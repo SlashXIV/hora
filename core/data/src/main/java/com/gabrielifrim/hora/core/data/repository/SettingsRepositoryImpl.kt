@@ -5,6 +5,7 @@ import com.gabrielifrim.hora.core.data.database.SettingsEntity
 import com.gabrielifrim.hora.core.domain.almanac.AlmanacGroup
 import com.gabrielifrim.hora.core.domain.almanac.AlmanacOptions
 import com.gabrielifrim.hora.core.domain.almanac.Place
+import com.gabrielifrim.hora.core.domain.almanac.PrayerCodec
 import com.gabrielifrim.hora.core.domain.model.UserSettings
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
 import java.time.DayOfWeek
@@ -44,6 +45,7 @@ private fun SettingsEntity.toDomain(): UserSettings {
         almanac = AlmanacOptions(alsaceMoselle = alsaceMoselle, bridges = bridges, moreFeasts = moreFeasts),
         hiddenAlmanac = hiddenAlmanac.split(',').mapNotNull { n -> AlmanacGroup.entries.firstOrNull { it.name == n.trim() } }.toSet(),
         place = Place(placeName, latitude, longitude),
+        prayer = PrayerCodec.decode(prayer),
     )
 }
 
@@ -61,4 +63,5 @@ private fun UserSettings.toEntity() = SettingsEntity(
     placeName = place.name,
     latitude = place.latitude,
     longitude = place.longitude,
+    prayer = PrayerCodec.encode(prayer),
 )

@@ -45,8 +45,12 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 @AndroidEntryPoint
 class RescheduleReceiver : BroadcastReceiver() {
     @Inject lateinit var engine: ReminderEngine
+    @Inject lateinit var prayers: PrayerAlarms
 
-    override fun onReceive(context: Context, intent: Intent) = work { engine.run() }
+    override fun onReceive(context: Context, intent: Intent) = work {
+        engine.run()
+        prayers.run()
+    }
 }
 
 /** « Reporter » depuis la notification ou l'alarme plein écran. */

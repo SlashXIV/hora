@@ -31,4 +31,17 @@
     <string name="snooze_hour">1 h</string>
     <string name="snooze_morning">Demain matin</string>
     <string name="alarm_stop">Arrêter</string>
+    <!-- Pratique musulmane (facultative) -->
+    <string name="channel_prayers">Prières</string>
+    <string name="channel_prayers_hint">Début des prières et fin du temps préférable, si tu les as demandés.</string>
+    <string name="prayer_sobh">Sobh</string>
+    <string name="prayer_fajr">Fajr</string>
+    <string name="prayer_dhohr">Dhohr</string>
+    <string name="prayer_asr">‘Asr</string>
+    <string name="prayer_maghrib">Maghrib</string>
+    <string name="prayer_isha">‘Isha</string>
+    <string name="prayer_starts">%1$s : c’est l’heure</string>
+    <string name="prayer_ending_soon">%1$s : fin du temps préférable dans 15 min</string>
+    <string name="prayer_preferred_until">Temps préférable jusqu’à %1$s</string>
+    <string name="prayer_preferred_until_estimated">Temps préférable jusqu’à %1$s environ (estimé)</string>
 </resources>

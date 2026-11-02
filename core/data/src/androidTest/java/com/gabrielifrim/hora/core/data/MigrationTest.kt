@@ -8,6 +8,7 @@ import com.gabrielifrim.hora.core.data.database.HoraDatabase
 import com.gabrielifrim.hora.core.data.database.MIGRATION_1_2
 import com.gabrielifrim.hora.core.data.database.MIGRATION_2_3
 import com.gabrielifrim.hora.core.data.database.MIGRATION_3_4
+import com.gabrielifrim.hora.core.data.database.MIGRATION_4_5
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -106,6 +107,28 @@ class MigrationTest {
         assertThat(row.bridges).isTrue()
         assertThat(row.hiddenAlmanac).isEqualTo("MOON")
         assertThat(row.placeName).isEqualTo("Bordeaux")
+        db.close()
+    }
+
+    @Test
+    fun v4_to_v5_keepsAlmanacSettingsAndLeavesPrayerOff() = runTest {
+        helper.createDatabase(DB, 4).apply {
+            execSQL(
+                "INSERT INTO settings (id, theme, motion, haptics, first_day_of_week, show_week_numbers, clock_format, " +
+                    "alsace_moselle, bridges, more_feasts, hidden_almanac, place_name, latitude, longitude) " +
+                    "VALUES (0, 'MIDI', 'CALM', 1, NULL, 1, 'H24', 1, 0, 0, 'MOON', 'Talence', 44.809, -0.588)",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(DB, 5, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        val row = db.settingsDao().get()!!
+        assertThat(row.placeName).isEqualTo("Talence")
+        assertThat(row.alsaceMoselle).isTrue()
+        assertThat(row.prayer).isEmpty()
         db.close()
     }
 

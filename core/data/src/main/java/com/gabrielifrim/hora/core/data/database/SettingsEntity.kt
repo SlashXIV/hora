@@ -26,6 +26,8 @@ data class SettingsEntity(
     @ColumnInfo(name = "place_name", defaultValue = "Bordeaux") val placeName: String = "Bordeaux",
     @ColumnInfo(defaultValue = "44.8378") val latitude: Double = 44.8378,
     @ColumnInfo(defaultValue = "-0.5792") val longitude: Double = -0.5792,
+    /** Réglages des prières (`PrayerCodec`) ; vide : valeurs par défaut, pratique désactivée. */
+    @ColumnInfo(defaultValue = "") val prayer: String = "",
 ) {
     companion object {
         const val SINGLE_ROW_ID = 0

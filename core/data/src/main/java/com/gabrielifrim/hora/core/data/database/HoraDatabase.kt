@@ -21,7 +21,7 @@ abstract class HoraDatabase : RoomDatabase() {
         const val NAME = "hora.db"
 
         /** Version du schéma ; une sauvegarde plus récente ne se restaure pas. */
-        const val VERSION = 4
+        const val VERSION = 5
     }
 }
 
@@ -90,8 +90,15 @@ internal val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+/** v4 → v5 (J5) : réglages de la pratique musulmane, en une colonne (`PrayerCodec`). */
+internal val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `prayer` TEXT NOT NULL DEFAULT ''")
+    }
+}
+
 /** Migrations explicites, dans l'ordre. Chacune a son test dans `MigrationTest`. */
-internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
 
 /**
  * Configuration de la base, définie une seule fois : les tests instrumentés

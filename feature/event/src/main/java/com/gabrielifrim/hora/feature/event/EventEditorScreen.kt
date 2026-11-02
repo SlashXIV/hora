@@ -1,5 +1,17 @@
 package com.gabrielifrim.hora.feature.event
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import com.gabrielifrim.hora.core.domain.recurrence.EditScope
+import com.gabrielifrim.hora.core.ui.component.AddReminderSheet
+import com.gabrielifrim.hora.core.ui.component.ButtonStyle
+import com.gabrielifrim.hora.core.ui.component.HoraDialog
+import com.gabrielifrim.hora.core.ui.component.ReminderList
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -61,25 +73,34 @@ import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import java.time.LocalDate
 import java.time.ZoneId
 
-private enum class Picking { START_DATE, START_TIME, END_DATE, END_TIME, ZONE }
+private enum class Picking { START_DATE, START_TIME, END_DATE, END_TIME, ZONE, REPEAT, REMINDER, SAVE_SET, SCOPE }
 
 @Composable
 fun EventEditorScreen(
     eventId: Long,
+    occurrence: Long,
     duplicateOf: Long,
     date: LocalDate,
     minute: Int?,
     onClose: () -> Unit,
     onSaved: (Long) -> Unit,
     viewModel: EventEditorViewModel = hiltViewModel<EventEditorViewModel, EventEditorViewModel.Factory> {
-        it.create(eventId, duplicateOf, date, minute)
+        it.create(eventId, occurrence, duplicateOf, date, minute)
     },
 ) {
     val draft by viewModel.draft.collectAsStateWithLifecycle()
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
+    val sets by viewModel.reminderSets.collectAsStateWithLifecycle()
     val formats = rememberFormats()
     val haptics = rememberHaptics()
     var picking by remember { mutableStateOf<Picking?>(null) }
+    val context = LocalContext.current
+    // Notifications (Android 13+) : demandées au moment où un rappel en a besoin, pas au lancement.
+    val askNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val save: () -> Unit = {
+        haptics.confirm()
+        if (viewModel.needsScope) picking = Picking.SCOPE else viewModel.save(EditScope.ALL, onSaved)
+    }
     val d = draft ?: return
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))) {
@@ -108,8 +129,24 @@ fun EventEditorScreen(
                 if (!d.allDay) {
                     ValueRow(stringResource(R.string.field_zone), d.zone.id, onClick = { picking = Picking.ZONE })
                 }
+                ValueRow(stringResource(R.string.field_repeat), repeatText(d.repeat, d.customRule, d.start.toLocalDate(), formats), onClick = { picking = Picking.REPEAT })
                 Rule()
-                AgendaChoice(agendas, d.agendaId) { id -> haptics.tick(); viewModel.update { it.copy(agendaId = id) } }
+                ReminderList(
+                    reminders = d.reminders,
+                    formats = formats,
+                    onRemove = { r -> haptics.tick(); viewModel.update { it.copy(reminders = it.reminders - r) } },
+                    onAdd = {
+                        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                            askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                        picking = Picking.REMINDER
+                    },
+                )
+                if (d.reminders.size > 1) {
+                    HoraButton(stringResource(R.string.save_as_set), onClick = { picking = Picking.SAVE_SET }, style = ButtonStyle.Text)
+                }
+                Rule()
+                AgendaChoice(agendas, d.agendaId) { id -> haptics.tick(); viewModel.chooseAgenda(id) }
                 ColorChoice(d.colorKey) { key -> haptics.tick(); viewModel.update { it.copy(colorKey = key) } }
                 Rule()
                 HoraTextField(
@@ -130,7 +167,7 @@ fun EventEditorScreen(
             if (d.title.isBlank()) HoraText(stringResource(R.string.editor_title_needed), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
             HoraButton(
                 stringResource(R.string.action_save),
-                onClick = { haptics.confirm(); viewModel.save(onSaved) },
+                onClick = save,
                 enabled = d.canSave,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -151,6 +188,14 @@ fun EventEditorScreen(
             viewModel.update { it.withEnd(it.end.toLocalDate().atTime(t)) }; picking = null
         }, onDismiss = { picking = null })
         Picking.ZONE -> ZonePickerSheet(d.zone, onPick = { z -> viewModel.update { it.copy(zone = z) }; picking = null }, onDismiss = { picking = null })
+        Picking.REPEAT -> RepeatSheet(d.repeat, d.customRule, d.start.toLocalDate(), formats, onPick = { spec ->
+            viewModel.update { it.copy(repeat = spec, customRule = null) }; picking = null
+        }, onDismiss = { picking = null })
+        Picking.REMINDER -> AddReminderSheet(sets, formats, onAdd = { added ->
+            haptics.tick(); viewModel.update { it.copy(reminders = (it.reminders + added).distinct()) }; picking = null
+        }, onDismiss = { picking = null })
+        Picking.SAVE_SET -> SaveSetDialog(onSave = { name -> viewModel.saveAsSet(name); picking = null }, onDismiss = { picking = null })
+        Picking.SCOPE -> ScopeDialog(stringResource(R.string.edit_scope_title), onPick = { scope -> picking = null; viewModel.save(scope, onSaved) }, onDismiss = { picking = null })
         null -> Unit
     }
 }
@@ -218,6 +263,21 @@ private fun ColorChoice(selected: String?, onSelect: (String?) -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SaveSetDialog(onSave: (String) -> Unit, onDismiss: () -> Unit) {
+    var name by remember { mutableStateOf("") }
+    HoraDialog(
+        title = stringResource(R.string.save_as_set),
+        onDismissRequest = onDismiss,
+        actions = {
+            HoraButton(stringResource(R.string.cancel), onClick = onDismiss, style = ButtonStyle.Text)
+            HoraButton(stringResource(R.string.action_save), onClick = { onSave(name) }, enabled = name.isNotBlank())
+        },
+    ) {
+        HoraTextField(name, { name = it }, label = stringResource(R.string.set_name), placeholder = stringResource(R.string.set_name_hint))
     }
 }
 

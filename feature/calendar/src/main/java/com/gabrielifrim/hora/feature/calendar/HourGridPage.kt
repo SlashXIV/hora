@@ -78,7 +78,7 @@ internal fun HourGridPage(
     agendas: Map<Long, Agenda>,
     zone: ZoneId,
     formats: HoraFormats,
-    onOpenEvent: (Long) -> Unit,
+    onOpenEvent: (Long, Long?) -> Unit,
     onCreate: (LocalDate, Int?) -> Unit,
     onDay: ((LocalDate) -> Unit)?,
 ) {
@@ -119,7 +119,7 @@ internal fun HourGridPage(
 }
 
 @Composable
-private fun AllDayRow(days: List<LocalDate>, events: List<Event>, agendas: Map<Long, Agenda>, zone: ZoneId, formats: HoraFormats, onOpenEvent: (Long) -> Unit) {
+private fun AllDayRow(days: List<LocalDate>, events: List<Event>, agendas: Map<Long, Agenda>, zone: ZoneId, formats: HoraFormats, onOpenEvent: (Long, Long?) -> Unit) {
     val perDay = days.map { DayLayout.allDayOn(events, it) }
     if (perDay.all { it.isEmpty() }) return
     Row(Modifier.fillMaxWidth().padding(start = formats.gutter, end = 2.dp, bottom = 4.dp)) {
@@ -158,7 +158,7 @@ private fun DayColumn(
     zone: ZoneId,
     formats: HoraFormats,
     isToday: Boolean,
-    onOpenEvent: (Long) -> Unit,
+    onOpenEvent: (Long, Long?) -> Unit,
     onCreate: (LocalDate, Int?) -> Unit,
     modifier: Modifier,
 ) {
@@ -196,7 +196,7 @@ private fun DayColumn(
 
 /** Un événement posé dans la grille : fond teinté, filet de couleur, ombre de cadran. */
 @Composable
-private fun Block(event: Event, agendas: Map<Long, Agenda>, zone: ZoneId, formats: HoraFormats, onOpenEvent: (Long) -> Unit, compact: Boolean, modifier: Modifier) {
+private fun Block(event: Event, agendas: Map<Long, Agenda>, zone: ZoneId, formats: HoraFormats, onOpenEvent: (Long, Long?) -> Unit, compact: Boolean, modifier: Modifier) {
     val colors = HoraTheme.colors
     val c = colorKeyOf(event, agendas).color()
     val spoken = spokenEvent(event, zone, formats)
@@ -209,7 +209,7 @@ private fun Block(event: Event, agendas: Map<Long, Agenda>, zone: ZoneId, format
             .clip(RoundedCornerShape(3.dp))
             .background(c.copy(alpha = 0.16f).compositeOver(colors.background))
             .drawBehind { drawRect(c, size = androidx.compose.ui.geometry.Size(3.dp.toPx(), size.height)) }
-            .clickable { onOpenEvent(event.id) }
+            .clickable { onOpenEvent(event.id, event.occurrence) }
             .clearAndSetSemantics { contentDescription = spoken; role = Role.Button }
             .padding(start = 6.dp, end = 3.dp, top = 2.dp, bottom = 2.dp),
     ) {

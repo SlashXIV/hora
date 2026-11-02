@@ -5,4 +5,7 @@
     <string name="tab_calendar">Agenda</string>
     <string name="tab_search">Chercher</string>
     <string name="tab_settings">Réglages</string>
+    <string name="alarm_eyebrow">Alarme</string>
+    <string name="alarm_stop">Arrêter</string>
+    <string name="alarm_snooze">Reporter de 10 min</string>
 </resources>

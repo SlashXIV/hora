@@ -59,6 +59,7 @@ dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.data)
     implementation(projects.core.ui)
+    implementation(projects.core.reminders)
     implementation(projects.feature.today)
     implementation(projects.feature.calendar)
     implementation(projects.feature.event)

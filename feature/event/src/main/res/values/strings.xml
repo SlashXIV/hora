@@ -28,4 +28,65 @@
     <string name="action_move">Déplacer</string>
     <string name="delete_title">Supprimer l’événement ?</string>
     <string name="delete_message">« %1$s » sera supprimé de l’agenda. On ne peut pas revenir en arrière.</string>
+
+    <string name="cancel">Annuler</string>
+    <string name="action_validate">Valider</string>
+    <string name="field_repeat">Répétition</string>
+    <string name="repeat_none">Ne se répète pas</string>
+    <string name="repeat_custom">Règle importée, gardée telle quelle</string>
+    <string name="repeat_modified_occurrence">Occurrence modifiée seule dans sa série</string>
+    <plurals name="repeat_daily">
+        <item quantity="one">Chaque jour</item>
+        <item quantity="other">Tous les %d jours</item>
+    </plurals>
+    <plurals name="repeat_weekly">
+        <item quantity="one">Chaque semaine, le %2$s</item>
+        <item quantity="other">Toutes les %1$d semaines, le %2$s</item>
+    </plurals>
+    <plurals name="repeat_monthly_date">
+        <item quantity="one">Chaque mois, le %2$d</item>
+        <item quantity="other">Tous les %1$d mois, le %2$d</item>
+    </plurals>
+    <plurals name="repeat_monthly_rank">
+        <item quantity="one">Chaque mois, le %2$s %3$s</item>
+        <item quantity="other">Tous les %1$d mois, le %2$s %3$s</item>
+    </plurals>
+    <plurals name="repeat_yearly">
+        <item quantity="one">Chaque année</item>
+        <item quantity="other">Tous les %d ans</item>
+    </plurals>
+    <plurals name="repeat_times">
+        <item quantity="one">%d fois</item>
+        <item quantity="other">%d fois</item>
+    </plurals>
+    <string name="repeat_until">jusqu’au %1$s</string>
+    <string name="rank_first">premier</string>
+    <string name="rank_last">dernier</string>
+    <string name="rank_nth">%1$de</string>
+    <string name="freq_daily">Chaque jour</string>
+    <string name="freq_weekly">Chaque semaine</string>
+    <string name="freq_monthly_date">Chaque mois, le %1$d</string>
+    <string name="freq_monthly_rank">Chaque mois, le %1$s %2$s</string>
+    <string name="freq_yearly">Chaque année</string>
+    <plurals name="interval_every">
+        <item quantity="one">Chaque fois</item>
+        <item quantity="other">Une fois sur %d</item>
+    </plurals>
+    <string name="interval_less">Intervalle plus court</string>
+    <string name="interval_more">Intervalle plus long</string>
+    <string name="repeat_on_days">Les jours</string>
+    <string name="repeat_end">Fin</string>
+    <string name="end_never">Jamais</string>
+    <string name="end_after">Après un nombre de fois</string>
+    <string name="end_until">Jusqu’à une date</string>
+    <string name="count_less">Une fois de moins</string>
+    <string name="count_more">Une fois de plus</string>
+    <string name="scope_this">Cet événement</string>
+    <string name="scope_following">Celui-ci et les suivants</string>
+    <string name="scope_all">Tous les événements de la série</string>
+    <string name="edit_scope_title">Modifier la série ?</string>
+    <string name="delete_scope_title">Supprimer dans la série ?</string>
+    <string name="save_as_set">Enregistrer comme jeu de rappels</string>
+    <string name="set_name">Nom du jeu</string>
+    <string name="set_name_hint">Rendez-vous du matin</string>
 </resources>

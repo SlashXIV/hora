@@ -41,4 +41,54 @@
     <string name="color_raspberry">Framboise</string>
     <string name="color_slate">Ardoise</string>
     <string name="today">Aujourd’hui</string>
+
+    <!-- Rappels -->
+    <string name="reminder_at_start">À l’heure</string>
+    <plurals name="reminder_minutes_before">
+        <item quantity="one">%d min avant</item>
+        <item quantity="other">%d min avant</item>
+    </plurals>
+    <plurals name="reminder_hours_before">
+        <item quantity="one">%d h avant</item>
+        <item quantity="other">%d h avant</item>
+    </plurals>
+    <plurals name="reminder_days_before">
+        <item quantity="one">%d jour avant</item>
+        <item quantity="other">%d jours avant</item>
+    </plurals>
+    <plurals name="reminder_weeks_before">
+        <item quantity="one">%d semaine avant</item>
+        <item quantity="other">%d semaines avant</item>
+    </plurals>
+    <string name="reminder_same_day_at">Le jour même à %1$s</string>
+    <string name="reminder_eve_at">La veille à %1$s</string>
+    <plurals name="reminder_days_before_at">
+        <item quantity="one">%1$d jour avant à %2$s</item>
+        <item quantity="other">%1$d jours avant à %2$s</item>
+    </plurals>
+    <plurals name="reminders_count">
+        <item quantity="zero">Rappels</item>
+        <item quantity="one">Rappel · %d</item>
+        <item quantity="other">Rappels · %d</item>
+    </plurals>
+    <string name="reminder_alarm">Alarme plein écran</string>
+    <string name="reminder_remove">Retirer le rappel %1$s</string>
+    <string name="reminder_add">Ajouter un rappel</string>
+    <string name="reminder_before_start">Avant le début</string>
+    <string name="reminder_custom_duration">Durée libre…</string>
+    <string name="reminder_amount">Durée</string>
+    <string name="unit_minutes">min</string>
+    <string name="unit_hours">heures</string>
+    <string name="unit_days">jours</string>
+    <string name="unit_weeks">semaines</string>
+    <string name="reminder_add_this">Ajouter</string>
+    <string name="reminder_at_time">À une heure précise</string>
+    <string name="reminder_other">Autre…</string>
+    <string name="reminder_fewer_days">Un jour de moins</string>
+    <string name="reminder_more_days">Un jour de plus</string>
+    <string name="reminder_sets">Jeux de rappels</string>
+    <!-- « Rendez-vous du matin · 3 » -->
+    <string name="reminder_set_label">%1$s · %2$d</string>
+    <string name="reminder_alarm_toggle">Alarme plein écran</string>
+    <string name="reminder_alarm_hint">Sonne comme un réveil, même téléphone verrouillé, pour ce qui ne doit pas être raté.</string>
 </resources>

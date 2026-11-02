@@ -79,6 +79,14 @@ private fun SettingsContent(
         }
 
         item {
+            Section(stringResource(R.string.settings_reminders)) {
+                ReminderReliability()
+                HoraText(stringResource(R.string.settings_sets), style = HoraTheme.type.body)
+                ReminderSets()
+            }
+        }
+
+        item {
             Section(stringResource(R.string.settings_appearance)) {
                 Choice(
                     options = listOf(R.string.theme_system, R.string.theme_midi, R.string.theme_nocturne),

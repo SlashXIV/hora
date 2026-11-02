@@ -58,7 +58,7 @@ import kotlinx.coroutines.delay
  */
 @Composable
 fun TodayScreen(
-    onOpenEvent: (Long) -> Unit,
+    onOpenEvent: (Long, Long?) -> Unit,
     onCreate: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TodayViewModel = hiltViewModel(),
@@ -105,7 +105,7 @@ fun TodayScreen(
             } else {
                 Eyebrow(stringResource(R.string.today_list))
                 Column {
-                    todays.forEach { e -> EventRow(e, agendas, zone, formats, onClick = { onOpenEvent(e.id) }, day = today) }
+                    todays.forEach { e -> EventRow(e, agendas, zone, formats, onClick = { onOpenEvent(e.id, e.occurrence) }, day = today) }
                 }
             }
         }
@@ -120,7 +120,7 @@ private fun NextUp(
     zone: ZoneId,
     formats: HoraFormats,
     agendas: Map<Long, Agenda>,
-    onOpenEvent: (Long) -> Unit,
+    onOpenEvent: (Long, Long?) -> Unit,
 ) {
     val key = colorKeyOf(event, agendas)
     val delayText = relativeDelay(inTime)
@@ -128,7 +128,7 @@ private fun NextUp(
     val start = (event.timing as Timing.Timed).start.atZone(zone).toLocalDate()
     val whenText = if (start == today) timeRange(event, zone, formats) else stringResource(R.string.day_and_time, formats.dayLong(start), timeRange(event, zone, formats))
     Column(
-        Modifier.fillMaxWidth().clickable { onOpenEvent(event.id) }
+        Modifier.fillMaxWidth().clickable { onOpenEvent(event.id, event.occurrence) }
             .clearAndSetSemantics { contentDescription = spoken; role = Role.Button }
             .padding(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),

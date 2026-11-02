@@ -26,7 +26,19 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.Hora.Splash" />
+
+        <!-- Alarme plein écran : par-dessus le verrouillage, hors des applications récentes. -->
+        <activity
+            android:name=".reminders.AlarmActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Hora" />
 
         <!--
             Icônes au choix (Réglages → Icône) : un alias par icône, un seul activé à la

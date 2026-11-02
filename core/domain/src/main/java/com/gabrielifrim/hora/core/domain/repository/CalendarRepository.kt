@@ -42,7 +42,7 @@ interface EventRepository {
     /** Supprime l'événement et, si c'est une série, ses occurrences modifiées. */
     suspend fun delete(id: Long)
 
-    /** Applique d'un bloc un plan de modification de série. @return l'id du premier événement enregistré. */
+    /** Applique d'un bloc un plan de modification de série. @return l'id du dernier enregistré (l'événement modifié). */
     suspend fun apply(plan: EditPlan): Long?
 }
 

@@ -1,6 +1,9 @@
 package com.gabrielifrim.hora.feature.event
 
 import com.gabrielifrim.hora.core.domain.model.Event
+import com.gabrielifrim.hora.core.domain.model.Recurrence
+import com.gabrielifrim.hora.core.domain.model.Reminder
+import com.gabrielifrim.hora.core.domain.recurrence.RepeatSpec
 import com.gabrielifrim.hora.core.domain.model.Timing
 import java.time.Duration
 import java.time.LocalDate
@@ -27,6 +30,12 @@ data class EventDraft(
     val start: LocalDateTime,
     val end: LocalDateTime,
     val zone: ZoneId,
+    val reminders: List<Reminder> = emptyList(),
+    /** Répétition éditable ; null avec [customRule] null : ne se répète pas. */
+    val repeat: RepeatSpec? = null,
+    /** Règle importée que l'éditeur ne sait pas montrer : gardée telle quelle tant qu'on ne choisit pas autre chose. */
+    val customRule: String? = null,
+    val exceptions: Set<Long> = emptySet(),
 ) {
     val canSave: Boolean get() = title.isNotBlank() && !endDateTimeForSave().isBefore(start)
 
@@ -38,6 +47,8 @@ data class EventDraft(
 
     private fun endDateTimeForSave(): LocalDateTime = if (allDay) end.toLocalDate().atStartOfDay() else end
 
+    val repeats: Boolean get() = repeat != null || customRule != null
+
     fun toEvent(): Event = Event(
         id = id,
         uid = uid,
@@ -46,6 +57,8 @@ data class EventDraft(
         location = location.trim(),
         notes = notes.trim(),
         colorKey = colorKey,
+        reminders = reminders,
+        recurrence = (repeat?.toRule(start.toLocalDate(), if (allDay) null else zone) ?: customRule)?.let { Recurrence(it, exceptions) },
         timing = if (allDay) {
             Timing.AllDay(start.toLocalDate(), maxOf(start.toLocalDate(), end.toLocalDate()))
         } else {
@@ -57,17 +70,29 @@ data class EventDraft(
 
     companion object {
         /** Nouvel événement : à l'heure donnée, sinon à la prochaine heure pleine ; une heure. */
-        fun new(agendaId: Long, date: LocalDate, minute: Int?, zone: ZoneId, now: LocalDateTime = LocalDateTime.now()): EventDraft {
+        fun new(agendaId: Long, date: LocalDate, minute: Int?, zone: ZoneId, now: LocalDateTime = LocalDateTime.now(), reminders: List<Reminder> = emptyList()): EventDraft {
             val time = if (minute != null) {
                 LocalTime.of(minute / 60, minute % 60)
             } else {
                 now.toLocalTime().truncatedTo(ChronoUnit.HOURS).plusHours(1)
             }
             val start = date.atTime(time)
-            return EventDraft(agendaId = agendaId, start = start, end = start.plusHours(1), zone = zone)
+            return EventDraft(agendaId = agendaId, start = start, end = start.plusHours(1), zone = zone, reminders = reminders)
         }
 
-        fun of(event: Event, displayZone: ZoneId): EventDraft = when (val t = event.timing) {
+        fun of(event: Event, displayZone: ZoneId): EventDraft = base(event, displayZone).let { d ->
+            val rule = event.recurrence?.rule
+            val zone = if (event.timing is Timing.AllDay) null else d.zone
+            val spec = rule?.let { RepeatSpec.parse(it, zone) }
+            d.copy(
+                reminders = event.reminders,
+                repeat = spec,
+                customRule = rule.takeIf { spec == null },
+                exceptions = event.recurrence?.exceptions.orEmpty(),
+            )
+        }
+
+        private fun base(event: Event, displayZone: ZoneId): EventDraft = when (val t = event.timing) {
             is Timing.AllDay -> EventDraft(
                 id = event.id, uid = event.uid, agendaId = event.agendaId, title = event.title,
                 location = event.location, notes = event.notes, colorKey = event.colorKey,
@@ -81,7 +106,7 @@ data class EventDraft(
         }
 
         /** Copie à enregistrer comme un nouvel événement : nouvel identifiant, nouvel UID. */
-        fun duplicate(event: Event, displayZone: ZoneId): EventDraft = of(event, displayZone).copy(id = 0, uid = UUID.randomUUID().toString())
+        fun duplicate(event: Event, displayZone: ZoneId): EventDraft = of(event, displayZone).copy(id = 0, uid = UUID.randomUUID().toString(), exceptions = emptySet())
     }
 }
 

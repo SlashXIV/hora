@@ -24,6 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gabrielifrim.hora.core.domain.model.Timing
+import com.gabrielifrim.hora.core.domain.recurrence.EditScope
+import com.gabrielifrim.hora.core.domain.recurrence.RepeatSpec
+import com.gabrielifrim.hora.core.ui.component.reminderText
+import com.gabrielifrim.hora.core.ui.R as UiR
+import androidx.compose.ui.res.pluralStringResource
 import com.gabrielifrim.hora.core.ui.component.AgendaMark
 import com.gabrielifrim.hora.core.ui.component.ButtonStyle
 import com.gabrielifrim.hora.core.ui.component.ConfirmDialog
@@ -45,10 +50,11 @@ import java.time.ZoneId
 @Composable
 fun EventDetailScreen(
     eventId: Long,
+    occurrence: Long,
     onBack: () -> Unit,
-    onEdit: (Long) -> Unit,
-    onDuplicate: (Long) -> Unit,
-    viewModel: EventDetailViewModel = hiltViewModel<EventDetailViewModel, EventDetailViewModel.Factory> { it.create(eventId) },
+    onEdit: (Long, Long?) -> Unit,
+    onDuplicate: (Long, Long?) -> Unit,
+    viewModel: EventDetailViewModel = hiltViewModel<EventDetailViewModel, EventDetailViewModel.Factory> { it.create(eventId, occurrence) },
 ) {
     val event by viewModel.event.collectAsStateWithLifecycle()
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
@@ -84,18 +90,30 @@ fun EventDetailScreen(
                         HoraText(stringResource(R.string.other_zone, t.zone.id), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                     }
                 }
+                if (e.isRecurring) {
+                    val spec = e.recurrence?.rule?.let { RepeatSpec.parse(it, (e.timing as? Timing.Timed)?.zone) }
+                    Field(stringResource(R.string.field_repeat), if (e.parentId != null) stringResource(R.string.repeat_modified_occurrence) else repeatText(spec, e.recurrence?.rule, day, formats))
+                }
+                if (e.reminders.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Eyebrow(pluralStringResource(UiR.plurals.reminders_count, e.reminders.size, e.reminders.size))
+                        e.reminders.forEach { r ->
+                            HoraText(reminderText(r, formats) + if (r.alarm) " · " + stringResource(UiR.string.reminder_alarm) else "", style = HoraTheme.type.body)
+                        }
+                    }
+                }
                 if (e.location.isNotBlank()) Field(stringResource(R.string.field_location), e.location)
                 if (e.notes.isNotBlank()) Field(stringResource(R.string.field_notes), e.notes)
                 Rule()
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HoraButton(stringResource(R.string.action_duplicate), onClick = { onDuplicate(e.id) }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
+                    HoraButton(stringResource(R.string.action_duplicate), onClick = { onDuplicate(e.id, e.occurrence) }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
                     HoraButton(stringResource(R.string.action_move), onClick = { moving = true }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
                 }
             }
         }
         Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             HoraButton(stringResource(R.string.action_delete), onClick = { confirmDelete = true }, style = ButtonStyle.Line, contentColor = HoraTheme.colors.error, modifier = Modifier.weight(1f))
-            HoraButton(stringResource(R.string.action_edit), onClick = { onEdit(e.id) }, modifier = Modifier.weight(1f))
+            HoraButton(stringResource(R.string.action_edit), onClick = { onEdit(e.id, e.occurrence) }, modifier = Modifier.weight(1f))
         }
     }
 
@@ -107,12 +125,18 @@ fun EventDetailScreen(
             onDismiss = { moving = false },
         )
     }
-    if (confirmDelete) {
+    if (confirmDelete && e.isRecurring) {
+        ScopeDialog(
+            title = stringResource(R.string.delete_scope_title),
+            onPick = { scope -> confirmDelete = false; viewModel.delete(scope) },
+            onDismiss = { confirmDelete = false },
+        )
+    } else if (confirmDelete) {
         ConfirmDialog(
             title = stringResource(R.string.delete_title),
             message = stringResource(R.string.delete_message, e.title),
             confirmLabel = stringResource(R.string.action_delete),
-            onConfirm = { confirmDelete = false; viewModel.delete() },
+            onConfirm = { confirmDelete = false; viewModel.delete(EditScope.ALL) },
             onDismiss = { confirmDelete = false },
         )
     }

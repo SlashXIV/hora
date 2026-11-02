@@ -45,7 +45,7 @@ internal fun AgendaList(
     agendas: Map<Long, Agenda>,
     zone: ZoneId,
     formats: HoraFormats,
-    onOpenEvent: (Long) -> Unit,
+    onOpenEvent: (Long, Long?) -> Unit,
 ) {
     val last = start.plusDays(LIST_DAYS)
     val events by remember(start, zone) { viewModel.events(start, last, zone) }.collectAsStateWithLifecycle(emptyList())
@@ -75,8 +75,8 @@ internal fun AgendaList(
                     Rule(Modifier.padding(top = 4.dp))
                 }
             }
-            items(list, key = { "${day.toEpochDay()}-${it.id}" }) { event ->
-                EventRow(event, agendas, zone, formats, onClick = { onOpenEvent(event.id) }, day = day, subtitle = subtitleOf(event, zone, formats), modifier = Modifier.fillMaxWidth())
+            items(list, key = { "${day.toEpochDay()}-${it.id}-${it.occurrence}" }) { event ->
+                EventRow(event, agendas, zone, formats, onClick = { onOpenEvent(event.id, event.occurrence) }, day = day, subtitle = subtitleOf(event, zone, formats), modifier = Modifier.fillMaxWidth())
             }
         }
     }

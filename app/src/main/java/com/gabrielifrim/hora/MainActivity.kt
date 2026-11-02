@@ -1,5 +1,6 @@
 package com.gabrielifrim.hora
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -24,6 +25,8 @@ import com.gabrielifrim.hora.core.ui.text.LocalUserSettings
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import com.gabrielifrim.hora.core.ui.theme.paletteFor
 import com.gabrielifrim.hora.feature.settings.AppIconSwitcher
+import com.gabrielifrim.hora.reminders.AppReminderLauncher
+import kotlinx.coroutines.flow.MutableStateFlow
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -41,6 +44,9 @@ class MainActivity : ComponentActivity() {
     @Volatile
     private var settingsLoaded = false
 
+    /** Événement à ouvrir, venu d'une notification de rappel (id, occurrence). */
+    private val opening = MutableStateFlow<Pair<Long, Long>?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Avant super.onCreate. Le démarrage reste affiché jusqu'à la lecture des
         // réglages : l'ambiance du mouvement doit être connue avant la première entrée.
@@ -49,6 +55,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Il faut toujours un agenda où ranger un événement : Perso, Taff, Famille au premier lancement.
         lifecycleScope.launch { agendaRepository.ensureDefaults() }
+        if (savedInstanceState == null) readOpening(intent)
         setContent {
             val settings by remember { settingsRepository.settings }.collectAsStateWithLifecycle(initialValue = null)
             val loaded = settings ?: return@setContent
@@ -66,11 +73,22 @@ class MainActivity : ComponentActivity() {
             HoraTheme(theme = loaded.theme, motion = loaded.motion, haptics = loaded.haptics) {
                 CompositionLocalProvider(LocalUserSettings provides loaded) {
                     Box(Modifier.fillMaxSize().background(HoraTheme.colors.background)) {
-                        HoraApp()
+                        val open by opening.collectAsStateWithLifecycle()
+                        HoraApp(opening = open, onOpened = { opening.value = null })
                     }
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        readOpening(intent)
+    }
+
+    private fun readOpening(intent: Intent) {
+        val id = intent.getLongExtra(AppReminderLauncher.EXTRA_EVENT, -1)
+        if (id > 0) opening.value = id to intent.getLongExtra(AppReminderLauncher.EXTRA_OCCURRENCE, -1)
     }
 
     override fun onStop() {

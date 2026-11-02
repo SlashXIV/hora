@@ -27,7 +27,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
+import com.gabrielifrim.hora.core.ui.component.AddReminderSheet
 import com.gabrielifrim.hora.core.ui.component.AgendaMark
+import com.gabrielifrim.hora.core.ui.component.ReminderList
+import com.gabrielifrim.hora.core.ui.text.rememberFormats
 import com.gabrielifrim.hora.core.ui.component.ButtonStyle
 import com.gabrielifrim.hora.core.ui.component.ConfirmDialog
 import com.gabrielifrim.hora.core.ui.component.HoraButton
@@ -115,11 +118,14 @@ fun AgendasScreen(onBack: () -> Unit, viewModel: AgendasViewModel = hiltViewMode
 private fun AgendaSheet(agenda: Agenda, canDelete: Boolean, onSave: (Agenda) -> Unit, onDelete: () -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf(agenda.name) }
     var color by remember { mutableStateOf(agenda.colorKey) }
+    var defaults by remember { mutableStateOf(agenda.defaultReminders) }
+    var adding by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf(false) }
+    val formats = rememberFormats()
     HoraSheet(
         onDismissRequest = onDismiss,
         actions = {
-            HoraButton(stringResource(R.string.save), onClick = { onSave(agenda.copy(name = name.trim(), colorKey = color)) }, enabled = name.isNotBlank(), modifier = Modifier.fillMaxWidth())
+            HoraButton(stringResource(R.string.save), onClick = { onSave(agenda.copy(name = name.trim(), colorKey = color, defaultReminders = defaults)) }, enabled = name.isNotBlank(), modifier = Modifier.fillMaxWidth())
             if (canDelete) {
                 HoraButton(stringResource(R.string.agenda_delete), onClick = { confirm = true }, style = ButtonStyle.Text, contentColor = HoraTheme.colors.error, modifier = Modifier.fillMaxWidth())
             }
@@ -137,6 +143,11 @@ private fun AgendaSheet(agenda: Agenda, canDelete: Boolean, onSave: (Agenda) -> 
                 )
             }
         }
+        HoraText(stringResource(R.string.agenda_defaults_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+        ReminderList(defaults, formats, onRemove = { defaults = defaults - it }, onAdd = { adding = true })
+    }
+    if (adding) {
+        AddReminderSheet(emptyList(), formats, onAdd = { defaults = (defaults + it).distinct(); adding = false }, onDismiss = { adding = false })
     }
     if (confirm) {
         ConfirmDialog(

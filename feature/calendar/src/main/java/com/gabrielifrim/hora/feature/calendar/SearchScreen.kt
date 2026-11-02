@@ -41,7 +41,7 @@ import kotlinx.coroutines.flow.flowOf
 
 /** Recherche dans le titre, le lieu et les notes ; résultats du plus récent au plus ancien. */
 @Composable
-fun SearchScreen(onOpenEvent: (Long) -> Unit, modifier: Modifier = Modifier, viewModel: CalendarViewModel = hiltViewModel()) {
+fun SearchScreen(onOpenEvent: (Long, Long?) -> Unit, modifier: Modifier = Modifier, viewModel: CalendarViewModel = hiltViewModel()) {
     var query by rememberSaveable { mutableStateOf("") }
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
     val results by remember(query) { if (query.isBlank()) flowOf(emptyList()) else viewModel.search(query) }.collectAsStateWithLifecycle(emptyList())
@@ -85,7 +85,7 @@ fun SearchScreen(onOpenEvent: (Long) -> Unit, modifier: Modifier = Modifier, vie
                 }
                 EventRow(
                     event, agendas, zone, formats,
-                    onClick = { onOpenEvent(event.id) },
+                    onClick = { onOpenEvent(event.id, event.occurrence) },
                     subtitle = formats.dayShort(day) + " · " + timeRange(event, zone, formats),
                     modifier = Modifier.fillMaxWidth(),
                 )

@@ -24,6 +24,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,10 +62,11 @@ import kotlinx.serialization.Serializable
 @Serializable private data object SearchRoute
 @Serializable private data object SettingsRoute
 @Serializable private data object AgendasRoute
-@Serializable private data class EventRoute(val id: Long)
+/** Fiche : occurrence < 0 pour un événement simple, sinon la clé de l’occurrence d’une série. */
+@Serializable private data class EventRoute(val id: Long, val occurrence: Long = -1)
 
 /** Éditeur : id > 0 modifie, duplicateOf > 0 copie, sinon crée au jour epochDay (minute < 0 : heure par défaut). */
-@Serializable private data class EditRoute(val id: Long = 0, val duplicateOf: Long = 0, val epochDay: Long = 0, val minute: Int = -1)
+@Serializable private data class EditRoute(val id: Long = 0, val occurrence: Long = -1, val duplicateOf: Long = 0, val epochDay: Long = 0, val minute: Int = -1)
 
 private enum class Tab(val route: Any, val label: Int, val icon: ImageVector) {
     TODAY(TodayRoute, R.string.tab_today, HoraIcons.Today),
@@ -74,8 +76,11 @@ private enum class Tab(val route: Any, val label: Int, val icon: ImageVector) {
 }
 
 @Composable
-fun HoraApp() {
+fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
     val nav = rememberNavController()
+    LaunchedEffect(opening) {
+        opening?.let { (id, occurrence) -> nav.navigate(EventRoute(id, occurrence)); onOpened() }
+    }
     val entry by nav.currentBackStackEntryAsState()
     val haptics = rememberHaptics()
     // La transition signature (l'ombre qui tourne) arrive avec les moments ; d'ici là,
@@ -83,7 +88,7 @@ fun HoraApp() {
     val fadeMs = if (LocalMotionLevel.current.animates) Motion.CALM_MS else 0
     val currentTab = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.route::class) == true }
     val create: (LocalDate, Int?) -> Unit = { date, minute -> nav.navigate(EditRoute(epochDay = date.toEpochDay(), minute = minute ?: -1)) }
-    val open: (Long) -> Unit = { id -> nav.navigate(EventRoute(id)) }
+    val open: (Long, Long?) -> Unit = { id, occurrence -> nav.navigate(EventRoute(id, occurrence ?: -1)) }
 
     Column(Modifier.fillMaxSize()) {
         NavHost(
@@ -102,15 +107,17 @@ fun HoraApp() {
                 val route = back.toRoute<EventRoute>()
                 EventDetailScreen(
                     eventId = route.id,
+                    occurrence = route.occurrence,
                     onBack = { nav.popBackStack() },
-                    onEdit = { nav.navigate(EditRoute(id = it)) },
-                    onDuplicate = { nav.navigate(EditRoute(duplicateOf = it)) },
+                    onEdit = { id, occ -> nav.navigate(EditRoute(id = id, occurrence = occ ?: -1)) },
+                    onDuplicate = { id, occ -> nav.navigate(EditRoute(duplicateOf = id, occurrence = occ ?: -1)) },
                 )
             }
             composable<EditRoute> { back ->
                 val route = back.toRoute<EditRoute>()
                 EventEditorScreen(
                     eventId = route.id,
+                    occurrence = route.occurrence,
                     duplicateOf = route.duplicateOf,
                     date = if (route.id == 0L && route.duplicateOf == 0L) LocalDate.ofEpochDay(route.epochDay) else LocalDate.now(),
                     minute = route.minute.takeIf { it >= 0 },
@@ -121,6 +128,11 @@ fun HoraApp() {
                             nav.navigate(EventRoute(savedId)) { popUpTo<EditRoute> { inclusive = true } }
                         } else {
                             nav.popBackStack()
+                            // Occurrence détachée ou nouvelle série : la fiche montre ce qui vient d'être écrit.
+                            if (savedId != route.id) {
+                                nav.popBackStack()
+                                nav.navigate(EventRoute(savedId))
+                            }
                         }
                     },
                 )

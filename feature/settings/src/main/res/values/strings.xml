@@ -46,4 +46,22 @@
     <string name="agenda_delete">Supprimer l’agenda</string>
     <string name="agenda_delete_title">Supprimer l’agenda ?</string>
     <string name="agenda_delete_message">« %1$s » et tous ses événements seront supprimés. On ne peut pas revenir en arrière.</string>
+
+    <string name="settings_reminders">Rappels</string>
+    <string name="reliability_hint">Pour que les rappels sonnent téléphone verrouillé et en économie de batterie, tout doit être au vert.</string>
+    <string name="reliability_notifications">Notifications</string>
+    <string name="reliability_exact">Alarmes exactes</string>
+    <string name="reliability_full_screen">Alarme plein écran</string>
+    <string name="reliability_battery">Optimisation de la batterie</string>
+    <string name="reliability_ok">Autorisé</string>
+    <string name="reliability_blocked">Bloqué : un rappel peut ne pas sonner</string>
+    <string name="reliability_allow">Autoriser</string>
+    <string name="reliability_unrestrict">Lever</string>
+    <string name="reliability_manufacturer">Réglages du fabricant (démarrage automatique, MIUI)</string>
+    <string name="settings_sets">Jeux de rappels</string>
+    <string name="sets_empty">Aucun jeu pour l’instant. Dans l’éditeur, « Enregistrer comme jeu de rappels » en crée un.</string>
+    <!-- « Rendez-vous du matin · 3 rappels » -->
+    <string name="set_line">%1$s · %2$d rappels</string>
+    <string name="set_delete">Supprimer le jeu %1$s</string>
+    <string name="agenda_defaults_hint">Rappels ajoutés à chaque nouvel événement de cet agenda.</string>
 </resources>

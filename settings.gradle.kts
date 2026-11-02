@@ -26,6 +26,7 @@ include(":app")
 include(":core:domain")
 include(":core:data")
 include(":core:ui")
+include(":core:reminders")
 
 include(":feature:today")
 include(":feature:calendar")

@@ -94,7 +94,8 @@ internal class EventRepositoryImpl @Inject constructor(
             dao.deleteChildren(id)
             dao.delete(id)
         }
-        plan.save.map { save(it) }.firstOrNull()
+        // Le dernier enregistré est celui que l'on vient de modifier : l'occurrence ou la nouvelle série.
+        plan.save.map { save(it) }.lastOrNull()
     }
 }
 

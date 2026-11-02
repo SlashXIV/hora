@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Petite icône de notification : le H et son style, la ligne de midi (design/icon/hora-icon.svg, recadré). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="40" android:viewportHeight="40">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M6,4h7v29h-7z M27,4h7v29h-7z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M13,20.5L27,15L27,21L13,26.5z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M5.5,36h29a1,1 0 0 1 0,2h-29a1,1 0 0 1 0,-2z" />
+</vector>

@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun CalendarScreen(
-    onOpenEvent: (Long) -> Unit,
+    onOpenEvent: (Long, Long?) -> Unit,
     onCreate: (LocalDate, Int?) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CalendarViewModel = hiltViewModel(),

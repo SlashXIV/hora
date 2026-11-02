@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Langue des heures dans les notifications, comme celle des écrans. -->
+    <string name="reminders_locale" translatable="false">fr-FR</string>
+
+    <string name="channel_reminders">Rappels</string>
+    <string name="channel_reminders_hint">Les rappels de tes événements.</string>
+    <string name="channel_alarms">Alarmes</string>
+    <string name="channel_alarms_hint">Les rappels réglés en alarme plein écran, qui sonnent comme un réveil.</string>
+
+    <!-- « Dentiste · dans 1 h » -->
+    <string name="reminder_title">%1$s · %2$s</string>
+    <string name="reminder_missed">Rappel manqué : %1$s</string>
+    <string name="reminder_all_day">Toute la journée</string>
+    <string name="reminder_time_range">%1$s–%2$s</string>
+    <string name="until_now">maintenant</string>
+    <plurals name="until_minutes">
+        <item quantity="one">dans %d min</item>
+        <item quantity="other">dans %d min</item>
+    </plurals>
+    <plurals name="until_hours">
+        <item quantity="one">dans %d h</item>
+        <item quantity="other">dans %d h</item>
+    </plurals>
+    <plurals name="until_days">
+        <item quantity="one">dans %d jour</item>
+        <item quantity="other">dans %d jours</item>
+    </plurals>
+
+    <string name="snooze_10">10 min</string>
+    <string name="snooze_hour">1 h</string>
+    <string name="snooze_morning">Demain matin</string>
+    <string name="alarm_stop">Arrêter</string>
+</resources>

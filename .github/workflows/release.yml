@@ -34,7 +34,7 @@ jobs:
           HORA_SIGNING_KEYALIAS: ${{ secrets.HORA_KEY_ALIAS }}
           HORA_SIGNING_KEYPASSWORD: ${{ secrets.HORA_KEY_PASSWORD }}
         run: |
-          ./gradlew testDebugUnitTest :core:domain:test assembleRelease
+          ./gradlew testDebugUnitTest :core:domain:test :core:ics:test assembleRelease
           cp app/build/outputs/apk/release/app-release.apk "Hora-$GITHUB_REF_NAME.apk"
 
       # Hora est hors ligne par construction : une dépendance qui ajouterait la

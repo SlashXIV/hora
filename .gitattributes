@@ -14,5 +14,6 @@ gradlew text eol=lf
 *.png binary
 *.jpg binary
 *.webp binary
-*.ics text
 *.ttf binary
+# Les fichiers iCalendar de test gardent leurs fins de ligne CRLF, comme les vrais exports.
+*.ics -text

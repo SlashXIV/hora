@@ -60,6 +60,8 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.core.ui)
     implementation(projects.feature.today)
+    implementation(projects.feature.calendar)
+    implementation(projects.feature.event)
     implementation(projects.feature.settings)
 
     implementation(libs.androidx.core.ktx)

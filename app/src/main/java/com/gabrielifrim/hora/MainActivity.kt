@@ -10,18 +10,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
+import com.gabrielifrim.hora.core.ui.text.LocalUserSettings
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import com.gabrielifrim.hora.core.ui.theme.paletteFor
 import com.gabrielifrim.hora.feature.settings.AppIconSwitcher
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 /** Activité unique : elle porte le thème et la navigation, rien d'autre. */
 @AndroidEntryPoint
@@ -29,6 +34,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var agendaRepository: AgendaRepository
 
     @Volatile
     private var settingsLoaded = false
@@ -39,6 +47,8 @@ class MainActivity : ComponentActivity() {
         installSplashScreen().setKeepOnScreenCondition { !settingsLoaded }
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // Il faut toujours un agenda où ranger un événement : Perso, Taff, Famille au premier lancement.
+        lifecycleScope.launch { agendaRepository.ensureDefaults() }
         setContent {
             val settings by remember { settingsRepository.settings }.collectAsStateWithLifecycle(initialValue = null)
             val loaded = settings ?: return@setContent
@@ -54,8 +64,10 @@ class MainActivity : ComponentActivity() {
                 onDispose {}
             }
             HoraTheme(theme = loaded.theme, motion = loaded.motion, haptics = loaded.haptics) {
-                Box(Modifier.fillMaxSize().background(HoraTheme.colors.background)) {
-                    HoraApp(settings = loaded)
+                CompositionLocalProvider(LocalUserSettings provides loaded) {
+                    Box(Modifier.fillMaxSize().background(HoraTheme.colors.background)) {
+                        HoraApp()
+                    }
                 }
             }
         }

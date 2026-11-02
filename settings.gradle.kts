@@ -28,4 +28,6 @@ include(":core:data")
 include(":core:ui")
 
 include(":feature:today")
+include(":feature:calendar")
+include(":feature:event")
 include(":feature:settings")

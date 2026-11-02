@@ -1,0 +1,96 @@
+package com.gabrielifrim.hora.feature.event
+
+import com.gabrielifrim.hora.core.domain.model.Event
+import com.gabrielifrim.hora.core.domain.model.Timing
+import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import java.util.UUID
+
+/**
+ * Ce que l'éditeur modifie : des dates et des heures murales dans un fuseau,
+ * converties en instants seulement à l'enregistrement. Ainsi, cocher « toute la
+ * journée » puis le décocher rend les heures d'origine.
+ */
+data class EventDraft(
+    val id: Long = 0,
+    val uid: String = UUID.randomUUID().toString(),
+    val agendaId: Long,
+    val title: String = "",
+    val location: String = "",
+    val notes: String = "",
+    val colorKey: String? = null,
+    val allDay: Boolean = false,
+    val start: LocalDateTime,
+    val end: LocalDateTime,
+    val zone: ZoneId,
+) {
+    val canSave: Boolean get() = title.isNotBlank() && !endDateTimeForSave().isBefore(start)
+
+    /** Change le début en gardant la durée : déplacer un rendez-vous ne le raccourcit pas. */
+    fun withStart(newStart: LocalDateTime): EventDraft = copy(start = newStart, end = newStart.plus(Duration.between(start, end)))
+
+    /** Toute la journée, la fin est un jour ; à heure fixe, un instant. */
+    fun withEnd(newEnd: LocalDateTime): EventDraft = copy(end = if (newEnd.isBefore(start)) start else newEnd)
+
+    private fun endDateTimeForSave(): LocalDateTime = if (allDay) end.toLocalDate().atStartOfDay() else end
+
+    fun toEvent(): Event = Event(
+        id = id,
+        uid = uid,
+        agendaId = agendaId,
+        title = title.trim(),
+        location = location.trim(),
+        notes = notes.trim(),
+        colorKey = colorKey,
+        timing = if (allDay) {
+            Timing.AllDay(start.toLocalDate(), maxOf(start.toLocalDate(), end.toLocalDate()))
+        } else {
+            // Une heure qui n'existe pas (2 h 30 la nuit du passage à l'heure d'été) est
+            // repoussée par ZonedDateTime à l'heure qui suit : 3 h 30.
+            Timing.Timed(start.atZone(zone).toInstant(), end.atZone(zone).toInstant(), zone)
+        },
+    )
+
+    companion object {
+        /** Nouvel événement : à l'heure donnée, sinon à la prochaine heure pleine ; une heure. */
+        fun new(agendaId: Long, date: LocalDate, minute: Int?, zone: ZoneId, now: LocalDateTime = LocalDateTime.now()): EventDraft {
+            val time = if (minute != null) {
+                LocalTime.of(minute / 60, minute % 60)
+            } else {
+                now.toLocalTime().truncatedTo(ChronoUnit.HOURS).plusHours(1)
+            }
+            val start = date.atTime(time)
+            return EventDraft(agendaId = agendaId, start = start, end = start.plusHours(1), zone = zone)
+        }
+
+        fun of(event: Event, displayZone: ZoneId): EventDraft = when (val t = event.timing) {
+            is Timing.AllDay -> EventDraft(
+                id = event.id, uid = event.uid, agendaId = event.agendaId, title = event.title,
+                location = event.location, notes = event.notes, colorKey = event.colorKey,
+                allDay = true, start = t.first.atTime(9, 0), end = t.last.atTime(10, 0), zone = displayZone,
+            )
+            is Timing.Timed -> EventDraft(
+                id = event.id, uid = event.uid, agendaId = event.agendaId, title = event.title,
+                location = event.location, notes = event.notes, colorKey = event.colorKey,
+                start = LocalDateTime.ofInstant(t.start, t.zone), end = LocalDateTime.ofInstant(t.end, t.zone), zone = t.zone,
+            )
+        }
+
+        /** Copie à enregistrer comme un nouvel événement : nouvel identifiant, nouvel UID. */
+        fun duplicate(event: Event, displayZone: ZoneId): EventDraft = of(event, displayZone).copy(id = 0, uid = UUID.randomUUID().toString())
+    }
+}
+
+/** Déplace l'événement au jour [to], aux mêmes heures et avec la même durée. */
+fun Event.movedTo(to: LocalDate): Event = when (val t = timing) {
+    is Timing.AllDay -> copy(timing = Timing.AllDay(to, to.plusDays(ChronoUnit.DAYS.between(t.first, t.last))))
+    is Timing.Timed -> {
+        val start = t.start.atZone(t.zone)
+        val newStart = to.atTime(start.toLocalTime()).atZone(t.zone)
+        copy(timing = Timing.Timed(newStart.toInstant(), newStart.toInstant().plus(Duration.between(t.start, t.end)), t.zone))
+    }
+}

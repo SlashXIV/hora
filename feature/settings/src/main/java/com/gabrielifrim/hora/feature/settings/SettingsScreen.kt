@@ -2,6 +2,7 @@ package com.gabrielifrim.hora.feature.settings
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,20 +51,32 @@ import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import java.time.DayOfWeek
 
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(onOpenAgendas: () -> Unit, modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    settings?.let { SettingsContent(it, viewModel::update, modifier) }
+    settings?.let { SettingsContent(it, viewModel::update, onOpenAgendas, modifier) }
 }
 
 @Composable
 private fun SettingsContent(
     settings: UserSettings,
     update: ((UserSettings) -> UserSettings) -> Unit,
+    onOpenAgendas: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
     LazyColumn(modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
         item { PageHeader(stringResource(R.string.settings_title), modifier = Modifier.bleed(16.dp)) }
+
+        item {
+            Section(stringResource(R.string.settings_agendas)) {
+                Column(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onOpenAgendas).padding(vertical = 4.dp),
+                ) {
+                    HoraText(stringResource(R.string.settings_agendas), style = HoraTheme.type.body)
+                    HoraText(stringResource(R.string.settings_agendas_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+                }
+            }
+        }
 
         item {
             Section(stringResource(R.string.settings_appearance)) {

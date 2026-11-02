@@ -3,5 +3,21 @@
     <!-- « Lundi · semaine 45 » -->
     <string name="today_eyebrow">%1$s · semaine %2$d</string>
     <string name="today_empty_title">Journée libre</string>
-    <string name="today_empty_hint">Les événements, les plages et les rappels arrivent avec la prochaine version de Hora.</string>
+    <string name="today_empty_hint">Rien de prévu aujourd’hui. Le bouton + ajoute un événement.</string>
+    <string name="today_list">Aujourd’hui</string>
+    <string name="new_event">Nouvel événement</string>
+
+    <!-- « Prochain · dans 2 h 12 » -->
+    <string name="next_eyebrow">Prochain · dans %1$s</string>
+    <string name="next_spoken">Prochain, dans %1$s : %2$s</string>
+    <string name="day_and_time">%1$s · %2$s</string>
+    <string name="in_hours_minutes">%1$d h %2$02d</string>
+    <plurals name="in_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="in_days">
+        <item quantity="one">%d jour</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
 </resources>

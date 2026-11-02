@@ -30,4 +30,20 @@
     <string name="clock_system">Système</string>
     <string name="clock_24">24 h</string>
     <string name="clock_12">12 h</string>
+
+    <string name="back">Retour</string>
+    <string name="save">Enregistrer</string>
+    <string name="settings_agendas">Agendas</string>
+    <string name="settings_agendas_hint">Couleurs, noms, agendas masqués</string>
+    <string name="agendas_title">Agendas</string>
+    <string name="agenda_add">Ajouter un agenda</string>
+    <string name="agenda_new">Nouvel agenda</string>
+    <string name="agenda_edit">Modifier l’agenda</string>
+    <string name="agenda_name">Nom</string>
+    <string name="agenda_hidden">Masqué : ses événements n’apparaissent nulle part</string>
+    <string name="agenda_edit_hint">Toucher pour renommer ou changer de couleur</string>
+    <string name="agenda_visible">Afficher %1$s</string>
+    <string name="agenda_delete">Supprimer l’agenda</string>
+    <string name="agenda_delete_title">Supprimer l’agenda ?</string>
+    <string name="agenda_delete_message">« %1$s » et tous ses événements seront supprimés. On ne peut pas revenir en arrière.</string>
 </resources>

@@ -2,6 +2,8 @@ package com.gabrielifrim.hora.feature.settings
 
 import android.content.Context
 import android.net.Uri
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gabrielifrim.hora.core.domain.model.Agenda
@@ -49,12 +51,14 @@ sealed interface ImportUi {
         val selected: Int get() = sources.filter { it.include }.sumOf { it.count }
     }
     data class Done(val report: ImportReport) : ImportUi
-    /** Fichier illisible ou sans événement. */
+    /** Fichier illisible, trop gros ou sans événement. */
     data object Unreadable : ImportUi
+    /** L'écriture a échoué : la transaction est annulée, rien n'a changé. */
+    data object Failed : ImportUi
 }
 
 /** Résultat d'une action ponctuelle, affiché une fois. */
-enum class TransferMessage { EXPORTED, EXPORT_FAILED, BACKED_UP, BACKUP_FAILED, NOT_HORA, TOO_NEW }
+enum class TransferMessage { EXPORTED, EXPORT_FAILED, BACKED_UP, BACKUP_FAILED, NOT_HORA, TOO_NEW, RESTORE_FAILED }
 
 @HiltViewModel
 class TransferViewModel @Inject constructor(
@@ -81,8 +85,8 @@ class TransferViewModel @Inject constructor(
         viewModelScope.launch {
             val file = withContext(Dispatchers.IO) {
                 runCatching {
-                    val bytes = requireNotNull(context.contentResolver.openInputStream(uri)).use { it.readBytes() }
-                    IcsReader.read(bytes, ZoneId.systemDefault())
+                    val bytes = requireNotNull(context.contentResolver.openInputStream(uri)).use { it.readAtMost(MAX_ICS_BYTES) }
+                    IcsReader.read(requireNotNull(bytes) { "fichier trop gros" }, ZoneId.systemDefault())
                 }.getOrNull()
             }
             if (file == null || file.entries.isEmpty()) {
@@ -117,7 +121,7 @@ class TransferViewModel @Inject constructor(
             val groups = preview.file.entries.groupBy { it.agenda.name ?: unnamedAgenda }.mapNotNull { (name, entries) ->
                 chosen[name]?.let { c -> ImportGroup(name, c.colorKey, entries.map { it.item }) }
             }
-            _import.value = ImportUi.Done(transfer.import(groups))
+            _import.value = runCatching { transfer.import(groups) }.fold({ ImportUi.Done(it) }, { ImportUi.Failed })
         }
     }
 
@@ -165,10 +169,31 @@ class TransferViewModel @Inject constructor(
 
     fun confirmRestore() {
         val check = _restore.value ?: return
-        viewModelScope.launch { backup.restore(check) }
+        viewModelScope.launch {
+            // En cas de succès, l'application redémarre et on ne revient jamais ici.
+            runCatching { backup.restore(check) }.onFailure {
+                _restore.value = null
+                _message.value = TransferMessage.RESTORE_FAILED
+            }
+        }
     }
 
     fun messageShown() {
         _message.value = null
+    }
+}
+
+/** Un .ics de plusieurs années tient en quelques Mo ; au-delà, c'est un autre fichier choisi par erreur. */
+private const val MAX_ICS_BYTES = 20 * 1024 * 1024
+
+/** Lit au plus [max] octets ; null si le flux est plus long. */
+private fun InputStream.readAtMost(max: Int): ByteArray? {
+    val out = ByteArrayOutputStream()
+    val buffer = ByteArray(8 * 1024)
+    while (true) {
+        val n = read(buffer)
+        if (n < 0) return out.toByteArray()
+        if (out.size() + n > max) return null
+        out.write(buffer, 0, n)
     }
 }

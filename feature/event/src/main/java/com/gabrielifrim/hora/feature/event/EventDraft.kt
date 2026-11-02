@@ -83,7 +83,7 @@ data class EventDraft(
         fun of(event: Event, displayZone: ZoneId): EventDraft = base(event, displayZone).let { d ->
             val rule = event.recurrence?.rule
             val zone = if (event.timing is Timing.AllDay) null else d.zone
-            val spec = rule?.let { RepeatSpec.parse(it, zone) }
+            val spec = rule?.let { RepeatSpec.parse(it, zone, d.start.toLocalDate()) }
             d.copy(
                 reminders = event.reminders,
                 repeat = spec,

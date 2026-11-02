@@ -86,5 +86,9 @@ class RecurrenceTest {
         assertThat(RepeatSpec.parse(until.toRule(LocalDate.of(2026, 12, 1), paris), paris)).isEqualTo(until)
         assertThat(RepeatSpec.parse(until.toRule(LocalDate.of(2026, 12, 1), null), null)).isEqualTo(until)
         assertThat(RepeatSpec.parse("FREQ=MONTHLY;BYDAY=TU;BYSETPOS=-1", paris)).isNull()
+        // Fossify : « chaque année » s'écrit avec le mois du début ; un autre mois reste une règle à part.
+        val nov10 = LocalDate.of(2025, 11, 10)
+        assertThat(RepeatSpec.parse("FREQ=YEARLY;INTERVAL=1;BYMONTH=11", null, nov10)).isEqualTo(RepeatSpec(Frequency.YEARLY))
+        assertThat(RepeatSpec.parse("FREQ=YEARLY;BYMONTH=3", null, nov10)).isNull()
     }
 }

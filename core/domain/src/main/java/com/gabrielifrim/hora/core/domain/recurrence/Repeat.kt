@@ -70,14 +70,19 @@ data class RepeatSpec(
          */
         fun rankOf(day: LocalDate): Int = ((day.dayOfMonth - 1) / 7 + 1).let { if (it >= 5) -1 else it }
 
-        /** null si la règle dépasse ce que l'éditeur sait montrer (BYSETPOS, BYHOUR…). */
-        fun parse(rule: String, zone: ZoneId?): RepeatSpec? {
+        /**
+         * null si la règle dépasse ce que l'éditeur sait montrer (BYSETPOS, BYHOUR…).
+         * [start] : le jour de début ; il rend lisible le « FREQ=YEARLY;BYMONTH=11 » de
+         * Fossify quand BYMONTH est le mois du début (c'est alors « chaque année »).
+         */
+        fun parse(rule: String, zone: ZoneId?, start: LocalDate? = null): RepeatSpec? {
             val parts = rule.removePrefix("RRULE:").split(';').filter { it.isNotBlank() }.associate {
                 val (k, v) = it.split('=', limit = 2).let { p -> p[0].uppercase() to p.getOrElse(1) { "" } }
                 k to v
             }
             val known = setOf("FREQ", "INTERVAL", "BYDAY", "BYMONTHDAY", "COUNT", "UNTIL", "WKST")
-            if (!known.containsAll(parts.keys)) return null
+            val redundantMonth = parts["FREQ"] == "YEARLY" && start != null && parts["BYMONTH"] == start.monthValue.toString()
+            if (!known.containsAll(parts.keys - if (redundantMonth) setOf("BYMONTH") else emptySet())) return null
             val interval = parts["INTERVAL"]?.toIntOrNull() ?: 1
             val byDay = parts["BYDAY"]?.split(',')?.filter { it.isNotBlank() }.orEmpty()
             val end = when {

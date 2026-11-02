@@ -99,7 +99,7 @@ fun EventDetailScreen(
                     }
                 }
                 if (e.isRecurring) {
-                    val spec = e.recurrence?.rule?.let { RepeatSpec.parse(it, (e.timing as? Timing.Timed)?.zone) }
+                    val spec = e.recurrence?.rule?.let { RepeatSpec.parse(it, (e.timing as? Timing.Timed)?.zone, day) }
                     Field(stringResource(R.string.field_repeat), if (e.parentId != null) stringResource(R.string.repeat_modified_occurrence) else repeatText(spec, e.recurrence?.rule, day, formats))
                 }
                 if (e.reminders.isNotEmpty()) {

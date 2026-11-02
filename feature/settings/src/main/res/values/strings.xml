@@ -72,7 +72,8 @@
     <string name="import_hint">Un fichier .ics : export de Fossify, de Google Agenda, d’Outlook… Un événement déjà importé est mis à jour, jamais mis en double.</string>
     <string name="import_pick">Choisir un fichier .ics</string>
     <string name="import_reading">Lecture du fichier…</string>
-    <string name="import_unreadable">Ce fichier ne contient aucun événement lisible.</string>
+    <string name="import_unreadable">Ce fichier ne contient aucun événement lisible, ou il est trop gros.</string>
+    <string name="import_failed">L’import a échoué : rien n’a été modifié.</string>
     <!-- Agenda d’un fichier sans nom d’agenda (agenda local de Fossify, export sans X-WR-CALNAME). -->
     <string name="import_unnamed">Importé</string>
     <plurals name="import_count">
@@ -136,6 +137,7 @@
     <string name="restore_title">Remplacer l’agenda ?</string>
     <string name="restore_message">Cette sauvegarde (%1$s, %2$s) remplace tout l’agenda actuel, réglages compris. Une copie de l’agenda actuel est gardée sur le téléphone. Hora redémarre ensuite.</string>
     <string name="restore_confirm">Restaurer</string>
+    <string name="transfer_restore_failed">La restauration a échoué : l’agenda actuel n’a pas été remplacé.</string>
     <string name="transfer_not_hora">Ce fichier n’est pas une sauvegarde Hora.</string>
     <string name="transfer_too_new">Cette sauvegarde vient d’une version plus récente de Hora : mettez l’application à jour d’abord.</string>
 </resources>

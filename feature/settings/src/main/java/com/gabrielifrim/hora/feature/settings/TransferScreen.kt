@@ -82,9 +82,9 @@ fun TransferScreen(onBack: () -> Unit, viewModel: TransferViewModel = hiltViewMo
             Section(stringResource(R.string.import_section)) {
                 HoraText(stringResource(R.string.import_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                 when (val ui = importUi) {
-                    ImportUi.Idle, ImportUi.Unreadable -> {
-                        if (ui == ImportUi.Unreadable) {
-                            HoraText(stringResource(R.string.import_unreadable), style = HoraTheme.type.body, color = HoraTheme.colors.error, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                    ImportUi.Idle, ImportUi.Unreadable, ImportUi.Failed -> {
+                        if (ui != ImportUi.Idle) {
+                            HoraText(stringResource(if (ui == ImportUi.Failed) R.string.import_failed else R.string.import_unreadable), style = HoraTheme.type.body, color = HoraTheme.colors.error, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                         }
                         HoraButton(stringResource(R.string.import_pick), onClick = { viewModel.messageShown(); pickIcs.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth())
                     }
@@ -225,6 +225,7 @@ private fun TransferMessage.label(): Int = when (this) {
     TransferMessage.BACKUP_FAILED -> R.string.transfer_backup_failed
     TransferMessage.NOT_HORA -> R.string.transfer_not_hora
     TransferMessage.TOO_NEW -> R.string.transfer_too_new
+    TransferMessage.RESTORE_FAILED -> R.string.transfer_restore_failed
 }
 
 private fun TransferMessage.isError(): Boolean = this != TransferMessage.EXPORTED && this != TransferMessage.BACKED_UP

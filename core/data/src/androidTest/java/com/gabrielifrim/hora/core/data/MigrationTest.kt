@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.gabrielifrim.hora.core.data.database.HoraDatabase
 import com.gabrielifrim.hora.core.data.database.MIGRATION_1_2
+import com.gabrielifrim.hora.core.data.database.MIGRATION_2_3
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -59,6 +60,29 @@ class MigrationTest {
             .build()
         assertThat(db.settingsDao().get()?.showWeekNumbers).isFalse()
         assertThat(db.agendaDao().count()).isEqualTo(0)
+        db.close()
+    }
+
+    @Test
+    fun v2_to_v3_keepsEventsAsSimpleEventsWithoutReminders() = runTest {
+        helper.createDatabase(DB, 2).apply {
+            execSQL("INSERT INTO agenda (id, name, color_key, hidden, sort_order) VALUES (1, 'Perso', 'BLUE', 0, 0)")
+            execSQL(
+                "INSERT INTO event (id, uid, agenda_id, title, location, notes, color_key, all_day, start, `end`, time_zone) " +
+                    "VALUES (5, 'u-5', 1, 'Dentiste', 'Cabinet', '', NULL, 0, 1793700000000, 1793701800000, 'Europe/Paris')",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(DB, 3, true, MIGRATION_1_2, MIGRATION_2_3).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        val event = db.eventDao().get(5)!!
+        assertThat(event.title).isEqualTo("Dentiste")
+        assertThat(event.reminders).isEmpty()
+        assertThat(event.rrule).isNull()
+        assertThat(event.parentId).isNull()
         db.close()
     }
 

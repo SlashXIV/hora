@@ -6,11 +6,16 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import java.util.concurrent.Executors
 
-@Database(entities = [SettingsEntity::class, AgendaEntity::class, EventEntity::class], version = 2, exportSchema = true)
+@Database(
+    entities = [SettingsEntity::class, AgendaEntity::class, EventEntity::class, ReminderSetEntity::class, FiredReminderEntity::class, SnoozeEntity::class],
+    version = 3,
+    exportSchema = true,
+)
 abstract class HoraDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDao
     abstract fun agendaDao(): AgendaDao
     abstract fun eventDao(): EventDao
+    abstract fun reminderDao(): ReminderDao
 
     companion object {
         const val NAME = "hora.db"
@@ -39,8 +44,35 @@ internal val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+/**
+ * v2 → v3 (J3) : récurrence (RRULE, exceptions, occurrences modifiées à part),
+ * rappels par événement et par agenda, jeux de rappels, journal des rappels
+ * présentés et reports. Colonnes ajoutées vides : les événements existants restent
+ * des événements simples, sans rappel.
+ */
+internal val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `agenda` ADD COLUMN `default_reminders` TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE `event` ADD COLUMN `reminders` TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE `event` ADD COLUMN `rrule` TEXT")
+        db.execSQL("ALTER TABLE `event` ADD COLUMN `exdates` TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE `event` ADD COLUMN `parent_id` INTEGER")
+        db.execSQL("ALTER TABLE `event` ADD COLUMN `recurrence_id` INTEGER")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_event_parent_id` ON `event` (`parent_id`)")
+        db.execSQL("CREATE TABLE IF NOT EXISTS `reminder_set` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `spec` TEXT NOT NULL)")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `fired_reminder` (`event_id` INTEGER NOT NULL, `occurrence` INTEGER NOT NULL, " +
+                "`reminder` TEXT NOT NULL, `fired_at` INTEGER NOT NULL, PRIMARY KEY(`event_id`, `occurrence`, `reminder`))",
+        )
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `snooze` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `event_id` INTEGER NOT NULL, " +
+                "`occurrence` INTEGER NOT NULL, `trigger_at` INTEGER NOT NULL, `alarm` INTEGER NOT NULL)",
+        )
+    }
+}
+
 /** Migrations explicites, dans l'ordre. Chacune a son test dans `MigrationTest`. */
-internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2)
+internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
 
 /**
  * Configuration de la base, définie une seule fois : les tests instrumentés

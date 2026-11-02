@@ -5,6 +5,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.gabrielifrim.hora.core.data.database.HoraDatabase
+import com.gabrielifrim.hora.core.data.database.MIGRATION_1_2
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -24,6 +25,7 @@ class MigrationTest {
 
     @Test
     fun v1_opensWithProductionConfigurationAndKeepsSettings() = runTest {
+        // createDatabase(…, 1) puis l'ouverture en production fait passer la migration 1 → 2.
         helper.createDatabase(DB, 1).apply {
             execSQL(
                 "INSERT INTO settings (id, theme, motion, haptics, first_day_of_week, show_week_numbers, clock_format) " +
@@ -37,6 +39,26 @@ class MigrationTest {
         val row = db.settingsDao().get()
         assertThat(row?.theme).isEqualTo("NOCTURNE")
         assertThat(row?.haptics).isFalse()
+        db.close()
+    }
+
+    @Test
+    fun v1_to_v2_keepsSettingsAndCreatesEmptyCalendarTables() = runTest {
+        helper.createDatabase(DB, 1).apply {
+            execSQL(
+                "INSERT INTO settings (id, theme, motion, haptics, first_day_of_week, show_week_numbers, clock_format) " +
+                    "VALUES (0, 'MIDI', 'EXPRESSIVE', 1, NULL, 0, 'SYSTEM')",
+            )
+            close()
+        }
+        // Compare le résultat au schéma exporté 2.json : tables, colonnes, index, clés étrangères.
+        helper.runMigrationsAndValidate(DB, 2, true, MIGRATION_1_2).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        assertThat(db.settingsDao().get()?.showWeekNumbers).isFalse()
+        assertThat(db.agendaDao().count()).isEqualTo(0)
         db.close()
     }
 

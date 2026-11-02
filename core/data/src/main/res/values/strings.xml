@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Agendas créés au premier lancement, renommables. -->
+    <string name="agenda_personal">Perso</string>
+    <string name="agenda_work">Taff</string>
+    <string name="agenda_family">Famille</string>
+</resources>

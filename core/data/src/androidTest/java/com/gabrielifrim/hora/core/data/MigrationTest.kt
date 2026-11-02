@@ -7,6 +7,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.gabrielifrim.hora.core.data.database.HoraDatabase
 import com.gabrielifrim.hora.core.data.database.MIGRATION_1_2
 import com.gabrielifrim.hora.core.data.database.MIGRATION_2_3
+import com.gabrielifrim.hora.core.data.database.MIGRATION_3_4
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -83,6 +84,28 @@ class MigrationTest {
         assertThat(event.reminders).isEmpty()
         assertThat(event.rrule).isNull()
         assertThat(event.parentId).isNull()
+        db.close()
+    }
+
+    @Test
+    fun v3_to_v4_keepsSettingsAndAddsAlmanacDefaults() = runTest {
+        helper.createDatabase(DB, 3).apply {
+            execSQL(
+                "INSERT INTO settings (id, theme, motion, haptics, first_day_of_week, show_week_numbers, clock_format) " +
+                    "VALUES (0, 'NOCTURNE', 'CALM', 1, 'MONDAY', 1, 'H24')",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(DB, 4, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        val row = db.settingsDao().get()!!
+        assertThat(row.theme).isEqualTo("NOCTURNE")
+        assertThat(row.bridges).isTrue()
+        assertThat(row.hiddenAlmanac).isEqualTo("MOON")
+        assertThat(row.placeName).isEqualTo("Bordeaux")
         db.close()
     }
 

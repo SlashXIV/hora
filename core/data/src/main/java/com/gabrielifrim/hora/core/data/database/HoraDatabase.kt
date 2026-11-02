@@ -21,7 +21,7 @@ abstract class HoraDatabase : RoomDatabase() {
         const val NAME = "hora.db"
 
         /** Version du schéma ; une sauvegarde plus récente ne se restaure pas. */
-        const val VERSION = 3
+        const val VERSION = 4
     }
 }
 
@@ -74,8 +74,24 @@ internal val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+/**
+ * v3 → v4 (J5) : réglages de l'almanach (Alsace-Moselle, ponts, autres fêtes,
+ * agendas calculés masqués) et lieu du soleil, Bordeaux par défaut.
+ */
+internal val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `alsace_moselle` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `bridges` INTEGER NOT NULL DEFAULT 1")
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `more_feasts` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `hidden_almanac` TEXT NOT NULL DEFAULT 'MOON'")
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `place_name` TEXT NOT NULL DEFAULT 'Bordeaux'")
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `latitude` REAL NOT NULL DEFAULT 44.8378")
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `longitude` REAL NOT NULL DEFAULT -0.5792")
+    }
+}
+
 /** Migrations explicites, dans l'ordre. Chacune a son test dans `MigrationTest`. */
-internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
 /**
  * Configuration de la base, définie une seule fois : les tests instrumentés

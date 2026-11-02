@@ -2,6 +2,9 @@ package com.gabrielifrim.hora.core.data.repository
 
 import com.gabrielifrim.hora.core.data.database.SettingsDao
 import com.gabrielifrim.hora.core.data.database.SettingsEntity
+import com.gabrielifrim.hora.core.domain.almanac.AlmanacGroup
+import com.gabrielifrim.hora.core.domain.almanac.AlmanacOptions
+import com.gabrielifrim.hora.core.domain.almanac.Place
 import com.gabrielifrim.hora.core.domain.model.UserSettings
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
 import java.time.DayOfWeek
@@ -38,6 +41,9 @@ private fun SettingsEntity.toDomain(): UserSettings {
         firstDayOfWeek = firstDayOfWeek?.let { name -> DayOfWeek.entries.firstOrNull { it.name == name } },
         showWeekNumbers = showWeekNumbers,
         clockFormat = enumOr(clockFormat, defaults.clockFormat),
+        almanac = AlmanacOptions(alsaceMoselle = alsaceMoselle, bridges = bridges, moreFeasts = moreFeasts),
+        hiddenAlmanac = hiddenAlmanac.split(',').mapNotNull { n -> AlmanacGroup.entries.firstOrNull { it.name == n.trim() } }.toSet(),
+        place = Place(placeName, latitude, longitude),
     )
 }
 
@@ -48,4 +54,11 @@ private fun UserSettings.toEntity() = SettingsEntity(
     firstDayOfWeek = firstDayOfWeek?.name,
     showWeekNumbers = showWeekNumbers,
     clockFormat = clockFormat.name,
+    alsaceMoselle = almanac.alsaceMoselle,
+    bridges = almanac.bridges,
+    moreFeasts = almanac.moreFeasts,
+    hiddenAlmanac = hiddenAlmanac.sorted().joinToString(",") { it.name },
+    placeName = place.name,
+    latitude = place.latitude,
+    longitude = place.longitude,
 )

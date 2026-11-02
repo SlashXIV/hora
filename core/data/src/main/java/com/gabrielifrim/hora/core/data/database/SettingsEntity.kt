@@ -18,6 +18,14 @@ data class SettingsEntity(
     @ColumnInfo(name = "first_day_of_week") val firstDayOfWeek: String?,
     @ColumnInfo(name = "show_week_numbers") val showWeekNumbers: Boolean,
     @ColumnInfo(name = "clock_format") val clockFormat: String,
+    @ColumnInfo(name = "alsace_moselle", defaultValue = "0") val alsaceMoselle: Boolean = false,
+    @ColumnInfo(defaultValue = "1") val bridges: Boolean = true,
+    @ColumnInfo(name = "more_feasts", defaultValue = "0") val moreFeasts: Boolean = false,
+    /** Noms des `AlmanacGroup` masqués, séparés par des virgules. */
+    @ColumnInfo(name = "hidden_almanac", defaultValue = "MOON") val hiddenAlmanac: String = "MOON",
+    @ColumnInfo(name = "place_name", defaultValue = "Bordeaux") val placeName: String = "Bordeaux",
+    @ColumnInfo(defaultValue = "44.8378") val latitude: Double = 44.8378,
+    @ColumnInfo(defaultValue = "-0.5792") val longitude: Double = -0.5792,
 ) {
     companion object {
         const val SINGLE_ROW_ID = 0

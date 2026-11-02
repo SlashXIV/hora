@@ -1,0 +1,57 @@
+name: Publication
+
+# Un tag vX.Y.Z poussé = un APK signé publié dans les Releases.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Vérifier que le tag correspond à la version de l'application
+        run: |
+          version=$(grep -oP 'val horaVersion = "\K[^"]+' app/build.gradle.kts)
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "Tag $GITHUB_REF_NAME ≠ version $version"; exit 1; }
+
+      - name: Restaurer la clé de signature
+        run: echo "${{ secrets.HORA_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/hora-release.jks"
+
+      - name: Tests et APK signé
+        env:
+          HORA_SIGNING_STOREFILE: ${{ runner.temp }}/hora-release.jks
+          HORA_SIGNING_STOREPASSWORD: ${{ secrets.HORA_STORE_PASSWORD }}
+          HORA_SIGNING_KEYALIAS: ${{ secrets.HORA_KEY_ALIAS }}
+          HORA_SIGNING_KEYPASSWORD: ${{ secrets.HORA_KEY_PASSWORD }}
+        run: |
+          ./gradlew testDebugUnitTest :core:domain:test assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "Hora-$GITHUB_REF_NAME.apk"
+
+      # Hora est hors ligne par construction : une dépendance qui ajouterait la
+      # permission INTERNET bloque la publication.
+      - name: Vérifier l'absence de la permission INTERNET
+        run: |
+          aapt2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          if "$aapt2" dump permissions "Hora-$GITHUB_REF_NAME.apk" | grep -q 'android.permission.INTERNET'; then
+            echo "Permission INTERNET trouvée dans l'APK"; exit 1
+          fi
+
+      - name: Créer la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+          git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME" > notes.md
+          gh release create "$GITHUB_REF_NAME" "Hora-$GITHUB_REF_NAME.apk" \
+            --title "Hora $GITHUB_REF_NAME" \
+            --notes-file notes.md

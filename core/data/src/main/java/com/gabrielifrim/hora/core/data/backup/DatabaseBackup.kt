@@ -118,7 +118,7 @@ class DatabaseBackup @Inject constructor(
      * dans le journal : on le reverse dans la base, puis on copie le fichier en
      * bloquant les écritures, et seulement si le journal est resté vide entre-temps.
      */
-    private suspend fun snapshot(out: OutputStream) {
+    internal suspend fun snapshot(out: OutputStream) {
         val main = context.getDatabasePath(HoraDatabase.NAME)
         val wal = File(main.path + "-wal")
         repeat(10) {
@@ -159,7 +159,10 @@ class DatabaseBackup @Inject constructor(
         File(context.filesDir, "avant-restauration.db").outputStream().use { snapshot(it) }
         db.close()
         listOf("-wal", "-shm", "-journal").forEach { File(main.path + it).delete() }
-        File(check.path).copyTo(main, overwrite = true)
+        // Copie à côté puis renommage : une copie interrompue (stockage plein) laisse la base intacte.
+        val incoming = File(main.path + ".restauration")
+        File(check.path).copyTo(incoming, overwrite = true)
+        if (!incoming.renameTo(main)) error("remplacement de la base refusé")
         File(check.path).delete()
         val launch = requireNotNull(context.packageManager.getLaunchIntentForPackage(context.packageName))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -181,19 +184,26 @@ class DatabaseBackup @Inject constructor(
         private val MINUTE = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
 
         /**
-         * Une sauvegarde par jour, vers 3 h, sans réveil exact : l'heure précise ne
-         * compte pas. Réarmée au lancement et au démarrage du téléphone.
+         * La prochaine sauvegarde, entre 3 h et 5 h : une fenêtre plutôt qu'une alarme
+         * exacte, mais pas l'alarme répétée inexacte qu'Android repousse jusqu'à 18 h.
+         * Réarmée après chaque sauvegarde, au lancement et au démarrage du téléphone.
          */
-        fun scheduleAuto(context: Context, on: Boolean) {
+        fun scheduleAuto(context: Context, on: Boolean, now: LocalDateTime = LocalDateTime.now()) {
             val alarms = context.getSystemService(AlarmManager::class.java)
             val intent = PendingIntent.getBroadcast(
                 context, 0, Intent(context, BackupReceiver::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
             alarms.cancel(intent)
             if (!on) return
-            val next = LocalDateTime.now().toLocalDate().plusDays(1).atTime(3, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            alarms.setInexactRepeating(AlarmManager.RTC_WAKEUP, next, AlarmManager.INTERVAL_DAY, intent)
+            val next = nextRun(now).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            alarms.setWindow(AlarmManager.RTC_WAKEUP, next, WINDOW_MS, intent)
         }
+
+        private const val WINDOW_MS = 2 * 60 * 60 * 1000L
+
+        /** Le prochain 3 h : aujourd'hui s'il n'est pas encore passé, sinon demain. */
+        internal fun nextRun(now: LocalDateTime): LocalDateTime =
+            now.toLocalDate().atTime(3, 0).let { if (it.isAfter(now)) it else it.plusDays(1) }
     }
 }
 
@@ -224,6 +234,7 @@ class BackupReceiver : BroadcastReceiver() {
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
                 backup.backupNow(auto = true)
+                DatabaseBackup.scheduleAuto(context, auto)
             } finally {
                 pending.finish()
             }

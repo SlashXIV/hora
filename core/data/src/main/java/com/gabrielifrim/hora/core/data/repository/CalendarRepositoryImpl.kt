@@ -170,23 +170,41 @@ internal class TransferRepositoryImpl @Inject constructor(
                     .id
             // Les séries d'abord : une occurrence modifiée a besoin de l'id de la sienne.
             for (item in group.items.sortedBy { it.parentUid != null }) {
-                val previous = events.byUid(item.event.uid)
+                val uid = distinctUid(item.event)
+                val previous = events.byUid(uid)
                 val parentId = item.parentUid?.let { idByUid[it] ?: events.byUid(it)?.id }
                 // Sans sa série (ni dans le fichier, ni en base), l'occurrence reste un événement simple.
                 val event = item.event.copy(
                     id = previous?.id ?: 0,
+                    uid = uid,
                     agendaId = agendaId,
                     parentId = parentId,
                     recurrenceId = item.event.recurrenceId.takeIf { parentId != null },
                 )
                 val id = events.upsert(event.toEntity()).let { if (it == -1L) event.id else it }
-                idByUid[event.uid] = id
+                idByUid[item.event.uid] = id
                 saved += event.copy(id = id)
                 if (previous == null) added++ else updated++
             }
         }
         markPastRemindersFired(saved)
         ImportReport(added, updated, agendasCreated)
+    }
+
+    /**
+     * Fossify numérote les événements de son agenda local (« 62 ») : deux exports de
+     * deux téléphones réutilisent les mêmes numéros. Un tel UID déjà pris par un
+     * autre événement (autre titre ou autre début) en reçoit un dérivé plutôt que
+     * d'écraser l'existant. Limite : un événement renommé dans Fossify puis
+     * réimporté est ajouté au lieu d'être mis à jour.
+     */
+    private suspend fun distinctUid(event: Event): String {
+        val uid = event.uid
+        if (uid.isEmpty() || !uid.all(Char::isDigit)) return uid
+        val existing = events.byUid(uid) ?: return uid
+        val start = event.toEntity().start
+        if (existing.title == event.title && existing.start == start) return uid
+        return "$uid~" + "${event.title}|$start".hashCode().toUInt().toString(16)
     }
 
     /**

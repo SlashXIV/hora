@@ -107,4 +107,15 @@ class TransferRepositoryTest {
         val fired = db.reminderDao().firedSince(0)
         assertThat(fired.map { it.reminder }).containsExactly(Reminder.Before(30).key())
     }
+
+    @Test
+    fun numero_fossify_deja_pris_ne_remplace_pas_un_autre_evenement() = runTest {
+        fun local(title: String) = Event(uid = "62", agendaId = 0, title = title, timing = Timing.AllDay(LocalDate.of(1990, 3, 2), LocalDate.of(1990, 3, 2)))
+        repository.import(listOf(ImportGroup("Anniversaires", "BLUE", listOf(ImportItem(local("Alice"))))))
+        // Même fichier réimporté : mis à jour. Autre téléphone, même numéro : ajouté à côté.
+        assertThat(repository.import(listOf(ImportGroup("Anniversaires", "BLUE", listOf(ImportItem(local("Alice"))))))).isEqualTo(ImportReport(0, 1, 0))
+        assertThat(repository.import(listOf(ImportGroup("Anniversaires", "BLUE", listOf(ImportItem(local("Bob"))))))).isEqualTo(ImportReport(1, 0, 0))
+        val titles = repository.events(db.agendaDao().all().map { it.id }.toSet()).map { it.title }
+        assertThat(titles).containsExactly("Alice", "Bob")
+    }
 }

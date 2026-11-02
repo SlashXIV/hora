@@ -2,6 +2,7 @@ package com.gabrielifrim.hora.core.data.di
 
 import android.content.Context
 import androidx.room.Room
+import com.gabrielifrim.hora.core.data.backup.DatabaseBackup
 import com.gabrielifrim.hora.core.data.database.AgendaDao
 import com.gabrielifrim.hora.core.data.database.EventDao
 import com.gabrielifrim.hora.core.data.database.HoraDatabase
@@ -13,11 +14,14 @@ import com.gabrielifrim.hora.core.data.repository.EventRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.ReminderSetRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.ReminderStoreImpl
 import com.gabrielifrim.hora.core.data.repository.SettingsRepositoryImpl
+import com.gabrielifrim.hora.core.data.repository.TransferRepositoryImpl
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
+import com.gabrielifrim.hora.core.domain.repository.BackupRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderStore
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
+import com.gabrielifrim.hora.core.domain.repository.TransferRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -69,4 +73,11 @@ internal abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun reminderStore(impl: ReminderStoreImpl): ReminderStore
+
+    @Binds
+    @Singleton
+    abstract fun transfer(impl: TransferRepositoryImpl): TransferRepository
+
+    @Binds
+    abstract fun backup(impl: DatabaseBackup): BackupRepository
 }

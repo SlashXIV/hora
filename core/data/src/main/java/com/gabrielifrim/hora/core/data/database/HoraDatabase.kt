@@ -8,7 +8,7 @@ import java.util.concurrent.Executors
 
 @Database(
     entities = [SettingsEntity::class, AgendaEntity::class, EventEntity::class, ReminderSetEntity::class, FiredReminderEntity::class, SnoozeEntity::class],
-    version = 3,
+    version = HoraDatabase.VERSION,
     exportSchema = true,
 )
 abstract class HoraDatabase : RoomDatabase() {
@@ -19,6 +19,9 @@ abstract class HoraDatabase : RoomDatabase() {
 
     companion object {
         const val NAME = "hora.db"
+
+        /** Version du schéma ; une sauvegarde plus récente ne se restaure pas. */
+        const val VERSION = 3
     }
 }
 

@@ -90,6 +90,9 @@ interface AgendaDao {
     @Query("SELECT COUNT(*) FROM agenda")
     suspend fun count(): Int
 
+    @Query("SELECT * FROM agenda ORDER BY sort_order, id")
+    suspend fun all(): List<AgendaEntity>
+
     @Upsert
     suspend fun upsert(agenda: AgendaEntity): Long
 
@@ -137,6 +140,12 @@ interface EventDao {
 
     @Query("SELECT * FROM event WHERE id = :id")
     suspend fun get(id: Long): EventEntity?
+
+    @Query("SELECT * FROM event WHERE uid = :uid")
+    suspend fun byUid(uid: String): EventEntity?
+
+    @Query("SELECT * FROM event WHERE agenda_id IN (:agendaIds) ORDER BY parent_id IS NOT NULL, start")
+    suspend fun inAgendas(agendaIds: List<Long>): List<EventEntity>
 
     /** Tout ce qui a des rappels, agendas masqués compris : un agenda masqué sonne quand même. */
     @Query("SELECT * FROM event WHERE reminders != ''")

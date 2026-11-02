@@ -20,7 +20,11 @@ import com.gabrielifrim.hora.core.domain.model.Timing
 import com.gabrielifrim.hora.core.domain.recurrence.EditPlan
 import com.gabrielifrim.hora.core.domain.recurrence.Recurrences
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
+import com.gabrielifrim.hora.core.domain.reminder.ReminderPlanner
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
+import com.gabrielifrim.hora.core.domain.repository.ImportGroup
+import com.gabrielifrim.hora.core.domain.repository.ImportReport
+import com.gabrielifrim.hora.core.domain.repository.TransferRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderSet
 import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderStore
@@ -141,7 +145,67 @@ internal class ReminderStoreImpl @Inject constructor(
     override suspend fun event(id: Long): Event? = events.get(id)?.toDomain()
 }
 
-private fun AgendaEntity.toDomain() = Agenda(id, name, colorKey, hidden, sortOrder, ReminderCodec.decode(defaultReminders))
+internal class TransferRepositoryImpl @Inject constructor(
+    private val db: HoraDatabase,
+    private val agendas: AgendaDao,
+    private val events: EventDao,
+    private val reminders: ReminderDao,
+) : TransferRepository {
+
+    override suspend fun events(agendaIds: Set<Long>): List<Event> = events.inAgendas(agendaIds.toList()).map { it.toDomain() }
+
+    override suspend fun import(groups: List<ImportGroup>): ImportReport = db.withTransaction {
+        val existingAgendas = agendas.all().toMutableList()
+        var added = 0
+        var updated = 0
+        var agendasCreated = 0
+        val idByUid = mutableMapOf<String, Long>()
+        val saved = mutableListOf<Event>()
+
+        for (group in groups) {
+            val agendaId = existingAgendas.firstOrNull { it.name.trim().equals(group.agendaName.trim(), ignoreCase = true) }?.id
+                ?: AgendaEntity(name = group.agendaName.trim(), colorKey = group.colorKey, hidden = false, sortOrder = (existingAgendas.maxOfOrNull { it.sortOrder } ?: -1) + 1)
+                    .let { entity -> entity.copy(id = agendas.upsert(entity)) }
+                    .also { existingAgendas += it; agendasCreated++ }
+                    .id
+            // Les séries d'abord : une occurrence modifiée a besoin de l'id de la sienne.
+            for (item in group.items.sortedBy { it.parentUid != null }) {
+                val previous = events.byUid(item.event.uid)
+                val parentId = item.parentUid?.let { idByUid[it] ?: events.byUid(it)?.id }
+                // Sans sa série (ni dans le fichier, ni en base), l'occurrence reste un événement simple.
+                val event = item.event.copy(
+                    id = previous?.id ?: 0,
+                    agendaId = agendaId,
+                    parentId = parentId,
+                    recurrenceId = item.event.recurrenceId.takeIf { parentId != null },
+                )
+                val id = events.upsert(event.toEntity()).let { if (it == -1L) event.id else it }
+                idByUid[event.uid] = id
+                saved += event.copy(id = id)
+                if (previous == null) added++ else updated++
+            }
+        }
+        markPastRemindersFired(saved)
+        ImportReport(added, updated, agendasCreated)
+    }
+
+    /**
+     * Un rappel d'un événement importé dont l'heure vient de passer serait rattrapé
+     * comme « manqué » : sur un import de tout un agenda, une avalanche. Il est noté
+     * comme déjà présenté ; les rappels à venir sonnent normalement.
+     */
+    private suspend fun markPastRemindersFired(saved: List<Event>) {
+        val now = Instant.now()
+        val overrides = saved.filter { it.parentId != null && it.recurrenceId != null }.groupBy({ it.parentId!! }, { it.recurrenceId!! }).mapValues { it.value.toSet() }
+        ReminderPlanner.plan(saved.filter { it.reminders.isNotEmpty() }, overrides, emptyList(), emptySet(), now, ZoneId.systemDefault())
+            .due.forEach { due ->
+                val key = due.firedKey ?: return@forEach
+                reminders.markFired(FiredReminderEntity(due.event.id, due.occurrence, key.substringAfterLast('|'), now.toEpochMilli()))
+            }
+    }
+}
+
+private fun AgendaEntity.toDomain() =Agenda(id, name, colorKey, hidden, sortOrder, ReminderCodec.decode(defaultReminders))
 private fun Agenda.toEntity() = AgendaEntity(id, name, colorKey, hidden, sortOrder, ReminderCodec.encode(defaultReminders))
 
 private fun EventEntity.toDomain() = Event(

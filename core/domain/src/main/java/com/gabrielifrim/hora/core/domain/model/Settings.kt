@@ -3,6 +3,7 @@ package com.gabrielifrim.hora.core.domain.model
 import com.gabrielifrim.hora.core.domain.almanac.AlmanacGroup
 import com.gabrielifrim.hora.core.domain.almanac.AlmanacOptions
 import com.gabrielifrim.hora.core.domain.almanac.Place
+import com.gabrielifrim.hora.core.domain.almanac.PrayerSettings
 import com.gabrielifrim.hora.core.domain.almanac.Places
 import java.time.DayOfWeek
 
@@ -32,4 +33,6 @@ data class UserSettings(
     val hiddenAlmanac: Set<AlmanacGroup> = setOf(AlmanacGroup.MOON),
     /** Lieu du lever et du coucher du soleil. */
     val place: Place = Places.DEFAULT,
+    /** Pratique musulmane : désactivée par défaut (voir le journal des décisions). */
+    val prayer: PrayerSettings = PrayerSettings(),
 )

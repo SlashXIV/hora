@@ -56,6 +56,16 @@ object Sun {
         return date.atStartOfDay(ZoneOffset.UTC).toInstant().plusMillis((minutes * 60_000).roundToLong())
     }
 
+    /** Hauteur du centre du soleil (degrés) à un instant : sert à caler les angles sur l'horaire d'une mosquée. */
+    fun altitude(at: Instant, place: Place): Double {
+        val utc = at.atZone(ZoneOffset.UTC)
+        val minutes = utc.hour * 60 + utc.minute + utc.second / 60.0
+        val p = position(utc.toLocalDate(), minutes)
+        val hourAngle = rad((minutes + p.equationOfTime + 4 * place.longitude) / 4 - 180)
+        val lat = rad(place.latitude)
+        return deg(asin(sin(lat) * sin(p.declination) + cos(lat) * cos(p.declination) * cos(hourAngle)))
+    }
+
     private class Position(val declination: Double, val equationOfTime: Double)
 
     /** Déclinaison (radians) et équation du temps (minutes) au jour [date], [minutes] après 0 h UTC. */

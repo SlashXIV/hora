@@ -1,0 +1,897 @@
+<title>Planche Hora</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..800&family=Atkinson+Hyperlegible+Next:wght@300..700&family=Spline+Sans+Mono:wght@400..600&display=swap">
+<style>
+/* Mise en page : une planche de travail, colonne de lecture étroite + rangées de paires de téléphones (clair | sombre) qui passent en une colonne au format téléphone. */
+:root{
+  /* Palette Midi (claire) — identique à HoraPalettes.Midi */
+  --bg:#F3F5F7; --surf:#E7EBF0; --ink:#18202B; --ink2:#4A5568; --rule:#C9D1DB;
+  --acc:#2448A8; --onacc:#FFFFFF; --shadow:rgba(24,32,43,.16); --band:rgba(24,32,43,.055); --night:rgba(24,32,43,.07);
+  --a-bleu:#0F6EC1; --a-brique:#761C06; --a-sapin:#499953; --a-prune:#5E2284;
+  --a-ocre:#7A5E05; --a-sarcelle:#3494A5; --a-framboise:#5A0A3F; --a-ardoise:#57616E;
+  --ok:#1E7A4C; --warn:#8A5A00;
+  /* Polices */
+  --f-poster:"Fraunces", "Iowan Old Style", Georgia, serif;
+  --f-text:"Atkinson Hyperlegible Next", "Atkinson Hyperlegible", "Segoe UI", Roboto, system-ui, sans-serif;
+  --f-mono:"Spline Sans Mono", "JetBrains Mono", Consolas, ui-monospace, monospace;
+  /* Formes et espacements */
+  --r-s:3px; --r-m:6px; --r-l:14px; --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:40px;
+  --enter:cubic-bezier(.2,.7,.2,1); --trans:cubic-bezier(.65,0,.35,1); --release:cubic-bezier(.2,.9,.2,1.2);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1530; --surf:#18203F; --ink:#EEE9DC; --ink2:#A9B1CC; --rule:#2B355E;
+    --acc:#8FB8FF; --onacc:#0F1530; --shadow:rgba(3,6,18,.55); --band:rgba(238,233,220,.05); --night:rgba(3,6,18,.35);
+    --a-bleu:#6276FC; --a-brique:#DB572B; --a-sapin:#64C07E; --a-prune:#C992FB;
+    --a-ocre:#FDD25B; --a-sarcelle:#A2FBF3; --a-framboise:#CF5794; --a-ardoise:#B7C4D4;
+    --ok:#6FD39C; --warn:#F2C46B;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1530; --surf:#18203F; --ink:#EEE9DC; --ink2:#A9B1CC; --rule:#2B355E;
+  --acc:#8FB8FF; --onacc:#0F1530; --shadow:rgba(3,6,18,.55); --band:rgba(238,233,220,.05); --night:rgba(3,6,18,.35);
+  --a-bleu:#6276FC; --a-brique:#DB572B; --a-sapin:#64C07E; --a-prune:#C992FB;
+  --a-ocre:#FDD25B; --a-sarcelle:#A2FBF3; --a-framboise:#CF5794; --a-ardoise:#B7C4D4;
+  --ok:#6FD39C; --warn:#F2C46B;
+}
+/* Les téléphones portent leur propre palette, quel que soit le thème de la page */
+.midi{
+  --bg:#F3F5F7; --surf:#E7EBF0; --ink:#18202B; --ink2:#4A5568; --rule:#C9D1DB;
+  --acc:#2448A8; --onacc:#FFFFFF; --shadow:rgba(24,32,43,.16); --band:rgba(24,32,43,.055); --night:rgba(24,32,43,.07);
+  --a-bleu:#0F6EC1; --a-brique:#761C06; --a-sapin:#499953; --a-prune:#5E2284;
+  --a-ocre:#7A5E05; --a-sarcelle:#3494A5; --a-framboise:#5A0A3F; --a-ardoise:#57616E;
+  --ok:#1E7A4C; --warn:#8A5A00; color-scheme:light;
+}
+.noct{
+  --bg:#0F1530; --surf:#18203F; --ink:#EEE9DC; --ink2:#A9B1CC; --rule:#2B355E;
+  --acc:#8FB8FF; --onacc:#0F1530; --shadow:rgba(3,6,18,.55); --band:rgba(238,233,220,.05); --night:rgba(3,6,18,.35);
+  --a-bleu:#6276FC; --a-brique:#DB572B; --a-sapin:#64C07E; --a-prune:#C992FB;
+  --a-ocre:#FDD25B; --a-sarcelle:#A2FBF3; --a-framboise:#CF5794; --a-ardoise:#B7C4D4;
+  --ok:#6FD39C; --warn:#F2C46B; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-text);font-size:15px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto}
+.read{max-width:66ch}
+h1,h2,h3{font-family:var(--f-poster);font-weight:560;text-wrap:balance;margin:0;line-height:1.1}
+h2{font-size:clamp(28px,4vw,40px);font-variation-settings:"opsz" 96}
+h3{font-size:20px;font-variation-settings:"opsz" 24}
+p{margin:0}
+.eyebrow{font-family:var(--f-text);font-size:12px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+section.block{display:flex;flex-direction:column;gap:var(--s5);padding-block:56px;border-top:1px solid var(--rule)}
+a{color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* En-tête de la planche */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:var(--s6);align-items:center;padding-block:56px 48px}
+.hero svg{width:148px;height:148px;border-radius:34px;box-shadow:0 18px 40px -18px var(--shadow)}
+.hero h1{font-size:clamp(48px,9vw,96px);font-weight:600;font-variation-settings:"opsz" 144;letter-spacing:-.02em}
+.hero .lede{font-size:18px;color:var(--ink2);max-width:60ch;margin-top:var(--s3)}
+.hero .meta{display:flex;gap:var(--s4);flex-wrap:wrap;margin-top:var(--s4)}
+@media (max-width:640px){.hero{grid-template-columns:1fr;gap:var(--s4)} .hero svg{width:104px;height:104px;border-radius:24px}}
+
+/* Grille de cadran : filets d'heures */
+.dialrule{height:10px;background:repeating-linear-gradient(90deg,var(--rule) 0 1px,transparent 1px calc(100%/24));border-bottom:1px solid var(--rule)}
+
+/* Métaphore */
+.three{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--s5)}
+.three > div{display:flex;flex-direction:column;gap:var(--s2);padding-top:var(--s3);border-top:2px solid var(--ink)}
+
+/* Jetons */
+.palettes{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--s5)}
+.pal{border-radius:var(--r-l);padding:var(--s5);background:var(--bg);color:var(--ink);border:1px solid var(--rule);display:flex;flex-direction:column;gap:var(--s4)}
+.pal h3{display:flex;justify-content:space-between;align-items:baseline}
+.sw{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s2)}
+.sw div{display:flex;flex-direction:column;gap:2px;font-size:11px}
+.sw i{display:block;height:44px;border-radius:var(--r-s);border:1px solid var(--rule)}
+.sw b{font-weight:650;font-size:12px}
+.agenda{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s3) var(--s2)}
+.agenda div{display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}
+.agenda svg{flex:none}
+.ratio{font-family:var(--f-mono);font-size:11px;color:var(--ink2)}
+.tokens{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--s5)}
+.tok{display:flex;flex-direction:column;gap:var(--s2)}
+.tok .row{display:flex;gap:var(--s3);align-items:flex-end;flex-wrap:wrap}
+.tok .row span{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--ink2)}
+
+/* Typographie */
+.type{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--s5)}
+.face{display:flex;flex-direction:column;gap:var(--s2);padding-top:var(--s3);border-top:1px solid var(--rule)}
+.face .big{font-size:56px;line-height:1}
+.styles{display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+.styles > div{display:grid;grid-template-columns:120px 1fr;gap:var(--s4);align-items:baseline;padding-block:var(--s3);border-bottom:1px solid var(--rule)}
+.styles code{font-family:var(--f-mono);font-size:12px;color:var(--acc)}
+@media (max-width:520px){.styles > div{grid-template-columns:1fr;gap:4px}}
+
+/* Logos */
+.logos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--s5)}
+.logo{display:flex;flex-direction:column;gap:var(--s3)}
+.logo svg{width:100%;max-width:200px;height:auto;aspect-ratio:1}
+.logo .sq{border-radius:28%}
+.logo.pick{position:relative}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:99px;border:1px solid var(--acc);color:var(--acc);font-size:12px;font-weight:650;width:fit-content}
+.mini-icons{display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap}
+.mini-icons svg{width:48px;height:48px;border-radius:50%}
+
+/* Téléphones */
+.screens{display:flex;flex-direction:column;gap:56px}
+.screen{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:var(--s5);align-items:start}
+.screen .note{display:flex;flex-direction:column;gap:var(--s2);position:sticky;top:calc(env(safe-area-inset-top, 0px) + 16px)}
+.screen .note ul{margin:0;padding-left:18px;color:var(--ink2);font-size:14px;display:flex;flex-direction:column;gap:4px}
+.pair{display:flex;gap:var(--s5);flex-wrap:wrap}
+@media (max-width:900px){.screen{grid-template-columns:1fr} .screen .note{position:static}}
+.ph{width:300px;max-width:100%;height:640px;border-radius:30px;background:var(--bg);color:var(--ink);overflow:hidden;position:relative;
+  border:1px solid var(--rule);box-shadow:0 24px 48px -28px rgba(10,14,30,.5);display:flex;flex-direction:column;font-size:13px;line-height:1.35}
+.ph .sb{height:26px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-family:var(--f-mono);font-size:11px;color:var(--ink2)}
+.ph .body{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.ph .pad{padding:0 16px}
+.ph .eb{font-size:10.5px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.ph .poster{font-family:var(--f-poster);font-variation-settings:"opsz" 120;font-weight:560;font-size:40px;line-height:1;letter-spacing:-.015em}
+.ph .h{font-family:var(--f-poster);font-variation-settings:"opsz" 30;font-weight:600;font-size:19px;line-height:1.15}
+.ph .hr{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--ink2)}
+.ph .s{color:var(--ink2);font-size:12px}
+.ph .rule{height:1px;background:var(--rule);flex:none}
+.ph .tabs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);padding:6px 0 12px}
+.ph .tabs div{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--ink2);min-height:44px;justify-content:center}
+.ph .tabs div.on{color:var(--ink);font-weight:650}
+.ph .tabs div.on svg{color:var(--acc)}
+.ph .tabs div.on::after{content:"";width:18px;height:2px;background:var(--acc);border-radius:2px}
+.ph .quick{flex:none;margin:0 12px 8px;min-height:44px;border-radius:22px;border:1px solid var(--rule);background:var(--surf);display:flex;align-items:center;gap:8px;padding:0 6px 0 14px;color:var(--ink2)}
+.ph .quick .go{margin-left:auto;width:34px;height:34px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center}
+.ph .header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px 10px}
+.ph .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--ink);font-weight:650;font-size:12.5px;color:var(--ink)}
+.ph .btn.fill{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.ph .btn.ghost{border-color:var(--rule)}
+.ph .ico{width:36px;height:36px;display:grid;place-items:center;color:var(--ink)}
+.ph .seg{display:flex;border:1px solid var(--rule);border-radius:18px;padding:2px;gap:2px}
+.ph .seg span{flex:1;text-align:center;padding:5px 8px;border-radius:15px;font-size:12px;color:var(--ink2);white-space:nowrap}
+.ph .seg span.on{background:var(--ink);color:var(--bg);font-weight:650}
+.ph .tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:2px 9px;border-radius:99px;border:1px solid var(--rule);white-space:nowrap}
+.ph .ev{display:flex;gap:8px;align-items:flex-start;padding:8px 0}
+.ph .ev .t{font-family:var(--f-mono);font-size:11.5px;width:42px;flex:none;color:var(--ink2);padding-top:1px}
+.ph .ev .x{flex:1;min-width:0}
+.ph .ev .x b{font-weight:650;display:flex;align-items:center;gap:6px}
+.ph .toggle{width:36px;height:22px;border-radius:11px;background:var(--rule);position:relative;flex:none}
+.ph .toggle::after{content:"";position:absolute;width:16px;height:16px;border-radius:50%;background:var(--bg);top:3px;left:3px;box-shadow:0 1px 2px var(--shadow)}
+.ph .toggle.on{background:var(--acc)}
+.ph .toggle.on::after{left:17px}
+.ph .set{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 0}
+.ph .set > div{flex:1;min-width:0}
+.ph .scroll{overflow:hidden;flex:1;min-height:0}
+
+/* L'ombre « maintenant » : un filet d'accent et l'ombre oblique qu'il porte */
+.now{position:absolute;left:0;right:0;height:2px;background:var(--acc);z-index:3}
+.now::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--acc)}
+.now::after{content:"";position:absolute;left:0;right:0;top:2px;height:16px;background:linear-gradient(to bottom,var(--shadow),transparent);transform:skewX(-40deg);transform-origin:top left}
+/* Grilles horaires */
+.grid{position:relative;flex:1;min-height:0;overflow:hidden}
+.hourlines{position:absolute;inset:0}
+.hourlines div{position:absolute;left:38px;right:0;border-top:1px solid var(--rule)}
+.hourlines span{position:absolute;left:-36px;top:-7px;width:30px;text-align:right;font-family:var(--f-mono);font-size:10px;color:var(--ink2)}
+.blk{position:absolute;border-radius:var(--r-s);padding:3px 5px;font-size:10.5px;line-height:1.2;overflow:hidden;color:var(--ink);
+  background:color-mix(in srgb,var(--c) 16%,var(--bg));border-left:3px solid var(--c);box-shadow:2px 3px 0 -1px var(--shadow)}
+.blk b{font-weight:650;display:block}
+.plage{position:absolute;background:var(--band);border-top:1px dashed var(--rule);border-bottom:1px dashed var(--rule)}
+.plage span{position:absolute;top:2px;left:4px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:650}
+.nightband{position:absolute;left:38px;right:0;background:var(--night)}
+/* Mois */
+.month{display:grid;grid-template-columns:22px repeat(7,1fr);padding:0 10px}
+.month .wd{font-size:10px;font-weight:650;letter-spacing:.08em;color:var(--ink2);text-align:center;padding:4px 0}
+.month .wn{font-family:var(--f-mono);font-size:9.5px;color:var(--ink2);display:flex;align-items:flex-start;padding-top:6px;justify-content:center;opacity:.8}
+.month .d{min-height:66px;border-top:1px solid var(--rule);padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.month .d .n{font-family:var(--f-mono);font-size:12px;width:24px;height:24px;display:grid;place-items:center;border-radius:50%}
+.month .d.out .n{color:var(--ink2);opacity:.55}
+.month .d.today .n{background:var(--ink);color:var(--bg);font-weight:600;box-shadow:3px 3px 0 0 var(--shadow)}
+.month .d.hol .n{color:var(--acc);font-weight:650;text-decoration:underline;text-underline-offset:2px}
+.month .d .mk{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.month .d .lbl{font-size:8.5px;color:var(--ink2);text-align:center;line-height:1.1}
+.month .d .pont{font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);border:1px dashed var(--acc);border-radius:3px;padding:0 2px}
+/* Feuille */
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--rule);border-radius:18px 18px 0 0;padding:10px 16px 16px;box-shadow:0 -18px 40px -20px var(--shadow);display:flex;flex-direction:column;gap:10px;z-index:5}
+.sheet .grab{width:36px;height:4px;border-radius:2px;background:var(--rule);margin:0 auto}
+.scrim{position:absolute;inset:0;background:rgba(5,8,20,.35);z-index:4}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{min-height:32px;display:inline-flex;align-items:center;padding:0 11px;border-radius:16px;border:1px solid var(--rule);font-size:12px}
+.chips span.on{border-color:var(--acc);color:var(--acc);font-weight:650;background:color-mix(in srgb,var(--acc) 10%,var(--bg))}
+.field{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.field.focus{border-bottom:2px solid var(--acc)}
+.field label{font-size:10.5px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.rem{display:flex;align-items:center;gap:10px;min-height:44px;border-bottom:1px solid var(--rule)}
+.rem .k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);font-weight:650;width:58px;flex:none}
+.rem .done{color:var(--ink2);text-decoration:line-through}
+.mark{width:18px;height:18px;flex:none}
+.tok-parse{display:inline;padding:1px 3px;border-radius:3px;border-bottom:2px solid var(--c);background:color-mix(in srgb,var(--c) 12%,transparent)}
+/* Écran verrouillé */
+.lock{position:absolute;inset:0;background:linear-gradient(160deg,#1D2B5C,#0A1028);color:#EEE9DC;display:flex;flex-direction:column;padding:40px 14px 14px;gap:10px}
+.lock .clock{font-family:var(--f-poster);font-variation-settings:"opsz" 144;font-weight:400;font-size:72px;line-height:1;text-align:center}
+.notif{background:var(--bg);color:var(--ink);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 24px -10px rgba(0,0,0,.5)}
+.notif .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.notif .acts span{min-height:32px;display:inline-flex;align-items:center;padding:0 10px;border-radius:16px;background:var(--surf);font-size:11.5px;font-weight:650;color:var(--acc)}
+
+/* Moments */
+.mctl{display:flex;gap:var(--s4);align-items:center;flex-wrap:wrap}
+.segp{display:inline-flex;border:1px solid var(--rule);border-radius:20px;padding:3px;gap:3px}
+.segp button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--ink2);padding:6px 14px;border-radius:16px;cursor:pointer;min-height:36px}
+.segp button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:650}
+.moments{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s5)}
+.moment{display:flex;flex-direction:column;gap:var(--s3)}
+.stage{height:220px;border-radius:var(--r-l);border:1px solid var(--rule);background:var(--bg);position:relative;overflow:hidden;cursor:pointer}
+.moment button.replay{font:inherit;font-size:13px;font-weight:650;align-self:flex-start;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:18px;padding:6px 14px;min-height:36px;cursor:pointer}
+.moment p{font-size:14px;color:var(--ink2)}
+
+/* Système */
+.sys{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s5)}
+.sys ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+footer{padding-block:40px;border-top:1px solid var(--rule);color:var(--ink2);font-size:13px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- Repères de forme des agendas : la couleur n'est jamais seule -->
+  <symbol id="sh-rond" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.6" fill="currentColor"/></symbol>
+  <symbol id="sh-carre" viewBox="0 0 12 12"><rect x="1.8" y="1.8" width="8.4" height="8.4" fill="currentColor"/></symbol>
+  <symbol id="sh-losange" viewBox="0 0 12 12"><path d="M6 .8 11.2 6 6 11.2.8 6Z" fill="currentColor"/></symbol>
+  <symbol id="sh-triangle" viewBox="0 0 12 12"><path d="M6 1.2 11.2 10.6H.8Z" fill="currentColor"/></symbol>
+  <symbol id="sh-anneau" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="sh-croix" viewBox="0 0 12 12"><path d="M4.4 1h3.2v3.4H11v3.2H7.6V11H4.4V7.6H1V4.4h3.4Z" fill="currentColor"/></symbol>
+  <symbol id="sh-tribas" viewBox="0 0 12 12"><path d="M6 10.8 .8 1.4h10.4Z" fill="currentColor"/></symbol>
+  <symbol id="sh-barre" viewBox="0 0 12 12"><rect x=".8" y="3.8" width="10.4" height="4.4" rx="1" fill="currentColor"/></symbol>
+  <!-- Icônes au trait (24, trait 1,7) -->
+  <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 17h16"/><path d="M12 17V8l7 9"/><path d="M6 13l-1.5-1M7.5 9.5 6.5 8M12 5V3.5"/></g></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M9.3 10v10M14.6 10v10M8 3v4M16 3v4"/></g></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></g></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></g></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z"/><path d="M10 20.5h4"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11Z"/><circle cx="12" cy="10" r="2.2"/></g></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V9a3 3 0 0 1 3-3h10l-3-3M19 13v2a3 3 0 0 1-3 3H6l3 3"/></g></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6"/></g></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></g></symbol>
+  <symbol id="i-move" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M16 8l4 4-4 4M8 8l-4 4 4 4"/></g></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.5l2 11h10l2-8H7"/><circle cx="9.5" cy="19" r="1.3"/><circle cx="16.5" cy="19" r="1.3"/></g></symbol>
+</svg>
+
+<div class="wrap">
+
+<header class="hero">
+  <svg id="heroLogo" viewBox="0 0 108 108" role="img" aria-label="Icône Hora"></svg>
+  <div>
+    <p class="eyebrow">Planche de direction artistique · J0 · 2 novembre 2026</p>
+    <h1>Hora</h1>
+    <p class="lede">L’agenda qui se lit comme un cadran solaire. L’heure présente est une ombre portée, les heures sont gravées en marge, et ce qui revient chaque semaine se dessine en ombre douce sous les rendez-vous.</p>
+    <div class="meta">
+      <span class="chip">À valider avant le code d’UI</span>
+      <span class="eyebrow" style="align-self:center">com.gabrielifrim.hora · sans Material · hors ligne</span>
+    </div>
+  </div>
+</header>
+<div class="dialrule" aria-hidden="true"></div>
+
+<section class="block">
+  <p class="eyebrow">La métaphore</p>
+  <h2>L’ombre qui tourne</h2>
+  <div class="three">
+    <div><h3>Aux écrans</h3><p>« Maintenant » est un filet bleu cadran qui porte une ombre oblique. Les heures sont gravées en chiffres à chasse fixe dans la marge. Les plages récurrentes (Taff, Sport) sont des bandes d’ombre pâle sous les événements, et la nuit, avant le lever et après le coucher, est légèrement assombrie. Des filets, pas de cartes.</p></div>
+    <div><h3>À l’icône</h3><p>Un H dessiné dont la barre est le style du cadran, posée en biais, qui projette son ombre. Le filet d’accent sous la lettre est la ligne de midi. Fond lapis de nuit, unique dans la famille.</p></div>
+    <div><h3>Aux moments</h3><p>Tout ce qui bouge est une ombre qui se déplace. Elle tourne d’un cran quand le mois change, elle balaie la journée jusqu’à l’heure présente, elle passe sur un rappel pour le cocher, et elle rejoint la ligne de midi quand un compte à rebours arrive à zéro.</p></div>
+  </div>
+</section>
+
+<section class="block">
+  <p class="eyebrow">Jetons</p>
+  <h2>Deux palettes, huit agendas</h2>
+  <p class="read" style="color:var(--ink2)">Ratios WCAG mesurés sur le fond. Pour les huit couleurs d’agenda, l’écart minimal mesuré entre deux couleurs est de ΔE OKLab 11,3, en vision normale comme avec une protanopie ou une deutéranopie simulées (Machado 2009). Le seuil du test est 8. Chaque agenda a aussi sa forme, pour ne jamais dépendre de la couleur seule.</p>
+  <div class="palettes" id="palettes"></div>
+  <div class="tokens">
+    <div class="tok"><p class="eyebrow">Rayons</p><div class="row">
+      <span><i style="display:block;width:44px;height:44px;border:1.5px solid var(--ink);border-radius:3px"></i>3 dp · bloc</span>
+      <span><i style="display:block;width:44px;height:44px;border:1.5px solid var(--ink);border-radius:6px"></i>6 dp · champ</span>
+      <span><i style="display:block;width:44px;height:44px;border:1.5px solid var(--ink);border-radius:14px"></i>14 dp · feuille</span>
+      <span><i style="display:block;width:72px;height:32px;border:1.5px solid var(--ink);border-radius:16px"></i>pilule · action</span>
+    </div></div>
+    <div class="tok"><p class="eyebrow">Espacements (dp)</p><div class="row">
+      <span><i style="display:block;width:4px;height:24px;background:var(--acc)"></i>4</span>
+      <span><i style="display:block;width:8px;height:24px;background:var(--acc)"></i>8</span>
+      <span><i style="display:block;width:12px;height:24px;background:var(--acc)"></i>12</span>
+      <span><i style="display:block;width:16px;height:24px;background:var(--acc)"></i>16</span>
+      <span><i style="display:block;width:24px;height:24px;background:var(--acc)"></i>24</span>
+      <span><i style="display:block;width:40px;height:24px;background:var(--acc)"></i>40</span>
+    </div></div>
+    <div class="tok"><p class="eyebrow">Ombre et filets</p>
+      <p style="font-size:14px">Aucune ombre portée « Material ». La seule ombre est celle du cadran : un décalage dur de 2–3 dp vers le bas à droite, comme le soleil de l’après-midi. Filets de 1 dp, ligne « maintenant » de 2 dp.</p>
+    </div>
+    <div class="tok"><p class="eyebrow">Mouvement (famille)</p>
+      <p class="mono" style="font-size:12.5px">Enter cubic(.2,.7,.2,1) · 500 ms<br>Transition cubic(.65,0,.35,1) · 640 ms<br>Release cubic(.2,.9,.2,1.2) · 600 ms<br>Tracé 1 400 · calme 180 · 60 ms/élément</p>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <p class="eyebrow">Typographie · trois familles OFL embarquées</p>
+  <h2>Gravé, lisible, aligné</h2>
+  <div class="type">
+    <div class="face"><p class="eyebrow">Affiche · Fraunces (variable, opsz)</p><p class="big" style="font-family:var(--f-poster);font-variation-settings:'opsz' 144;font-weight:560">Novembre</p><p style="font-size:14px;color:var(--ink2)">Un serif à empattements doux qui rappelle les chiffres gravés des cadrans. Réservé aux dates et aux titres.</p></div>
+    <div class="face"><p class="eyebrow">Texte · Atkinson Hyperlegible Next</p><p class="big" style="font-family:var(--f-text);font-size:40px;font-weight:500">Dentiste, rue Oberkampf</p><p style="font-size:14px;color:var(--ink2)">Dessinée pour la lisibilité (Braille Institute) : I, l et 1 se distinguent, et elle tient bien à 200 %.</p></div>
+    <div class="face"><p class="eyebrow">Chiffres · Spline Sans Mono</p><p class="big mono" style="font-size:48px">14:30 · J-12</p><p style="font-size:14px;color:var(--ink2)">Chasse fixe pour les heures, la marge gravée et les comptes à rebours : un 9 qui devient 10 ne décale rien.</p></div>
+  </div>
+  <div class="styles" id="styles"></div>
+</section>
+
+<section class="block">
+  <p class="eyebrow">Logo · lettre H · canevas 108, cercle sûr 66</p>
+  <h2>Trois H, un à retenir</h2>
+  <div class="logos" id="logos"></div>
+  <div class="mini-icons" aria-label="Le H parmi la famille, en masque rond">
+    <span class="eyebrow">Dans le tiroir :</span>
+    <svg viewBox="0 0 108 108" aria-label="Dromos"><rect width="108" height="108" fill="#111315"/><path fill="#F4F1EC" fill-rule="evenodd" d="M41.5,35H52.5C61.5,35 67,40.6 67,49.5C67,58.4 61.5,64 52.5,64H41.5Z M50,42H52.2C56.6,42 58.5,44.8 58.5,49.5C58.5,54.2 56.6,57 52.2,57H50Z"/><rect x="38.5" y="70" width="31" height="2" rx="1" fill="#EE6055"/></svg>
+    <svg viewBox="0 0 108 108" aria-label="Topo"><rect width="108" height="108" fill="#EEEAE0"/><path d="M40 35h28v7H57.5v22h-7V42H40Z" fill="#1B1A17"/><rect x="38.5" y="70" width="31" height="2" rx="1" fill="#C46A1C"/></svg>
+    <svg viewBox="0 0 108 108" aria-label="Popote"><rect width="108" height="108" fill="#4B1F45"/><path d="M42 35h12a10 10 0 0 1 0 20h-5v9h-7Z" fill="#FBF3E6"/><rect x="38.5" y="70" width="31" height="2" rx="1" fill="#F2A516"/></svg>
+    <svg id="miniHora" viewBox="0 0 108 108" aria-label="Hora"></svg>
+  </div>
+</section>
+
+<section class="block">
+  <p class="eyebrow">Écrans · à gauche Midi, à droite Nocturne · lundi 2 novembre 2026, 12 h 18</p>
+  <h2>Les écrans</h2>
+  <div class="screens" id="screens"></div>
+</section>
+
+<section class="block">
+  <p class="eyebrow">Moments · interruptibles d’un appui · joués au vrai changement seulement</p>
+  <h2>Six ombres qui bougent</h2>
+  <div class="mctl">
+    <span class="segp" role="group" aria-label="Ambiance">
+      <button type="button" id="m-exp" aria-pressed="true">Expressive</button>
+      <button type="button" id="m-sob" aria-pressed="false">Sobre</button>
+    </span>
+    <span style="font-size:14px;color:var(--ink2)">En Sobre, un fondu de 180 ms. « Supprimer les animations » d’Android donne l’état final, sans transition.</span>
+  </div>
+  <div class="moments" id="moments"></div>
+</section>
+
+<section class="block">
+  <p class="eyebrow">Système maison · compose.foundation, sans Material 3</p>
+  <h2>Ce que le code reprendra</h2>
+  <div class="sys">
+    <div><h3>Composants</h3><ul>
+      <li><code>HoraText</code>, <code>HoraButton</code> (contour, plein, discret), <code>IconAction</code></li>
+      <li><code>SegmentedChoice</code>, <code>Tag</code>, <code>Toggle</code>, <code>AgendaMark</code> (couleur + forme)</li>
+      <li><code>HoraTextField</code> (filet qui s’épaissit au focus), <code>QuickEntryBar</code></li>
+      <li><code>HoraSheet</code>, <code>HoraDialog</code>, <code>PageHeader</code>, <code>HoraIcons</code> au trait</li>
+      <li><code>HourGrid</code> (marge gravée, plages, nuit, ligne « maintenant »), <code>MonthGrid</code></li>
+    </ul></div>
+    <div><h3>Appui et accessibilité</h3><ul>
+      <li>Appui : voile d’encre de 8 % + <code>pressScale</code> 0,97, sans ripple</li>
+      <li>TalkBack : « Dentiste, lundi 14 h 30 à 15 h, rappel la veille à 20 h »</li>
+      <li>Hauteurs minimales, jamais fixes ; cibles de 48 dp ; 200 % sans troncature</li>
+      <li>Pas de geste caché : flèches et bouton « Aujourd’hui » visibles, déplacement par sélecteur</li>
+    </ul></div>
+    <div><h3>Haptique et réglages</h3><ul>
+      <li><code>tick()</code> pour un choix, <code>confirm()</code> pour un rappel créé ou coché</li>
+      <li>Apparence : Système, Midi, Nocturne · Ambiance : Expressive, Sobre · Vibrations</li>
+      <li>Option « Pratique musulmane » : désactivée par défaut, rien n’apparaît sans elle</li>
+    </ul></div>
+  </div>
+</section>
+
+<footer>Hora · planche J0 · palettes vérifiées avec le calcul du futur <code>PaletteContrastTest</code> · polices Fraunces, Atkinson Hyperlegible Next et Spline Sans Mono, sous licence OFL.</footer>
+</div>
+
+<script>
+// ---------- Logo ----------
+// H : fûts x 40..47 et 61..68, y 35..64. La barre est un style de cadran en biais ; son ombre tombe vers la droite.
+function logoSVG(v, opts = {}) {
+  const bg = opts.bg || '#1D2B5C', ink = opts.ink || '#F1ECDF', acc = opts.acc || '#8FB8FF', sh = opts.sh || '#111A3F';
+  const H = `<path fill="${ink}" d="M40 35h7v29h-7Z M61 35h7v29h-7Z"/>`;
+  const gnomon = `<path fill="${ink}" d="M47 51.5 61 46v6L47 57.5Z"/>`;
+  const filet = `<rect x="38.5" y="70" width="31" height="2" rx="1" fill="${acc}"/>`;
+  let detail = '';
+  if (v === 'A') {
+    // Lignes horaires d'un cadran horizontal, rayonnant depuis le pied du style ; l'une est l'heure présente.
+    const cx = 54, cy = 71; let lines = '';
+    for (let i = -6; i <= 6; i++) {
+      if (i === 0) continue;
+      const a = (i * 13) * Math.PI / 180, r0 = 40, r1 = 64;
+      const x0 = cx + r0 * Math.sin(a), y0 = cy - r0 * Math.cos(a), x1 = cx + r1 * Math.sin(a), y1 = cy - r1 * Math.cos(a);
+      lines += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)}L${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${ink}" stroke-opacity="${i===3?0.9:0.22}" stroke-width="${i===3?1.6:1.1}" stroke-linecap="round"/>`;
+    }
+    detail = lines;
+  }
+  if (v === 'A' || v === 'B') {
+    // Ombre portée du style, vers le bas à droite, qui déborde du masque
+    detail += `<path fill="${sh}" d="M61 46 96 64v9L61 52Z" opacity=".95"/>`;
+  }
+  if (v === 'C') {
+    // Variante calendrier : sept points de semaine sous le filet, le jour présent ombré
+    for (let i = 0; i < 7; i++) detail += `<circle cx="${33 + i * 7}" cy="79" r="1.6" fill="${i===0?acc:ink}" fill-opacity="${i===0?1:0.35}"/>`;
+    detail += `<path fill="${sh}" d="M61 46 86 58.5v6L61 52Z" opacity=".9"/>`;
+  }
+  return `<rect width="108" height="108" fill="${bg}"/>${detail}${H}${gnomon}${filet}`;
+}
+document.getElementById('heroLogo').innerHTML = `<defs><clipPath id="sqh"><path d="M54,0C86,0 108,22 108,54C108,86 86,108 54,108C22,108 0,86 0,54C0,22 22,0 54,0Z"/></clipPath></defs><g clip-path="url(#sqh)">${logoSVG('A')}</g>`;
+document.getElementById('miniHora').innerHTML = logoSVG('A');
+const logos = [
+  ['A', 'A · Cadran complet', 'Le style et son ombre, et les lignes horaires gravées autour, dont celle de l’heure présente plus marquée. C’est celle qui raconte le mieux l’agenda.', true],
+  ['B', 'B · L’ombre seule', 'Rien que le H, son style et la longue ombre. Plus sobre, il se lit mieux en 48 px.', false],
+  ['C', 'C · La semaine', 'L’ombre, plus courte, et sept points de semaine sous la ligne de midi, aujourd’hui en bleu ciel.', false],
+];
+document.getElementById('logos').innerHTML = logos.map(([v, t, d, pick]) => `
+  <div class="logo">
+    <svg class="sq" viewBox="0 0 108 108" role="img" aria-label="Variante ${v}">${logoSVG(v)}</svg>
+    <h3>${t}</h3><p style="font-size:14px;color:var(--ink2)">${d}</p>${pick ? '<span class="chip">Proposée</span>' : ''}
+  </div>`).join('') + `
+  <div class="logo">
+    <svg class="sq" viewBox="0 0 108 108" role="img" aria-label="Monochrome">${logoSVG('A', {bg:'#E2E6EC', ink:'#2A3550', acc:'#2A3550', sh:'#C5CCD8'})}</svg>
+    <h3>Monochrome · thème Android 13+</h3><p style="font-size:14px;color:var(--ink2)">La couche monochrome garde la lettre, le style et le filet ; l’ombre et les lignes passent à mi-opacité.</p>
+  </div>
+  <div class="logo">
+    <svg class="sq" viewBox="0 0 108 108" role="img" aria-label="Écran de démarrage" id="splash"><rect width="108" height="108" fill="#1D2B5C"/><g id="splashShadow" style="transform-origin:61px 49px"><path fill="#111A3F" d="M61 46 96 64v9L61 52Z"/></g><path fill="#F1ECDF" d="M40 35h7v29h-7Z M61 35h7v29h-7Z"/><path fill="#F1ECDF" d="M47 51.5 61 46v6L47 57.5Z"/><rect x="38.5" y="70" width="31" height="2" rx="1" fill="#8FB8FF"/></svg>
+    <h3>Démarrage · Android 12+</h3><p style="font-size:14px;color:var(--ink2)">L’ombre tourne d’un cran puis se pose (800 ms, AVD). Fond lapis, sans texte. Appuyer pour rejouer.</p>
+  </div>`;
+const splashSh = document.getElementById('splashShadow');
+function playSplash() {
+  splashSh.animate([{transform:'rotate(-28deg)', opacity:0}, {transform:'rotate(4deg)', opacity:1, offset:.75}, {transform:'rotate(0)'}], {duration: motion() === 'full' ? 800 : 180, easing:'cubic-bezier(.2,.7,.2,1)'});
+}
+document.getElementById('splash').addEventListener('click', playSplash);
+
+// ---------- Palettes ----------
+const AG = [
+  ['bleu','Perso','rond'],['sapin','Taff','carre'],['prune','Famille','losange'],['brique','Sport','triangle'],
+  ['ocre','Courses','anneau'],['sarcelle','Santé','croix'],['framboise','Amis','tribas'],['ardoise','Admin','barre']];
+const mark = (c, s, size = 12) => `<svg class="mark" width="${size}" height="${size}" style="color:var(--a-${c});width:${size}px;height:${size}px" aria-hidden="true"><use href="#sh-${s}"/></svg>`;
+const PAL = {
+  midi: {name:'Midi', sub:'clair · identifiant « midi »', sw:[['fond','#F3F5F7','—'],['surface','#E7EBF0','—'],['encre','#18202B','15,0:1'],['encre 2','#4A5568','6,9:1'],['filet','#C9D1DB','—'],['accent','#2448A8','7,5:1'],['sur accent','#FFFFFF','8,2:1'],['ombre','#18202B29','16 %']]},
+  noct: {name:'Nocturne', sub:'sombre · identifiant « nocturne »', sw:[['fond','#0F1530','—'],['surface','#18203F','—'],['encre','#EEE9DC','14,8:1'],['encre 2','#A9B1CC','8,4:1'],['filet','#2B355E','—'],['accent','#8FB8FF','9,0:1'],['sur accent','#0F1530','9,0:1'],['ombre','#03061280','55 %']]},
+};
+document.getElementById('palettes').innerHTML = Object.entries(PAL).map(([k, p]) => `
+  <div class="pal ${k}">
+    <h3>${p.name} <span class="eyebrow" style="letter-spacing:.06em">${p.sub}</span></h3>
+    <div class="sw">${p.sw.map(([n, h, r]) => `<div><i style="background:${h}"></i><b>${n}</b><span class="ratio">${h.slice(0,7)} · ${r}</span></div>`).join('')}</div>
+    <p class="eyebrow">Couleurs d’agenda</p>
+    <div class="agenda">${AG.map(([c, n, s]) => `<div>${mark(c, s, 14)}<span>${n}</span></div>`).join('')}</div>
+  </div>`).join('');
+
+// ---------- Styles de texte ----------
+const ST = [
+  ['poster', 'Fraunces 560 · 40 sp · opsz 120', '<span style="font-family:var(--f-poster);font-size:40px;font-weight:560;font-variation-settings:\'opsz\' 120;line-height:1">2 novembre</span>'],
+  ['heading', 'Fraunces 600 · 20 sp', '<span style="font-family:var(--f-poster);font-size:20px;font-weight:600">Prochain rendez-vous</span>'],
+  ['eyebrow', 'Atkinson 650 · 11 sp · capitales +12 %', '<span class="eyebrow">Lundi · semaine 45</span>'],
+  ['body', 'Atkinson 400 · 15 sp', '<span>Cabinet du Dr Martin, 12 rue Oberkampf</span>'],
+  ['bodySmall', 'Atkinson 400 · 13 sp', '<span style="font-size:13px;color:var(--ink2)">Rappel la veille à 20 h</span>'],
+  ['hour', 'Spline Mono 450 · 12 sp · tnum', '<span class="mono" style="font-size:12px;color:var(--ink2)">08 · 09 · 10 · 11 · 12</span>'],
+  ['figure', 'Spline Mono 500 · 34 sp', '<span class="mono" style="font-size:34px;font-weight:500">J-12</span>'],
+  ['action', 'Atkinson 650 · 14 sp', '<span style="font-weight:650">Reporter d’une heure</span>'],
+  ['label', 'Atkinson 650 · 11 sp · capitales', '<span style="font-size:11px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)">Lieu</span>'],
+];
+document.getElementById('styles').innerHTML = ST.map(([n, d, ex]) => `<div><div><code>${n}</code><div style="font-size:11px;color:var(--ink2)">${d}</div></div><div>${ex}</div></div>`).join('');
+
+// ---------- Écrans ----------
+const sb = `<div class="sb"><span>12:18</span><span>5G ▮▮▮ 82 %</span></div>`;
+const tabs = on => `<div class="tabs">${[['sun','Aujourd’hui'],['grid','Agenda'],['search','Chercher'],['sliders','Réglages']].map(([i, l], k) => `<div class="${k===on?'on':''}"><svg width="22" height="22"><use href="#i-${i}"/></svg>${l}</div>`).join('')}</div>`;
+const quick = `<div class="quick"><svg width="18" height="18"><use href="#i-plus"/></svg><span>dentiste mardi 14h30 rappel la veille…</span><span class="go"><svg width="18" height="18"><use href="#i-right"/></svg></span></div>`;
+const hourGrid = (h0, h1, px, cols, content, extra='') => {
+  let lines = '';
+  for (let h = h0; h <= h1; h++) lines += `<div style="top:${(h-h0)*px+6}px"><span>${String(h).padStart(2,'0')}</span></div>`;
+  return `<div class="grid">${extra}<div class="hourlines">${lines}</div>${content}</div>`;
+};
+const y = (h, h0, px) => (h - h0) * px + 6;
+
+const today = `
+  ${sb}
+  <div class="body">
+    <div class="pad" style="display:flex;flex-direction:column;gap:6px;padding-top:6px">
+      <span class="eb">Lundi · semaine 45</span>
+      <span class="poster">2 novembre</span>
+      <span class="hr">lever 07:34 · coucher 17:21 · 9 h 47 de jour</span>
+    </div>
+    <div class="pad" style="margin-top:14px;display:flex;flex-direction:column;gap:6px">
+      <span class="eb">Prochain · dans 2 h 12</span>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="padding-top:5px">${mark('sarcelle','croix',12)}</div>
+        <div style="flex:1"><div class="h">Dentiste</div><div class="s">14:30–15:00 · Cabinet du Dr Martin</div>
+        <div class="s" style="display:flex;gap:4px;align-items:center;margin-top:2px"><svg width="14" height="14"><use href="#i-bell"/></svg>1 h avant · 10 min avant</div></div>
+      </div>
+    </div>
+    <div class="rule" style="margin:14px 16px 0"></div>
+    <div class="pad scroll">
+      <div class="ev" style="opacity:.75"><span class="t">09:00</span><div class="x"><b>${mark('sapin','carre',10)}Taff</b><span class="s">plage · jusqu’à 17:30</span></div></div>
+      <div class="ev"><span class="t">12:30</span><div class="x"><b>${mark('framboise','tribas',10)}Déjeuner avec Léa</b><span class="s">Le Petit Cambodge</span></div></div>
+      <div style="height:2px;background:var(--acc);position:relative;margin:2px 0 6px"><span style="position:absolute;right:0;top:-16px;font-family:var(--f-mono);font-size:10px;color:var(--acc)">12:18</span></div>
+      <div class="ev"><span class="t">14:30</span><div class="x"><b>${mark('sarcelle','croix',10)}Dentiste</b><span class="s">rappels : 1 h, 10 min</span></div></div>
+      <div class="ev"><span class="t">18:30</span><div class="x"><b>${mark('ocre','anneau',10)}Courses</b><span class="s" style="display:flex;align-items:center;gap:4px;color:var(--acc);font-weight:650"><svg width="13" height="13"><use href="#i-cart"/></svg>Ouvrir Popote</span></div></div>
+      <div class="rule" style="margin:6px 0"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0">
+        <div><span class="eb">Compte à rebours</span><div>Week-end à Lyon</div></div>
+        <span class="mono" style="font-size:28px;font-weight:500">J-12</span>
+      </div>
+      <div class="s" style="padding:2px 0">Mercredi 11 · Armistice, férié</div>
+    </div>
+    ${quick}
+  </div>${tabs(0)}`;
+
+const todayIslam = `
+  ${sb}
+  <div class="body">
+    <div class="pad" style="display:flex;flex-direction:column;gap:6px;padding-top:6px">
+      <span class="eb">Lundi · semaine 45</span>
+      <span class="poster">2 novembre</span>
+      <span class="hr">22 joumada al-oula 1448 · estimé</span>
+    </div>
+    <div class="pad" style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+      <span class="eb">Prière · Asr dans 2 h 43</span>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 6px">
+        ${[['Fajr','06:24',0],['Chourouk','07:34',0],['Dhouhr','12:36',1],['Asr','15:01',2],['Maghrib','17:21',0],['Icha','18:33',0]].map(([n,t,s]) => `<div style="display:flex;flex-direction:column;gap:1px;padding:6px 8px;border-radius:6px;${s===2?'border:1px solid var(--acc);':'border:1px solid var(--rule);'}${s===1?'opacity:.6':''}"><span class="eb" style="letter-spacing:.06em">${n}</span><span class="mono" style="font-size:15px;${s===2?'color:var(--acc);font-weight:600':''}">${t}</span></div>`).join('')}
+      </div>
+      <span class="s">Paris · UOIF 12° · Asr ombre × 1 · ajusté sur ta mosquée</span>
+    </div>
+    <div class="rule" style="margin:14px 16px 0"></div>
+    <div class="pad scroll">
+      <div class="ev"><span class="t">14:30</span><div class="x"><b>${mark('sarcelle','croix',10)}Dentiste</b><span class="s">Cabinet du Dr Martin</span></div></div>
+      <div class="ev"><span class="t">18:30</span><div class="x"><b>${mark('ocre','anneau',10)}Courses</b><span class="s">Ouvrir Popote</span></div></div>
+      <div class="rule" style="margin:6px 0"></div>
+      <span class="eb">Fêtes musulmanes · estimées</span>
+      <div class="ev"><span class="t" style="width:62px">7 févr.</span><div class="x"><b>Début du Ramadan</b><span class="s">1er ramadan 1448 · ±1 jour</span></div></div>
+    </div>
+    ${quick}
+  </div>${tabs(0)}`;
+
+const weekdays = ['L','M','M','J','V','S','D'];
+function monthScreen() {
+  const days = []; // novembre 2026, commence un dimanche → la grille démarre lundi 26 octobre
+  for (let i = 0; i < 42; i++) { const d = new Date(2026, 9, 26 + i); days.push(d); }
+  const evs = {2:[['framboise','tribas'],['sarcelle','croix'],['ocre','anneau']],4:[['brique','triangle']],5:[['bleu','rond']],6:[['brique','triangle']],7:[['ocre','anneau'],['prune','losange']],9:[['ardoise','barre']],12:[['brique','triangle']],14:[['bleu','rond'],['prune','losange']],15:[['bleu','rond']],18:[['sarcelle','croix']],19:[['brique','triangle']],21:[['ocre','anneau']],24:[['framboise','tribas']],26:[['brique','triangle']],28:[['prune','losange'],['ocre','anneau']],29:[['prune','losange']]};
+  let cells = '';
+  for (let w = 0; w < 6; w++) {
+    const wk = [44,45,46,47,48,49][w];
+    cells += `<div class="wn">${wk}</div>`;
+    for (let k = 0; k < 7; k++) {
+      const d = days[w*7+k], n = d.getDate(), inM = d.getMonth() === 10;
+      const cls = ['d', !inM ? 'out' : '', inM && n === 2 ? 'today' : '', inM && (n === 1 || n === 11) ? 'hol' : ''].join(' ');
+      const m = inM && evs[n] ? `<div class="mk">${evs[n].map(([c,s]) => mark(c,s,8)).join('')}</div>` : '';
+      const lbl = inM && n === 1 ? '<span class="lbl">Toussaint</span>' : inM && n === 11 ? '<span class="lbl">Armistice</span>' : '';
+      const tw = inM && n === 14 ? '<span class="lbl">Lyon</span>' : '';
+      cells += `<div class="${cls}"><span class="n">${n}</span>${m}${lbl}${tw}</div>`;
+    }
+  }
+  return `${sb}<div class="body">
+    <div class="header"><div style="display:flex;flex-direction:column"><span class="eb">2026</span><span class="h" style="font-size:24px">Novembre</span></div>
+      <div style="display:flex;align-items:center;gap:2px"><span class="ico"><svg width="22" height="22"><use href="#i-left"/></svg></span><span class="btn ghost">Aujourd’hui</span><span class="ico"><svg width="22" height="22"><use href="#i-right"/></svg></span></div></div>
+    <div class="pad" style="margin-bottom:8px"><div class="seg"><span>Jour</span><span>Semaine</span><span class="on">Mois</span><span>Liste</span></div></div>
+    <div class="month"><div></div>${weekdays.map(d => `<div class="wd">${d}</div>`).join('')}${cells}</div>
+    <div class="pad s" style="margin-top:auto;padding-bottom:8px;display:flex;gap:10px;flex-wrap:wrap">${AG.slice(0,5).map(([c,n,s]) => `<span style="display:inline-flex;align-items:center;gap:4px">${mark(c,s,9)}${n}</span>`).join('')}</div>
+  </div>${tabs(1)}`;
+}
+
+function weekScreen() {
+  const h0 = 8, h1 = 20, px = 32, colW = (300 - 38 - 6) / 7;
+  const cx = i => 38 + i * colW;
+  let c = '';
+  for (let i = 0; i < 5; i++) c += `<div class="plage" style="left:${cx(i)}px;width:${colW}px;top:${y(9,h0,px)}px;height:${8.5*px}px">${i===0?'<span>Taff</span>':''}</div>`;
+  [1,3].forEach(i => c += `<div class="plage" style="left:${cx(i)}px;width:${colW}px;top:${y(18.5,h0,px)}px;height:${1.5*px}px"></div>`);
+  const ev = (d, s, e, col, t) => `<div class="blk" style="--c:var(--a-${col});left:${cx(d)+1}px;width:${colW-3}px;top:${y(s,h0,px)}px;height:${(e-s)*px-2}px"><b>${t}</b></div>`;
+  c += ev(0,12.5,13.5,'framboise','Léa') + ev(0,14.5,15,'sarcelle','Dent.') + ev(0,18.5,19.5,'ocre','Cour.');
+  c += ev(1,18.5,20,'brique','Sport') + ev(2,10,11.5,'sapin','Point') + ev(3,18.5,20,'brique','Sport');
+  c += ev(4,16,17,'ardoise','Impôts') + ev(5,10,11,'ocre','Marché') + ev(6,12,15,'prune','Maman');
+  c += `<div class="now" style="left:${cx(0)}px;width:${colW}px;top:${y(12.3,h0,px)}px"></div>`;
+  c += `<div style="position:absolute;left:${cx(2)}px;width:${colW}px;top:0;bottom:0;background:var(--band);opacity:.6"></div>`;
+  const head = ['L 2','M 3','M 4','J 5','V 6','S 7','D 8'];
+  return `${sb}<div class="body">
+    <div class="header"><div style="display:flex;flex-direction:column"><span class="eb">Semaine 45 · 2026</span><span class="h" style="font-size:22px">2 – 8 novembre</span></div>
+      <div style="display:flex;align-items:center;gap:2px"><span class="ico"><svg width="22" height="22"><use href="#i-left"/></svg></span><span class="ico"><svg width="22" height="22"><use href="#i-right"/></svg></span></div></div>
+    <div class="pad" style="margin-bottom:6px"><div class="seg"><span>Jour</span><span class="on">Semaine</span><span>Mois</span><span>Liste</span></div></div>
+    <div style="display:grid;grid-template-columns:38px repeat(7,1fr);padding-right:6px;font-size:10.5px;color:var(--ink2);text-align:center;padding-bottom:4px">
+      <div></div>${head.map((h,i) => `<div style="${i===0?'color:var(--ink);font-weight:700':''}">${h}</div>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:38px repeat(7,1fr);padding-right:6px;font-size:9px;text-align:center;padding-bottom:4px">
+      <div class="hr" style="font-size:9px">jour</div><div></div><div></div><div style="border-radius:3px;background:color-mix(in srgb,var(--a-bleu) 16%,var(--bg));border-left:3px solid var(--a-bleu);font-size:9px;padding:1px 0;grid-column:span 1">Anniv.</div></div>
+    ${hourGrid(h0, h1, px, 7, c)}
+  </div>${tabs(1)}`;
+}
+
+function dayScreen() {
+  const h0 = 6, h1 = 20, px = 34;
+  let c = '';
+  c += `<div class="nightband" style="top:0;height:${y(7.57,h0,px)}px"></div><div class="nightband" style="top:${y(17.35,h0,px)}px;bottom:0"></div>`;
+  c += `<div style="position:absolute;left:44px;top:${y(7.57,h0,px)-13}px;font-family:var(--f-mono);font-size:9.5px;color:var(--ink2)">lever 07:34</div>`;
+  c += `<div style="position:absolute;left:44px;top:${y(17.35,h0,px)+3}px;font-family:var(--f-mono);font-size:9.5px;color:var(--ink2)">coucher 17:21</div>`;
+  c += `<div class="plage" style="left:38px;right:0;top:${y(9,h0,px)}px;height:${8.5*px}px"><span>Taff · 9:00–17:30</span></div>`;
+  const ev = (s, e, col, sh, t, sub, l=48, r=8) => `<div class="blk" style="--c:var(--a-${col});left:${l}px;right:${r}px;top:${y(s,h0,px)}px;height:${(e-s)*px-2}px;font-size:12px;padding:5px 8px"><b style="display:flex;gap:6px;align-items:center">${mark(col,sh,10)}${t}</b><span style="color:var(--ink2)">${sub}</span></div>`;
+  c += ev(12.5, 13.5, 'framboise', 'tribas', 'Déjeuner avec Léa', '12:30–13:30 · Le Petit Cambodge');
+  c += ev(14.5, 15, 'sarcelle', 'croix', 'Dentiste', '14:30–15:00');
+  c += ev(18.5, 19.5, 'ocre', 'anneau', 'Courses', '18:30–19:30 · Ouvrir Popote');
+  c += `<div class="now" style="left:38px;right:0;top:${y(12.3,h0,px)}px"></div>`;
+  return `${sb}<div class="body">
+    <div class="header"><div style="display:flex;flex-direction:column"><span class="eb">Lundi · semaine 45</span><span class="h" style="font-size:22px">2 novembre</span></div>
+      <div style="display:flex;align-items:center;gap:2px"><span class="ico"><svg width="22" height="22"><use href="#i-left"/></svg></span><span class="ico"><svg width="22" height="22"><use href="#i-right"/></svg></span></div></div>
+    <div class="pad" style="margin-bottom:6px"><div class="seg"><span class="on">Jour</span><span>Semaine</span><span>Mois</span><span>Liste</span></div></div>
+    ${hourGrid(h0, h1, px, 1, c)}
+  </div>${tabs(1)}`;
+}
+
+const listScreen = `${sb}<div class="body">
+  <div class="header"><div style="display:flex;flex-direction:column"><span class="eb">À venir</span><span class="h" style="font-size:22px">Liste</span></div><span class="btn ghost">Aujourd’hui</span></div>
+  <div class="pad" style="margin-bottom:6px"><div class="seg"><span>Jour</span><span>Semaine</span><span>Mois</span><span class="on">Liste</span></div></div>
+  <div class="pad scroll">
+    ${[
+      ['Lundi 2', 'aujourd’hui', [['12:30','framboise','tribas','Déjeuner avec Léa',''],['14:30','sarcelle','croix','Dentiste','rappel 1 h avant'],['18:30','ocre','anneau','Courses','']]],
+      ['Mardi 3', '', [['18:30','brique','triangle','Sport','chaque mardi et jeudi']]],
+      ['Mercredi 4', '', [['10:00','sapin','carre','Point d’équipe','visio'],['jour','bleu','rond','Anniversaire de Sami','34 ans']]],
+      ['Vendredi 6', '', [['16:00','ardoise','barre','Impôts : acompte','rappel 2 jours avant à 9 h']]],
+      ['Mercredi 11', 'férié', [['jour','ardoise','barre','Armistice','']]],
+    ].map(([d, sub, evs]) => `
+      <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0 2px;border-bottom:1px solid var(--rule)"><span class="h" style="font-size:16px">${d}</span><span class="eb">${sub}</span></div>
+      ${evs.map(([t,c,s,n,x]) => `<div class="ev"><span class="t">${t}</span><div class="x"><b>${mark(c,s,10)}${n}</b>${x?`<span class="s">${x}</span>`:''}</div></div>`).join('')}`).join('')}
+  </div>${quick}</div>${tabs(1)}`;
+
+const detailScreen = `${sb}<div class="body">
+  <div class="header"><span class="ico"><svg width="22" height="22"><use href="#i-left"/></svg></span><div style="display:flex;gap:2px"><span class="ico"><svg width="20" height="20"><use href="#i-copy"/></svg></span><span class="ico"><svg width="20" height="20"><use href="#i-move"/></svg></span><span class="ico"><svg width="20" height="20"><use href="#i-share"/></svg></span></div></div>
+  <div class="pad" style="display:flex;flex-direction:column;gap:6px">
+    <span class="eb" style="display:flex;gap:6px;align-items:center">${mark('sarcelle','croix',10)}Santé</span>
+    <span class="poster" style="font-size:34px">Dentiste</span>
+    <span>Lundi 2 novembre · <span class="mono">14:30–15:00</span></span>
+    <span class="s" style="display:flex;gap:4px;align-items:center"><svg width="14" height="14"><use href="#i-pin"/></svg>Cabinet du Dr Martin, 12 rue Oberkampf</span>
+  </div>
+  <div class="pad" style="margin-top:16px"><span class="eb">Rappels · 3</span>
+    <div class="rem"><svg class="mark" style="color:var(--ok)"><use href="#i-check"/></svg><span class="k">ancré</span><span class="done">La veille à 20:00</span></div>
+    <div class="rem"><svg class="mark" style="color:var(--acc)"><use href="#i-bell"/></svg><span class="k">relatif</span><span>1 h avant · <span class="mono">13:30</span></span></div>
+    <div class="rem"><svg class="mark" style="color:var(--acc)"><use href="#i-bell"/></svg><span class="k">relatif</span><span>10 min avant · <span class="mono">14:20</span></span></div>
+  </div>
+  <div class="pad" style="margin-top:14px;display:flex;flex-direction:column;gap:4px">
+    <span class="eb">Notes</span><span class="s" style="font-size:13px">Apporter la carte de mutuelle.</span>
+  </div>
+  <div class="pad" style="margin-top:auto;padding-bottom:16px;display:flex;gap:8px"><span class="btn" style="flex:1">Supprimer</span><span class="btn fill" style="flex:1">Modifier</span></div>
+</div>`;
+
+const editorScreen = `${sb}<div class="body">
+  <div class="header"><span class="ico"><svg width="22" height="22"><use href="#i-close"/></svg></span><span class="h" style="font-size:17px">Nouvel événement</span><span class="btn fill">Enregistrer</span></div>
+  <div class="pad" style="display:flex;flex-direction:column">
+    <div class="field focus"><label>Titre</label><span style="font-size:16px">Dentiste<span style="border-left:1.5px solid var(--acc);margin-left:1px"></span></span></div>
+    <div class="field"><label>Quand</label><span>Mardi 3 novembre · <span class="mono">14:30 → 15:00</span></span><span class="s">Europe/Paris · ne se répète pas</span></div>
+    <div class="field"><label>Agenda</label><span style="display:flex;gap:6px;align-items:center">${mark('sarcelle','croix',11)}Santé</span></div>
+  </div>
+  <div class="pad" style="margin-top:12px"><span class="eb">Rappels</span>
+    <div class="rem"><svg class="mark" style="color:var(--acc)"><use href="#i-bell"/></svg><span class="k">ancré</span><span style="flex:1">La veille à 20:00</span><svg width="16" height="16" style="color:var(--ink2)"><use href="#i-close"/></svg></div>
+    <div class="rem"><svg class="mark" style="color:var(--acc)"><use href="#i-bell"/></svg><span class="k">relatif</span><span style="flex:1">1 h avant</span><svg width="16" height="16" style="color:var(--ink2)"><use href="#i-close"/></svg></div>
+  </div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <span class="h" style="font-size:17px">Ajouter un rappel</span>
+    <span class="eb">Avant le début</span>
+    <div class="chips"><span>À l’heure</span><span class="on">10 min</span><span>30 min</span><span>1 h</span><span>1 jour</span><span>2 jours</span><span>3 jours</span><span>1 semaine</span><span>Durée libre…</span></div>
+    <span class="eb">À une heure précise</span>
+    <div class="chips"><span class="on">La veille à 20:00</span><span>2 jours avant à 9:00</span><span>Le jour même à 8:00</span><span>Autre…</span></div>
+    <span class="eb">Jeux de rappels</span>
+    <div class="chips"><span>Rendez-vous du matin · 3</span><span>Échéance · 4</span></div>
+    <div style="display:flex;gap:8px;align-items:center;min-height:44px"><div class="toggle"></div><span>Alarme plein écran</span></div>
+  </div>
+</div>`;
+
+const quickScreen = `${sb}<div class="body">
+  <div class="header"><span class="ico"><svg width="22" height="22"><use href="#i-close"/></svg></span><span class="h" style="font-size:17px">Saisie rapide</span><span style="width:36px"></span></div>
+  <div class="pad" style="display:flex;flex-direction:column;gap:14px">
+    <div class="field focus" style="font-size:17px;line-height:1.6"><label>Écris comme tu parles</label>
+      <span><span class="tok-parse" style="--c:var(--acc)">dentiste</span> <span class="tok-parse" style="--c:var(--a-sapin)">mardi 14h30</span> <span class="tok-parse" style="--c:var(--a-brique)">rappel la veille</span></span></div>
+    <span class="eb">Aperçu · rien n’est créé avant de valider</span>
+    <div style="border-left:3px solid var(--a-sarcelle);padding:8px 12px;background:color-mix(in srgb,var(--a-sarcelle) 12%,var(--bg));border-radius:3px;display:flex;flex-direction:column;gap:4px;box-shadow:3px 3px 0 -1px var(--shadow)">
+      <span class="h" style="font-size:18px">Dentiste</span>
+      <span>Mardi 3 novembre · <span class="mono">14:30–15:30</span></span>
+      <span class="s" style="display:flex;gap:4px;align-items:center"><svg width="14" height="14"><use href="#i-bell"/></svg>La veille à 20:00</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span class="eb">Compris</span>
+      <span class="s"><b style="color:var(--acc)">titre</b> dentiste · <b style="color:var(--a-sapin)">quand</b> mardi 3 à 14:30, durée 1 h par défaut · <b style="color:var(--a-brique)">rappel</b> la veille à 20:00</span>
+    </div>
+    <span class="eb">D’autres exemples</span>
+    <div class="chips"><span>resto vendredi 20h avec Léa</span><span>congés du 3 au 14 août</span><span>courses samedi 10h</span></div>
+  </div>
+  <div class="pad" style="margin-top:auto;padding-bottom:16px;display:flex;gap:8px"><span class="btn" style="flex:1">Détailler</span><span class="btn fill" style="flex:1">Créer</span></div>
+</div>`;
+
+const notifScreen = `<div class="lock">
+  <span class="mono" style="text-align:center;font-size:12px;opacity:.8">lundi 2 novembre</span>
+  <span class="clock">13:30</span>
+  <div style="height:14px"></div>
+  <div class="notif">
+    <div style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--ink2)"><svg width="14" height="14" viewBox="0 0 108 108" style="border-radius:3px">${logoSVG('B')}</svg>Hora · maintenant</div>
+    <b style="font-size:14px">Dentiste · dans 1 h</b>
+    <span class="s">14:30–15:00 · Cabinet du Dr Martin</span>
+    <div class="acts"><span>10 min</span><span>1 h</span><span>Demain matin</span><span>Ouvrir</span></div>
+  </div>
+  <div class="notif" style="opacity:.92">
+    <div style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--ink2)"><svg width="14" height="14" viewBox="0 0 108 108" style="border-radius:3px">${logoSVG('B')}</svg>Hora · 1 rappel manqué pendant l’arrêt</div>
+    <b style="font-size:14px">Impôts : acompte · la veille à 9:00</b>
+  </div>
+  <span style="margin-top:auto;text-align:center;font-size:11px;opacity:.7">Reporter : 10 min, 1 h ou demain à 8:00</span>
+</div>`;
+
+const alarmScreen = `<div class="lock" style="justify-content:space-between;padding:48px 20px 28px">
+  <div style="display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center">
+    <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.8">Alarme plein écran</span>
+    <span class="clock" style="font-size:88px">07:00</span>
+    <span style="font-family:var(--f-poster);font-size:26px;font-variation-settings:'opsz' 40">Train pour Lyon</span>
+    <span class="mono" style="font-size:13px;opacity:.85">départ 07:58 · gare de Lyon</span>
+  </div>
+  <svg viewBox="0 0 200 60" width="100%" height="60" aria-hidden="true"><path d="M10 50h180" stroke="#8FB8FF" stroke-width="2"/><path d="M100 50 40 18v6l60 26Z" fill="#000" opacity=".35"/><path d="M100 50V12" stroke="#F1ECDF" stroke-width="3"/></svg>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <span style="min-height:56px;border-radius:28px;background:#8FB8FF;color:#0F1530;display:grid;place-items:center;font-weight:700;font-size:16px">Arrêter</span>
+    <span style="min-height:56px;border-radius:28px;border:1.5px solid #EEE9DC;display:grid;place-items:center;font-weight:650;font-size:15px">Reporter de 10 min</span>
+  </div>
+</div>`;
+
+const settingsScreen = `${sb}<div class="body">
+  <div class="header"><span class="h" style="font-size:24px">Réglages</span></div>
+  <div class="pad scroll">
+    <span class="eb">Apparence</span>
+    <div style="padding:6px 0 10px"><div class="seg"><span>Système</span><span class="on">Midi</span><span>Nocturne</span></div></div>
+    <div style="padding:0 0 10px"><div class="seg"><span class="on">Expressive</span><span>Sobre</span></div></div>
+    <div class="set"><div>Vibrations</div><div class="toggle on"></div></div>
+    <div class="rule"></div>
+    <span class="eb" style="display:block;padding-top:10px">Jours particuliers</span>
+    <div class="set"><div>Ponts possibles</div><div class="toggle on"></div></div>
+    <div class="set"><div>Changements d’heure</div><div class="toggle on"></div></div>
+    <div class="set"><div>Fête des mères et des pères</div><div class="toggle on"></div></div>
+    <div class="set"><div>Alsace-Moselle<div class="s">Vendredi saint, 26 décembre</div></div><div class="toggle"></div></div>
+    <div class="set"><div>Saint du jour, phases de lune</div><div class="toggle"></div></div>
+    <div class="rule"></div>
+    <div class="set" style="padding-top:10px"><div><b>Pratique musulmane</b><div class="s">Horaires de prière calculés hors ligne et fêtes musulmanes estimées. Rien ne s’affiche tant que c’est désactivé.</div></div><div class="toggle"></div></div>
+    <div class="rule"></div>
+    <span class="eb" style="display:block;padding-top:10px">Rappels</span>
+    <div class="set"><div>Fiabilité des rappels<div class="s" style="color:var(--warn)">Économie de batterie active · Régler</div></div><svg width="18" height="18"><use href="#i-right"/></svg></div>
+  </div>
+</div>${tabs(3)}`;
+
+const importScreen = `${sb}<div class="body">
+  <div class="header"><span class="ico"><svg width="22" height="22"><use href="#i-left"/></svg></span><span class="h" style="font-size:17px">Import terminé</span><span style="width:36px"></span></div>
+  <div class="pad" style="display:flex;flex-direction:column;gap:6px">
+    <span class="eb">fossify-events-2026-11-02.ics</span>
+    <span class="poster" style="font-size:52px"><span class="mono" style="font-size:48px;font-weight:500">312</span></span>
+    <span style="font-size:16px">événements importés · <b>4</b> déjà présents</span>
+  </div>
+  <div class="pad" style="margin-top:16px">
+    ${[['bleu','rond','Perso',142],['sapin','carre','Taff',88],['prune','losange','Famille',61],['brique','triangle','Sport',21]].map(([c,s,n,k]) => `<div class="set" style="border-bottom:1px solid var(--rule)">${mark(c,s,12)}<div>${n}<div class="s">nouvel agenda</div></div><span class="mono">${k}</span></div>`).join('')}
+  </div>
+  <div class="pad" style="margin-top:14px;display:flex;flex-direction:column;gap:6px">
+    <span class="s" style="display:flex;gap:6px;align-items:center"><svg width="14" height="14" style="color:var(--ok)"><use href="#i-check"/></svg>498 rappels conservés</span>
+    <span class="s" style="display:flex;gap:6px;align-items:center"><svg width="14" height="14" style="color:var(--ok)"><use href="#i-check"/></svg>37 récurrences, 9 exceptions</span>
+    <span class="s" style="display:flex;gap:6px;align-items:center"><svg width="14" height="14" style="color:var(--ok)"><use href="#i-check"/></svg>Fuseaux : Europe/Paris</span>
+  </div>
+  <div class="pad" style="margin-top:auto;padding-bottom:16px;display:flex;gap:8px"><span class="btn" style="flex:1">Annuler l’import</span><span class="btn fill" style="flex:1">Voir l’agenda</span></div>
+</div>`;
+
+const SCREENS = [
+  ['Aujourd’hui', 'L’écran d’ouverture.', ['La date en affiche, le lever et le coucher du soleil en chiffres gravés', 'Le prochain rendez-vous, avec ses rappels', 'Le fil du jour, coupé par la ligne « maintenant »', 'Compte à rebours, férié à venir, « Ouvrir Popote » sur les courses', 'La saisie rapide toujours à portée, au-dessus des onglets'], today],
+  ['Aujourd’hui · Pratique musulmane', 'Seulement si l’option est activée.', ['Date hégirienne marquée « estimé »', 'Les six horaires, la prochaine prière en bleu, la précédente estompée', 'Méthode, ville et ajustement rappelés en clair', 'Fêtes musulmanes dans leur agenda masquable, décalables d’un jour'], todayIslam],
+  ['Mois', 'Formes plutôt que pastilles.', ['Aujourd’hui : disque d’encre avec son ombre de cadran', 'Fériés soulignés en accent, avec leur nom', 'Une marque par événement, couleur et forme', 'Numéros de semaine à gauche, « Aujourd’hui » et flèches visibles'], monthScreen()],
+  ['Semaine', 'Les plages sous les événements.', ['Taff en bande d’ombre pâle du lundi au vendredi, Sport mardi et jeudi soir', 'Événements posés au-dessus, chacun avec son ombre dure', 'Ligne « maintenant » sur lundi seulement', 'Rangée « jour » pour les événements sur toute la journée'], weekScreen()],
+  ['Jour', 'La journée vue comme un cadran.', ['Nuit légèrement ombrée avant le lever et après le coucher', 'Marge gravée en chiffres à chasse fixe', 'L’ombre oblique sous la ligne « maintenant »'], dayScreen()],
+  ['Liste', 'L’agenda à lire d’un trait.', ['Jours en titres Fraunces', 'Récurrence et âge des anniversaires en clair', 'Fériés dans le fil, sans doublon à l’export'], listScreen],
+  ['Fiche', 'Un événement, ses rappels.', ['Le rappel passé est coché (le moment « l’ombre passe sur le repère »)', 'Chaque rappel montre sa nature et son heure réelle', 'Dupliquer, déplacer, partager en .ics dans l’en-tête'], detailScreen],
+  ['Éditeur · ajouter un rappel', 'Autant de rappels qu’on veut.', ['Relatifs : préréglages et durée libre', 'Ancrés : « la veille à 20:00 », « 2 jours avant à 9:00 »', 'Jeux de rappels réutilisables', 'Alarme plein écran à la demande', 'Feuille maison sur Dialog, actions hors défilement'], editorScreen],
+  ['Saisie rapide', 'L’aperçu avant tout.', ['Les mots reconnus sont soulignés de la couleur de leur champ', 'L’aperçu dit ce qui sera créé, et rien ne l’est avant « Créer »', 'Des exemples pour apprendre la syntaxe'], quickScreen],
+  ['Notification', 'Téléphone verrouillé.', ['Reporter : 10 min, 1 h, demain matin, et Ouvrir', 'Les rappels manqués pendant un arrêt du téléphone sont signalés au redémarrage'], notifScreen],
+  ['Alarme plein écran', 'Pour ce qui ne doit pas être raté.', ['L’heure en très grand, le titre en Fraunces', 'Deux grandes cibles : Arrêter, Reporter', 'Le style du cadran et son ombre, rappel du logo'], alarmScreen],
+  ['Réglages', 'Des filets, pas de cartes.', ['Apparence et ambiance en choix segmentés', 'Jours particuliers : les choix par défaut retenus', 'Pratique musulmane : un seul interrupteur, désactivé', 'Fiabilité des rappels : la fenêtre batterie de MIUI'], settingsScreen],
+  ['Import Fossify', 'Le résumé qui rassure.', ['Le compte en chiffres à chasse fixe', 'Un agenda créé par catégorie Fossify', 'Rappels, récurrences et fuseaux confirmés', 'Annulation possible tout de suite'], importScreen],
+];
+document.getElementById('screens').innerHTML = SCREENS.map(([t, s, pts, html]) => `
+  <div class="screen">
+    <div class="note"><h3>${t}</h3><p style="color:var(--ink2)">${s}</p><ul>${pts.map(p => `<li>${p}</li>`).join('')}</ul></div>
+    <div class="pair"><div class="ph midi" aria-label="${t}, palette Midi">${html}</div><div class="ph noct" aria-label="${t}, palette Nocturne">${html}</div></div>
+  </div>`).join('');
+
+// ---------- Moments ----------
+let level = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full';
+function motion() { return level; }
+function setLevel(l) { level = l; document.getElementById('m-exp').setAttribute('aria-pressed', l === 'full'); document.getElementById('m-sob').setAttribute('aria-pressed', l !== 'full'); }
+document.getElementById('m-exp').onclick = () => setLevel('full');
+document.getElementById('m-sob').onclick = () => setLevel('reduced');
+setLevel(level);
+
+const ENTER = 'cubic-bezier(.2,.7,.2,1)', TRANS = 'cubic-bezier(.65,0,.35,1)', REL = 'cubic-bezier(.2,.9,.2,1.2)';
+const running = new Map();
+function run(id, anims) { // anims : [element, keyframes, options] ; un appui sur la scène termine tout
+  (running.get(id) || []).forEach(a => a.finish());
+  const list = anims.map(([el, kf, op]) => el.animate(kf, op.duration ? op : {...op, duration: 180}));
+  running.set(id, list);
+}
+const fade = el => [el, [{opacity:0}, {opacity:1}], {duration:180, easing:'linear', fill:'both'}];
+
+const MOMENTS = [
+  ['month', 'Le mois qui tourne', 'L’ombre tourne d’un cran autour du style, la grille glisse vers le mois suivant.',
+    `<div data-r="grid" style="position:absolute;inset:16px 16px 16px 16px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px;align-content:start"></div>
+     <div data-r="label" style="position:absolute;right:16px;top:12px;font-family:var(--f-poster);font-size:22px">Décembre</div>
+     <div data-r="shadow" style="position:absolute;left:50%;top:100%;width:300px;height:300px;margin:-150px 0 0 -150px;background:conic-gradient(from 0deg,var(--shadow) 0 20deg,transparent 20deg 360deg);border-radius:50%;pointer-events:none"></div>`,
+    (st, full) => {
+      const g = st.querySelector('[data-r=grid]');
+      if (!g.childElementCount) g.innerHTML = Array.from({length:35}, (_, i) => `<span class="mono" style="font-size:11px;color:var(--ink2);text-align:center;padding:4px 0;border-top:1px solid var(--rule)">${(i%31)+1}</span>`).join('');
+      const sh = st.querySelector('[data-r=shadow]'), lb = st.querySelector('[data-r=label]');
+      return full ? [
+        [sh, [{transform:'rotate(-60deg)'}, {transform:'rotate(15deg)'}], {duration:640, easing:TRANS, fill:'both'}],
+        [g, [{transform:'translateX(0)', opacity:1}, {transform:'translateX(-24px)', opacity:0, offset:.45}, {transform:'translateX(24px)', opacity:0, offset:.5}, {transform:'translateX(0)', opacity:1}], {duration:640, easing:TRANS}],
+        [lb, [{opacity:0, transform:'translateY(8px)'}, {opacity:1, transform:'none'}], {duration:500, delay:240, easing:ENTER, fill:'both'}],
+      ] : [fade(g), fade(lb)];
+    }],
+  ['day', 'Le jour qui s’ouvre', 'L’ombre descend la colonne des heures et s’arrête sur « maintenant ».',
+    `<div style="position:absolute;inset:14px 16px 14px 52px;border-left:1px solid var(--rule)">${[8,10,12,14,16,18].map((h,i) => `<div style="position:absolute;left:0;right:0;top:${i*36}px;border-top:1px solid var(--rule)"><span class="mono" style="position:absolute;left:-34px;top:-7px;font-size:10px;color:var(--ink2)">${h}:00</span></div>`).join('')}
+     <div data-r="sweep" style="position:absolute;left:0;right:0;top:0;height:0;background:linear-gradient(to bottom,transparent,var(--band))"></div>
+     <div data-r="now" class="now" style="top:76px"></div></div>`,
+    (st, full) => {
+      const s = st.querySelector('[data-r=sweep]'), n = st.querySelector('[data-r=now]');
+      return full ? [
+        [s, [{height:'0px'}, {height:'76px'}], {duration:1400, easing:ENTER, fill:'both'}],
+        [n, [{transform:'translateY(-76px)', opacity:0}, {transform:'translateY(-76px)', opacity:1, offset:.1}, {transform:'none', opacity:1}], {duration:1400, easing:ENTER, fill:'both'}],
+      ] : [fade(n)];
+    }],
+  ['place', 'Un événement se pose', 'Le bloc monte de 12 dp et son ombre de cadran se forme sous lui.',
+    `<div style="position:absolute;inset:0;background:repeating-linear-gradient(to bottom,transparent 0 35px,var(--rule) 35px 36px)"></div>
+     <div data-r="blk" class="blk" style="--c:var(--a-sarcelle);left:40px;right:40px;top:72px;height:58px;font-size:13px;padding:8px 10px"><b>Dentiste</b><span class="mono" style="font-size:11px;color:var(--ink2)">14:30–15:00</span></div>`,
+    (st, full) => {
+      const b = st.querySelector('[data-r=blk]');
+      return full ? [[b, [{transform:'translateY(12px) scale(.98)', opacity:0, boxShadow:'0 0 0 -1px transparent'}, {transform:'none', opacity:1, boxShadow:'0 0 0 -1px transparent', offset:.6}, {transform:'none', opacity:1, boxShadow:'2px 3px 0 -1px var(--shadow)'}], {duration:600, easing:REL, fill:'both'}]] : [fade(b)];
+    }],
+  ['quick', 'La saisie devient un événement', 'Chaque mot reconnu glisse vers son champ, puis le bloc se pose.',
+    `<div style="position:absolute;left:16px;right:16px;top:14px;font-size:14px;display:flex;gap:6px;flex-wrap:wrap">
+       <span data-r="w1" class="tok-parse" style="--c:var(--acc)">dentiste</span><span data-r="w2" class="tok-parse" style="--c:var(--a-sapin)">mardi 14h30</span><span data-r="w3" class="tok-parse" style="--c:var(--a-brique)">rappel la veille</span></div>
+     <div data-r="card" style="position:absolute;left:16px;right:16px;bottom:16px;border-left:3px solid var(--a-sarcelle);padding:8px 12px;background:color-mix(in srgb,var(--a-sarcelle) 12%,var(--bg));border-radius:3px;box-shadow:3px 3px 0 -1px var(--shadow);display:flex;flex-direction:column;gap:2px">
+       <span data-r="f1" style="font-family:var(--f-poster);font-size:18px">Dentiste</span><span data-r="f2" class="mono" style="font-size:12px">mar. 3 nov. · 14:30</span><span data-r="f3" style="font-size:12px;color:var(--ink2)">La veille à 20:00</span></div>`,
+    (st, full) => {
+      const q = r => st.querySelector(`[data-r=${r}]`);
+      if (!full) return [fade(q('card'))];
+      const a = [[q('card'), [{opacity:0, transform:'translateY(12px)'}, {opacity:1, transform:'none'}], {duration:500, delay:700, easing:ENTER, fill:'both'}]];
+      ['1','2','3'].forEach((k, i) => {
+        a.push([q('w'+k), [{transform:'none', opacity:1}, {transform:'translateY(70px)', opacity:0}], {duration:500, delay:i*60, easing:TRANS, fill:'both'}]);
+        a.push([q('f'+k), [{opacity:0}, {opacity:1}], {duration:300, delay:900+i*60, easing:ENTER, fill:'both'}]);
+      });
+      a.push([q('w1').parentElement, [{opacity:1}, {opacity:1}], {duration:1}]);
+      return a;
+    }],
+  ['check', 'Un rappel se coche', 'L’ombre passe sur le repère ; derrière elle, la cloche devient une coche.',
+    `<div style="position:absolute;left:16px;right:16px;top:74px;display:flex;align-items:center;gap:12px;min-height:56px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);overflow:hidden">
+       <span style="position:relative;width:22px;height:22px;flex:none"><svg data-r="bell" width="22" height="22" style="position:absolute;color:var(--acc)"><use href="#i-bell"/></svg><svg data-r="tick" width="22" height="22" style="position:absolute;color:var(--ok);opacity:0"><use href="#i-check"/></svg></span>
+       <span data-r="txt">La veille à 20:00</span>
+       <span data-r="sh" style="position:absolute;top:0;bottom:0;left:-60px;width:60px;background:linear-gradient(90deg,transparent,var(--shadow),transparent);transform:skewX(-20deg)"></span></div>`,
+    (st, full) => {
+      const q = r => st.querySelector(`[data-r=${r}]`);
+      return full ? [
+        [q('sh'), [{transform:'translateX(0) skewX(-20deg)'}, {transform:'translateX(380px) skewX(-20deg)'}], {duration:640, easing:TRANS, fill:'both'}],
+        [q('bell'), [{opacity:1}, {opacity:1, offset:.25}, {opacity:0}], {duration:400, easing:'linear', fill:'both'}],
+        [q('tick'), [{opacity:0, transform:'scale(.6)'}, {opacity:0, transform:'scale(.6)', offset:.3}, {opacity:1, transform:'none'}], {duration:600, easing:REL, fill:'both'}],
+        [q('txt'), [{color:'var(--ink)', textDecorationColor:'transparent'}, {color:'var(--ink2)', textDecoration:'line-through', textDecorationColor:'currentColor'}], {duration:400, delay:200, fill:'both'}],
+      ] : [[q('bell'), [{opacity:1}, {opacity:0}], {duration:180, fill:'both'}], [q('tick'), [{opacity:0}, {opacity:1}], {duration:180, fill:'both'}]];
+    }],
+  ['zero', 'Le compte à rebours à zéro', 'Les chiffres roulent jusqu’à J-0 ; l’ombre pivote et rejoint la ligne de midi.',
+    `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+       <span style="font-size:12px;color:var(--ink2);letter-spacing:.1em;text-transform:uppercase;font-weight:650">Week-end à Lyon</span>
+       <span class="mono" style="font-size:44px;font-weight:500;display:flex">J-<span style="display:inline-block;height:1.15em;overflow:hidden"><span data-r="roll" style="display:flex;flex-direction:column;line-height:1.15">${[3,2,1,0].map(n => `<span>${n}</span>`).join('')}</span></span></span>
+       <svg viewBox="0 0 160 40" width="160" height="40" aria-hidden="true"><path d="M10 34h140" stroke="var(--acc)" stroke-width="2"/><g data-r="gn" style="transform-origin:80px 34px"><path d="M80 34 30 14v5l50 15Z" fill="var(--shadow)"/></g><path d="M80 34V8" stroke="var(--ink)" stroke-width="3"/></svg></div>`,
+    (st, full) => {
+      const r = st.querySelector('[data-r=roll]'), g = st.querySelector('[data-r=gn]');
+      return full ? [
+        [r, [{transform:'translateY(0)'}, {transform:'translateY(-75%)'}], {duration:1400, easing:'steps(3, jump-none)', fill:'both'}],
+        [g, [{transform:'rotate(0)'}, {transform:'rotate(68deg)', opacity:.3}], {duration:1400, easing:ENTER, fill:'both'}],
+      ] : [[r, [{transform:'translateY(-75%)', opacity:0}, {transform:'translateY(-75%)', opacity:1}], {duration:180, fill:'both'}], [g, [{transform:'rotate(68deg)', opacity:.3}, {transform:'rotate(68deg)', opacity:.3}], {duration:180, fill:'both'}]];
+    }],
+];
+document.getElementById('moments').innerHTML = MOMENTS.map(([id, t, d, html]) => `
+  <div class="moment"><div class="stage" id="st-${id}" role="button" tabindex="0" aria-label="${t} : appuyer pour interrompre">${html}</div>
+  <h3>${t}</h3><p>${d}</p><button type="button" class="replay" data-m="${id}">Rejouer</button></div>`).join('');
+MOMENTS.forEach(([id, , , , fn]) => {
+  const st = document.getElementById('st-' + id);
+  const play = () => run(id, fn(st, motion() === 'full'));
+  st.addEventListener('click', () => (running.get(id) || []).forEach(a => a.finish()));
+  st.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (running.get(id) || []).forEach(a => a.finish()); } });
+  document.querySelector(`[data-m=${id}]`).addEventListener('click', play);
+  fn(st, false); // état de repos : la grille du mois se remplit
+  run(id, fn(st, false)); running.get(id).forEach(a => a.finish());
+});
+</script>

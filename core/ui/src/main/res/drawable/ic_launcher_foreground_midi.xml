@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Avant-plan clair de la variante « Midi ». Source : design/icon/hora-icon.svg. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:pathData="M40,35h7v29h-7z M61,35h7v29h-7z" android:fillColor="#FF1D2B5C" />
+    <path android:pathData="M47,51.5L61,46L61,52L47,57.5z" android:fillColor="#FF1D2B5C" />
+    <path android:pathData="M39.5,70h29a1,1 0 0 1 0,2h-29a1,1 0 0 1 0,-2z" android:fillColor="#FF2448A8" />
+</vector>

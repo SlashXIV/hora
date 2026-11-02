@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Démarrage Android 12+ : l'ombre du style tourne d'un cran puis se pose (800 ms, courbe Enter). -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/splash_icon">
+    <target android:name="shadow">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator android:propertyName="rotation" android:valueFrom="-28" android:valueTo="0"
+                    android:duration="800" android:interpolator="@interpolator/hora_enter" />
+                <objectAnimator android:propertyName="scaleX" android:valueFrom="0.6" android:valueTo="1"
+                    android:duration="800" android:interpolator="@interpolator/hora_enter" />
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>

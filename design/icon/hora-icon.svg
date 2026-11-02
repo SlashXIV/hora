@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Hora — icône d'application, source de référence (variante A « Cadran », validée le 02/11/2026).
+
+    Même grammaire que les autres applications de l'auteur (Dromos, Topo, Brut, Kalos,
+    Popote) : une lettre tracée à la main, un trait d'accent fin dessous, les couleurs
+    de la DA, et un détail qui raconte l'application.
+
+    DA « le cadran solaire » : la barre du H est le STYLE d'un cadran, posé en biais
+    à environ 20° (de 47,54.5 à 61,49 en son milieu ; à 43°, la lettre se lisait « И »), et il projette son OMBRE vers le bas à droite. Le trait
+    d'accent sous la lettre est la LIGNE DE MIDI. Le détail : douze lignes horaires
+    gravées, rayonnant du pied du cadran (54,71) tous les 13°, rayons 40 à 64 ; celle
+    de l'heure présente (i = 3) est plus marquée.
+
+    Canevas 108x108 (icône adaptative) ; seul le cercle central de diamètre 66 est
+    garanti visible. Les lignes horaires et l'ombre débordent volontairement : leur
+    milieu reste dans le cercle, leurs extrémités sont faites pour être rognées.
+
+    ZONE D'EXCLUSION (lettre + style + filet, marge comprise) : x 36,5..71,5, y 33..74.
+    Les lignes horaires partent à 40 du pied et restent hors de la lettre ; l'ombre
+    naît sur le fût droit (x = 61) et sort de la zone vers la droite.
+
+    Couches dérivées (core/ui/src/main/res/), générées par le même script :
+      - drawable/ic_launcher_background_cadran : fond, lignes horaires, ombre ;
+      - drawable/ic_launcher_foreground : H, style, ligne de midi ;
+      - drawable/ic_launcher_monochrome : lettre, style, filet ; ombre à mi-opacité ;
+      - drawable/splash_icon + avd_splash : démarrage, l'ombre qui tourne d'un cran.
+    Variantes au choix dans les réglages : B « Ombre » (sans lignes), C « Semaine »
+    (sept points, ombre courte), « Midi » (A en clair). Fond lapis, distinct des
+    autres icônes de la famille.
+
+    Palette : fond lapis #1D2B5C, lettre crème #F1ECDF, ligne de midi ciel #8FB8FF
+    (accent de Nocturne), ombre #111A3F.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <defs>
+    <clipPath id="squircle">
+      <path d="M54,0 C86,0 108,22 108,54 C108,86 86,108 54,108 C22,108 0,86 0,54 C0,22 22,0 54,0 Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#squircle)">
+    <rect width="108" height="108" fill="#1D2B5C"/>
+    <path d="M14.9,62.7L-8.6,57.7" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M17.7,54.1L-4.0,44.0" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M22.5,46.4L3.6,31.6" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M28.8,39.9L13.7,21.3" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M36.5,35.0L25.9,13.5" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M45.0,32.0L39.6,8.6" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M63.0,32.0L68.4,8.6" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M71.5,35.0L82.1,13.5" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M79.2,39.9L94.3,21.3" stroke="#F1ECDF" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M85.5,46.4L104.4,31.6" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M90.3,54.1L112.0,44.0" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M93.1,62.7L116.6,57.7" stroke="#F1ECDF" stroke-opacity="0.22" stroke-width="1.1" stroke-linecap="round"/>
+    <path fill="#111A3F" d="M61,46L96,64L96,73L61,52z"/>
+    <path fill="#F1ECDF" d="M40,35h7v29h-7z M61,35h7v29h-7z"/>
+    <path fill="#F1ECDF" d="M47,51.5L61,46L61,52L47,57.5z"/>
+    <rect x="38.5" y="70" width="31" height="2" rx="1" fill="#8FB8FF"/>
+  </g>
+</svg>

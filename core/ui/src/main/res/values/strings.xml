@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Textes partagés par tous les écrans. Typographie française : espace insécable
+    ( ) avant « : ; ! ? », pour qu'aucun signe ne se retrouve seul en début de ligne.
+-->
+<resources>
+    <!-- Langue des dates (voir text/AppLocale.kt) : chaque traduction met la sienne. -->
+    <string name="app_locale">fr-FR</string>
+</resources>

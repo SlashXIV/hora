@@ -1,5 +1,7 @@
 package com.gabrielifrim.hora.feature.calendar
 
+import com.gabrielifrim.hora.core.ui.component.FitText
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -99,8 +101,8 @@ internal fun HourGridPage(
                             .clearAndSetSemantics { contentDescription = formats.dayLong(day); role = Role.Button },
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        HoraText(day.dayOfWeek.getDisplayName(TextStyle.SHORT, formats.locale), style = HoraTheme.type.label, color = if (isToday) colors.accent else colors.ink2)
-                        HoraText(day.dayOfMonth.toString(), style = HoraTheme.type.hour, color = if (isToday) colors.accent else colors.ink)
+                        FitText(day.dayOfWeek.getDisplayName(TextStyle.SHORT, formats.locale), style = HoraTheme.type.label, color = if (isToday) colors.accent else colors.ink2, minFontSize = 7.sp)
+                        FitText(day.dayOfMonth.toString(), style = HoraTheme.type.hour, color = if (isToday) colors.accent else colors.ink)
                     }
                 }
             }
@@ -135,11 +137,11 @@ private fun HourGutter(formats: HoraFormats) {
         (0 until 24).forEach { h ->
             Box(Modifier.height(HOUR).fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                 if (h > 0) {
-                    HoraText(
+                    FitText(
                         formats.hourLabel(h),
                         style = HoraTheme.type.hour.copy(fontSize = HoraTheme.type.label.fontSize),
                         color = HoraTheme.colors.ink2,
-                        textAlign = TextAlign.End,
+                        minFontSize = 7.sp,
                         modifier = Modifier.offset(y = (-7).dp).padding(end = 6.dp).clearAndSetSemantics { },
                     )
                 }

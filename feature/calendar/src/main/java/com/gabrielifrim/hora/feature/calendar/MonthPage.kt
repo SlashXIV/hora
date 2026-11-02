@@ -1,5 +1,7 @@
 package com.gabrielifrim.hora.feature.calendar
 
+import com.gabrielifrim.hora.core.ui.component.FitText
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -63,13 +65,9 @@ internal fun MonthPage(
         Row(Modifier.fillMaxWidth().clearAndSetSemantics { }) {
             if (formats.showWeekNumbers) Box(Modifier.width(WEEK_COLUMN))
             (0L until 7L).forEach { i ->
-                HoraText(
-                    first.plusDays(i).dayOfWeek.getDisplayName(TextStyle.NARROW, formats.locale),
-                    style = HoraTheme.type.label,
-                    color = colors.ink2,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f).padding(vertical = 4.dp),
-                )
+                Box(Modifier.weight(1f).padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
+                    FitText(first.plusDays(i).dayOfWeek.getDisplayName(TextStyle.NARROW, formats.locale), style = HoraTheme.type.label, color = colors.ink2)
+                }
             }
         }
         (0 until 6).forEach { week ->
@@ -77,13 +75,9 @@ internal fun MonthPage(
             Row(Modifier.fillMaxWidth()) {
                 val weekStart = first.plusDays(week * 7L)
                 if (formats.showWeekNumbers) {
-                    HoraText(
-                        formats.week(weekStart).toString(),
-                        style = HoraTheme.type.hour.copy(fontSize = HoraTheme.type.label.fontSize),
-                        color = colors.ink2,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.width(WEEK_COLUMN).padding(top = 8.dp).clearAndSetSemantics { },
-                    )
+                    Box(Modifier.width(WEEK_COLUMN).padding(top = 8.dp).clearAndSetSemantics { }, contentAlignment = Alignment.TopCenter) {
+                        FitText(formats.week(weekStart).toString(), style = HoraTheme.type.hour.copy(fontSize = HoraTheme.type.label.fontSize), color = colors.ink2, minFontSize = 6.sp)
+                    }
                 }
                 (0L until 7L).forEach { i ->
                     val day = weekStart.plusDays(i)
@@ -122,7 +116,7 @@ private fun DayCell(
                 Box(Modifier.size(26.dp).offset(2.dp, 2.dp).background(colors.shadow, CircleShape))
                 Box(Modifier.size(26.dp).background(colors.ink, CircleShape))
             }
-            HoraText(
+            FitText(
                 day.dayOfMonth.toString(),
                 style = HoraTheme.type.hour,
                 color = when {

@@ -1,5 +1,7 @@
 package com.gabrielifrim.hora
 
+import com.gabrielifrim.hora.core.ui.component.FitText
+import androidx.compose.ui.unit.sp
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -159,7 +161,7 @@ private fun TabBar(selected: Tab, onSelect: (Tab) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
                 ) {
                     HoraIcon(tab.icon, contentDescription = null, tint = if (on) colors.accent else colors.ink2, size = 22.dp)
-                    HoraText(stringResource(tab.label), style = HoraTheme.type.bodySmall, color = if (on) colors.ink else colors.ink2, maxLines = 1)
+                    FitText(stringResource(tab.label), style = HoraTheme.type.bodySmall, color = if (on) colors.ink else colors.ink2, minFontSize = 8.sp)
                     Box(Modifier.width(18.dp).height(2.dp).background(if (on) colors.accent else colors.background, RoundedCornerShape(1.dp)))
                 }
             }

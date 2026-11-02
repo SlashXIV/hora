@@ -131,15 +131,17 @@ private fun Header(
             stringResource(R.string.week_span, formats.dayShort(shown), formats.dayShort(shown.plusDays(6)))
         CalendarMode.MONTH, CalendarMode.LIST -> shown.year.toString() to formats.month(shown)
     }
+    // Titre sur toute la largeur, commandes en dessous : à 200 %, côte à côte, le
+    // titre n'avait plus qu'une lettre par ligne.
+    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 4.dp)) {
+        Eyebrow(eyebrow)
+        HoraText(title, style = HoraTheme.type.heading.copy(fontSize = HoraTheme.type.heading.fontSize * 1.2f), modifier = Modifier.semantics { heading() })
+    }
     Row(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().padding(start = 8.dp, end = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.End),
     ) {
-        Column(Modifier.weight(1f)) {
-            Eyebrow(eyebrow)
-            HoraText(title, style = HoraTheme.type.heading.copy(fontSize = HoraTheme.type.heading.fontSize * 1.2f), modifier = Modifier.semantics { heading() })
-        }
         if (mode != CalendarMode.LIST) {
             IconAction(HoraIcons.Previous, stringResource(R.string.previous_period), onClick = onPrevious)
             IconAction(HoraIcons.Next, stringResource(R.string.next_period), onClick = onNext)

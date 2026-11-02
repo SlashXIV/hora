@@ -110,7 +110,7 @@ private fun MonthDays(month: YearMonth, formats: HoraFormats, selected: LocalDat
                                     ),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                HoraText(day.dayOfMonth.toString(), style = HoraTheme.type.hour, color = if (isSelected) colors.onInk else colors.ink)
+                                FitText(day.dayOfMonth.toString(), style = HoraTheme.type.hour, color = if (isSelected) colors.onInk else colors.ink)
                             }
                         }
                     }
@@ -166,7 +166,7 @@ private fun ChipGrid(values: List<Int>, columns: Int, selected: Int, label: (Int
                             .selectable(selected = on, role = Role.RadioButton) { onSelect(v) },
                         contentAlignment = Alignment.Center,
                     ) {
-                        HoraText(label(v), style = HoraTheme.type.hour, color = if (on) colors.onInk else colors.ink)
+                        FitText(label(v), style = HoraTheme.type.hour, color = if (on) colors.onInk else colors.ink)
                     }
                 }
                 repeat(columns - row.size) { Box(Modifier.weight(1f)) }

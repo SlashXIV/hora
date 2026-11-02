@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gabrielifrim.hora.core.ui.motion.LocalMotionLevel
 import com.gabrielifrim.hora.core.ui.motion.Motion
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
@@ -105,12 +106,8 @@ fun SegmentedChoice(
                     .padding(horizontal = 8.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                HoraText(
-                    option,
-                    style = HoraTheme.type.bodySmall,
-                    color = if (selected) colors.onInk else colors.ink2,
-                    textAlign = TextAlign.Center,
-                )
+                // Une ligne qui rétrécit plutôt qu'un mot coupé (« Semai/ne ») à 200 %.
+                FitText(option, style = HoraTheme.type.bodySmall, color = if (selected) colors.onInk else colors.ink2, minFontSize = 8.sp)
             }
         }
     }

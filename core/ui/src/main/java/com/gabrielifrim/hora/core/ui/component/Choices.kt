@@ -29,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -141,6 +143,19 @@ fun ToggleRow(
         }
         Switch(checked)
     }
+}
+
+/** Interrupteur seul, quand le libellé est ailleurs sur la ligne ; [label] est lu par TalkBack. */
+@Composable
+fun ToggleSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .heightIn(min = 48.dp)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+            .semantics { contentDescription = label }
+            .padding(horizontal = 4.dp),
+        contentAlignment = Alignment.Center,
+    ) { Switch(checked) }
 }
 
 /** L'interrupteur dessiné, sans interaction propre : c'est la ligne qui se coche. */

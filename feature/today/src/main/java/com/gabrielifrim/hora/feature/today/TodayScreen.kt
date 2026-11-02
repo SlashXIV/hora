@@ -23,10 +23,13 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gabrielifrim.hora.core.domain.almanac.Place
+import com.gabrielifrim.hora.core.domain.almanac.Sun
 import com.gabrielifrim.hora.core.domain.calendar.DayLayout
 import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.model.Event
@@ -80,13 +83,16 @@ fun TodayScreen(
     val today = now.atZone(zone).toLocalDate()
     val formats = rememberFormats()
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
+    val place by viewModel.place.collectAsStateWithLifecycle()
+    val sun = remember(today, place) { Sun.day(today, place) }
     val events by remember(today, zone) { viewModel.upcoming(today, zone) }.collectAsStateWithLifecycle(emptyList())
     val todays = remember(events, today) {
         events.filter { DayLayout.occursOn(it, today, zone) }
             .sortedWith(compareBy({ it.timing !is Timing.AllDay }, { (it.timing as? Timing.Timed)?.start }))
     }
+    // Le prochain rendez-vous est un vrai événement : pas une pleine lune ni un changement d'heure.
     val next = remember(events, now) {
-        events.mapNotNull { e -> (e.timing as? Timing.Timed)?.takeIf { it.start.isAfter(now) }?.let { e to it.start } }.minByOrNull { it.second }
+        events.filter { it.id > 0 }.mapNotNull { e -> (e.timing as? Timing.Timed)?.takeIf { it.start.isAfter(now) }?.let { e to it.start } }.minByOrNull { it.second }
     }
 
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
@@ -97,6 +103,7 @@ fun TodayScreen(
             actions = { IconAction(HoraIcons.Add, stringResource(R.string.new_event), onClick = { onCreate(today) }) },
         )
         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SunLine(sun, place, zone, formats)
             if (next != null) NextUp(next.first, Duration.between(now, next.second), today, zone, formats, agendas, onOpenEvent)
             Rule()
             if (todays.isEmpty()) {
@@ -110,6 +117,23 @@ fun TodayScreen(
             }
         }
     }
+}
+
+/** « Bordeaux · lever 08:12, coucher 17:44 » ; rien de lisible sous le cercle polaire. */
+@Composable
+private fun SunLine(sun: Sun.Day, place: Place, zone: ZoneId, formats: HoraFormats) {
+    val rise = sun.sunrise ?: return
+    val set = sun.sunset ?: return
+    val riseTime = rise.atZone(zone).toLocalTime()
+    val setTime = set.atZone(zone).toLocalTime()
+    // TalkBack dit « 8 h 12 » plutôt que « 08:12 ».
+    val spoken = stringResource(R.string.today_sun, place.name, formats.spoken(riseTime), formats.spoken(setTime))
+    HoraText(
+        stringResource(R.string.today_sun, place.name, formats.time(riseTime), formats.time(setTime)),
+        style = HoraTheme.type.bodySmall,
+        color = HoraTheme.colors.ink2,
+        modifier = Modifier.semantics { contentDescription = spoken },
+    )
 }
 
 @Composable

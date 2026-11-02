@@ -103,6 +103,35 @@ private fun SettingsContent(
             }
         }
 
+        item {
+            Section(stringResource(R.string.settings_almanac)) {
+                var picking by remember { mutableStateOf(false) }
+                LinkRow(stringResource(R.string.place), stringResource(R.string.place_hint, settings.place.name)) { picking = true }
+                if (picking) {
+                    PlaceSheet(settings.place, onPick = { place -> haptics.tick(); update { it.copy(place = place) }; picking = false }, onDismiss = { picking = false })
+                }
+                ToggleRow(
+                    title = stringResource(R.string.almanac_bridges),
+                    hint = stringResource(R.string.almanac_bridges_hint),
+                    checked = settings.almanac.bridges,
+                    onCheckedChange = { on -> update { it.copy(almanac = it.almanac.copy(bridges = on)) } },
+                )
+                ToggleRow(
+                    title = stringResource(R.string.almanac_alsace),
+                    hint = stringResource(R.string.almanac_alsace_hint),
+                    checked = settings.almanac.alsaceMoselle,
+                    onCheckedChange = { on -> update { it.copy(almanac = it.almanac.copy(alsaceMoselle = on)) } },
+                )
+                ToggleRow(
+                    title = stringResource(R.string.almanac_more_feasts),
+                    hint = stringResource(R.string.almanac_more_feasts_hint),
+                    checked = settings.almanac.moreFeasts,
+                    onCheckedChange = { on -> update { it.copy(almanac = it.almanac.copy(moreFeasts = on)) } },
+                )
+                HoraText(stringResource(R.string.almanac_agendas_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+            }
+        }
+
         item { Section(stringResource(R.string.settings_icon)) { IconPicker(onPicked = haptics::tick) } }
 
         item {

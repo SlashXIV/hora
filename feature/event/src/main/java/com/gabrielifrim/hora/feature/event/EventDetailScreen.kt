@@ -76,6 +76,7 @@ fun EventDetailScreen(
     LaunchedEffect(event) { if (event != null) seen = true else if (seen) onBack() }
 
     val e = event ?: return
+    val editable = e.id > 0
     val key = colorKeyOf(e, agendas)
     val day = when (val t = e.timing) {
         is Timing.Timed -> t.start.atZone(zone).toLocalDate()
@@ -112,33 +113,38 @@ fun EventDetailScreen(
                 }
                 if (e.location.isNotBlank()) Field(stringResource(R.string.field_location), e.location)
                 if (e.notes.isNotBlank()) Field(stringResource(R.string.field_notes), e.notes)
-                Rule()
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HoraButton(stringResource(R.string.action_duplicate), onClick = { onDuplicate(e.id, e.occurrence) }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
-                    HoraButton(stringResource(R.string.action_move), onClick = { moving = true }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
+                // Un férié ou une fête (agenda calculé) se lit, il ne se modifie pas.
+                if (editable) {
+                    Rule()
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        HoraButton(stringResource(R.string.action_duplicate), onClick = { onDuplicate(e.id, e.occurrence) }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
+                        HoraButton(stringResource(R.string.action_move), onClick = { moving = true }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
+                    }
+                    HoraButton(
+                        stringResource(R.string.action_share),
+                        onClick = {
+                            scope.launch {
+                                val uri = viewModel.shareFile() ?: return@launch
+                                val send = Intent(Intent.ACTION_SEND)
+                                    .setType("text/calendar")
+                                    .putExtra(Intent.EXTRA_STREAM, uri)
+                                    .putExtra(Intent.EXTRA_SUBJECT, e.title)
+                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                send.clipData = ClipData.newRawUri(e.title, uri)
+                                context.startActivity(Intent.createChooser(send, shareTitle))
+                            }
+                        },
+                        style = ButtonStyle.Line,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
-                HoraButton(
-                    stringResource(R.string.action_share),
-                    onClick = {
-                        scope.launch {
-                            val uri = viewModel.shareFile() ?: return@launch
-                            val send = Intent(Intent.ACTION_SEND)
-                                .setType("text/calendar")
-                                .putExtra(Intent.EXTRA_STREAM, uri)
-                                .putExtra(Intent.EXTRA_SUBJECT, e.title)
-                                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            send.clipData = ClipData.newRawUri(e.title, uri)
-                            context.startActivity(Intent.createChooser(send, shareTitle))
-                        }
-                    },
-                    style = ButtonStyle.Line,
-                    modifier = Modifier.fillMaxWidth(),
-                )
             }
         }
-        Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HoraButton(stringResource(R.string.action_delete), onClick = { confirmDelete = true }, style = ButtonStyle.Line, contentColor = HoraTheme.colors.error, modifier = Modifier.weight(1f))
-            HoraButton(stringResource(R.string.action_edit), onClick = { onEdit(e.id, e.occurrence) }, modifier = Modifier.weight(1f))
+        if (editable) {
+            Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HoraButton(stringResource(R.string.action_delete), onClick = { confirmDelete = true }, style = ButtonStyle.Line, contentColor = HoraTheme.colors.error, modifier = Modifier.weight(1f))
+                HoraButton(stringResource(R.string.action_edit), onClick = { onEdit(e.id, e.occurrence) }, modifier = Modifier.weight(1f))
+            }
         }
     }
 

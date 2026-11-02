@@ -140,4 +140,22 @@
     <string name="transfer_restore_failed">La restauration a échoué : l’agenda actuel n’a pas été remplacé.</string>
     <string name="transfer_not_hora">Ce fichier n’est pas une sauvegarde Hora.</string>
     <string name="transfer_too_new">Cette sauvegarde vient d’une version plus récente de Hora : mettez l’application à jour d’abord.</string>
+    <string name="settings_almanac">Fêtes et jours</string>
+    <string name="place">Lieu</string>
+    <string name="place_hint">%1$s : lever et coucher du soleil sur Aujourd’hui</string>
+    <string name="place_title">Lieu du soleil</string>
+    <string name="place_coordinates_hint">Ailleurs : vos coordonnées en degrés décimaux (une carte les donne d’un appui long).</string>
+    <string name="place_latitude">Latitude</string>
+    <string name="place_longitude">Longitude</string>
+    <string name="place_use_coordinates">Utiliser ces coordonnées</string>
+    <string name="place_custom">Mon lieu</string>
+    <string name="almanac_bridges">Ponts</string>
+    <string name="almanac_bridges_hint">Le lundi d’un férié un mardi, le vendredi d’un férié un jeudi.</string>
+    <string name="almanac_alsace">Alsace et Moselle</string>
+    <string name="almanac_alsace_hint">Vendredi saint et Saint-Étienne, fériés en plus.</string>
+    <string name="almanac_more_feasts">Autres fêtes</string>
+    <string name="almanac_more_feasts_hint">Chandeleur, Saint-Valentin, fête des grands-mères, Pâques, Pentecôte, fête de la musique, Halloween.</string>
+    <string name="almanac_agendas_hint">Fériés, fêtes, lune et changements d’heure sont calculés, jamais exportés ; ils s’affichent ou se masquent dans Agendas.</string>
+    <string name="agendas_computed">Calculés par Hora</string>
+    <string name="agenda_computed_hint">Calculé, en lecture seule</string>
 </resources>

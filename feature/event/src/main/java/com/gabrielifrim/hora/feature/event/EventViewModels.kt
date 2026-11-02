@@ -12,6 +12,7 @@ import com.gabrielifrim.hora.core.domain.recurrence.EditScope
 import com.gabrielifrim.hora.core.domain.recurrence.Recurrences
 import com.gabrielifrim.hora.core.domain.recurrence.SeriesEdits
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
+import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderSet
 import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
@@ -29,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -56,6 +58,7 @@ class EventDetailViewModel @AssistedInject constructor(
     private val events: EventRepository,
     agendas: AgendaRepository,
     @param:ApplicationContext private val context: Context,
+    almanac: AlmanacRepository,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -65,9 +68,10 @@ class EventDetailViewModel @AssistedInject constructor(
     private val zone = ZoneId.systemDefault()
 
     /** Ce qu'on affiche : l'occurrence demandée, avec son horaire. */
-    val event: StateFlow<Event?> = events.event(eventId).map { it?.let { s -> occurrenceOf(s, occurrence, zone) } }
+    /** Un id négatif est une entrée d'un agenda calculé (férié, fête…), en lecture seule. */
+    val event: StateFlow<Event?> = (if (eventId < 0) almanac.event(eventId) else events.event(eventId)).map { it?.let { s -> occurrenceOf(s, occurrence, zone) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-    val agendas: StateFlow<Map<Long, Agenda>> = agendas.agendas.map { l -> l.associateBy { it.id } }
+    val agendas: StateFlow<Map<Long, Agenda>> = combine(agendas.agendas, almanac.agendas) { a, b -> a + b }.map { l -> l.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /** Déplacer une occurrence d'une série ne déplace qu'elle. */

@@ -27,6 +27,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
+import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
+import com.gabrielifrim.hora.core.domain.repository.almanacGroupOf
+import com.gabrielifrim.hora.core.ui.component.Eyebrow
 import com.gabrielifrim.hora.core.ui.component.AddReminderSheet
 import com.gabrielifrim.hora.core.ui.component.AgendaMark
 import com.gabrielifrim.hora.core.ui.component.ReminderList
@@ -57,8 +60,19 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class AgendasViewModel @Inject constructor(private val repository: AgendaRepository) : ViewModel() {
+class AgendasViewModel @Inject constructor(
+    private val repository: AgendaRepository,
+    private val almanac: AlmanacRepository,
+) : ViewModel() {
     val agendas: StateFlow<List<Agenda>> = repository.agendas.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Fériés, fêtes, lune, changements d'heure : seulement visibles ou masqués. */
+    val computed: StateFlow<List<Agenda>> = almanac.agendas.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun setComputedVisible(agenda: Agenda, visible: Boolean) {
+        val group = almanacGroupOf(agenda.id) ?: return
+        viewModelScope.launch { almanac.setHidden(group, !visible) }
+    }
 
     fun save(agenda: Agenda) {
         viewModelScope.launch { repository.save(agenda) }
@@ -73,6 +87,7 @@ class AgendasViewModel @Inject constructor(private val repository: AgendaReposit
 @Composable
 fun AgendasScreen(onBack: () -> Unit, viewModel: AgendasViewModel = hiltViewModel()) {
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
+    val computed by viewModel.computed.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Agenda?>(null) }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
@@ -98,6 +113,19 @@ fun AgendasScreen(onBack: () -> Unit, viewModel: AgendasViewModel = hiltViewMode
                     HoraText(stringResource(if (agenda.hidden) R.string.agenda_hidden else R.string.agenda_edit_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                 }
                 ToggleSwitch(checked = !agenda.hidden, onCheckedChange = { viewModel.save(agenda.copy(hidden = !it)) }, label = stringResource(R.string.agenda_visible, agenda.name))
+            }
+            Rule()
+        }
+        item { Eyebrow(stringResource(R.string.agendas_computed), Modifier.padding(top = 20.dp, bottom = 4.dp)) }
+        items(computed, key = { it.id }) { agenda ->
+            val key = agendaColorKey(agenda.colorKey)
+            Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                AgendaMark(key.shape, key.color(), size = 14.dp)
+                Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+                    HoraText(agenda.name, style = HoraTheme.type.body)
+                    HoraText(stringResource(if (agenda.hidden) R.string.agenda_hidden else R.string.agenda_computed_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+                }
+                ToggleSwitch(checked = !agenda.hidden, onCheckedChange = { viewModel.setComputedVisible(agenda, it) }, label = stringResource(R.string.agenda_visible, agenda.name))
             }
             Rule()
         }

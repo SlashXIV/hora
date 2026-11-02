@@ -132,6 +132,12 @@ private fun SettingsContent(
             }
         }
 
+        item {
+            Section(stringResource(R.string.settings_prayer)) {
+                PrayerSection(settings.prayer, settings.place) { transform -> update { it.copy(prayer = transform(it.prayer)) } }
+            }
+        }
+
         item { Section(stringResource(R.string.settings_icon)) { IconPicker(onPicked = haptics::tick) } }
 
         item {

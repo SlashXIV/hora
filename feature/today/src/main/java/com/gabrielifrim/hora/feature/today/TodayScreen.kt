@@ -84,6 +84,7 @@ fun TodayScreen(
     val formats = rememberFormats()
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
     val place by viewModel.place.collectAsStateWithLifecycle()
+    val prayer by viewModel.prayer.collectAsStateWithLifecycle()
     val sun = remember(today, place) { Sun.day(today, place) }
     val events by remember(today, zone) { viewModel.upcoming(today, zone) }.collectAsStateWithLifecycle(emptyList())
     val todays = remember(events, today) {
@@ -106,6 +107,10 @@ fun TodayScreen(
             SunLine(sun, place, zone, formats)
             if (next != null) NextUp(next.first, Duration.between(now, next.second), today, zone, formats, agendas, onOpenEvent)
             Rule()
+            if (prayer.enabled) {
+                PrayerCard(today, now, place, prayer, zone, formats)
+                Rule()
+            }
             if (todays.isEmpty()) {
                 HoraText(stringResource(R.string.today_empty_title), style = HoraTheme.type.heading)
                 HoraText(stringResource(R.string.today_empty_hint), style = HoraTheme.type.body, color = HoraTheme.colors.ink2)

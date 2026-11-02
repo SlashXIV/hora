@@ -1,5 +1,9 @@
 package com.gabrielifrim.hora.core.domain.model
 
+import com.gabrielifrim.hora.core.domain.almanac.AlmanacGroup
+import com.gabrielifrim.hora.core.domain.almanac.AlmanacOptions
+import com.gabrielifrim.hora.core.domain.almanac.Place
+import com.gabrielifrim.hora.core.domain.almanac.Places
 import java.time.DayOfWeek
 
 /** Apparence choisie : suivre le téléphone, ou forcer Midi (clair) ou Nocturne (sombre). */
@@ -23,4 +27,9 @@ data class UserSettings(
     val firstDayOfWeek: DayOfWeek? = null,
     val showWeekNumbers: Boolean = true,
     val clockFormat: ClockFormat = ClockFormat.SYSTEM,
+    val almanac: AlmanacOptions = AlmanacOptions(),
+    /** Agendas calculés masqués ; la lune l'est d'abord (voir le journal des décisions). */
+    val hiddenAlmanac: Set<AlmanacGroup> = setOf(AlmanacGroup.MOON),
+    /** Lieu du lever et du coucher du soleil. */
+    val place: Place = Places.DEFAULT,
 )

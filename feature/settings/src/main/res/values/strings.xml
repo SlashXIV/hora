@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Réglages</string>
+
+    <string name="settings_appearance">Apparence</string>
+    <string name="theme_system">Système</string>
+    <string name="theme_midi">Midi</string>
+    <string name="theme_nocturne">Nocturne</string>
+    <string name="motion">Ambiance</string>
+    <string name="motion_expressive">Expressive</string>
+    <string name="motion_calm">Sobre</string>
+    <string name="motion_hint">Sobre remplace les mouvements par des fondus courts. « Supprimer les animations » d’Android l’emporte toujours.</string>
+    <string name="haptics">Vibrations</string>
+
+    <string name="settings_icon">Icône</string>
+    <string name="icon_cadran">Cadran</string>
+    <string name="icon_ombre">Ombre</string>
+    <string name="icon_semaine">Semaine</string>
+    <string name="icon_midi">Midi</string>
+    <string name="icon_hint">L’icône change quand tu quittes Hora. Il faudra parfois replacer le raccourci de l’écran d’accueil.</string>
+
+    <string name="settings_week">Semaine et heures</string>
+    <string name="first_day">Premier jour de la semaine</string>
+    <string name="first_day_auto">Auto</string>
+    <string name="first_day_monday">Lundi</string>
+    <string name="first_day_sunday">Dimanche</string>
+    <string name="first_day_saturday">Samedi</string>
+    <string name="week_numbers">Numéros de semaine</string>
+    <string name="clock_format">Format des heures</string>
+    <string name="clock_system">Système</string>
+    <string name="clock_24">24 h</string>
+    <string name="clock_12">12 h</string>
+</resources>

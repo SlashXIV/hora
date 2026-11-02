@@ -98,7 +98,7 @@ files = {
 }
 for v, fg in [('cadran', 'ic_launcher_foreground'), ('ombre', 'ic_launcher_foreground'),
               ('semaine', 'ic_launcher_foreground'), ('midi', 'ic_launcher_foreground_midi')]:
-    files[f'../../../../app/src/main/res/mipmap-anydpi/ic_launcher_{v}.xml'] = f'''<?xml version="1.0" encoding="utf-8"?>
+    files[f'../../../../../app/src/main/res/mipmap-anydpi/ic_launcher_{v}.xml'] = f'''<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/ic_launcher_background_{v}" />
     <foreground android:drawable="@drawable/{fg}" />

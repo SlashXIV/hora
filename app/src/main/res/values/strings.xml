@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Hora</string>
+    <string name="tab_today">Aujourd’hui</string>
+    <string name="tab_settings">Réglages</string>
+</resources>

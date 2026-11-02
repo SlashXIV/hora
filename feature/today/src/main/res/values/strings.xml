@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- « Lundi · semaine 45 » -->
+    <string name="today_eyebrow">%1$s · semaine %2$d</string>
+    <string name="today_empty_title">Journée libre</string>
+    <string name="today_empty_hint">Les événements, les plages et les rappels arrivent avec la prochaine version de Hora.</string>
+</resources>

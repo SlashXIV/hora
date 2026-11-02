@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Aucune permission INTERNET, jamais : Hora est hors ligne par construction. La
+    release échoue si une dépendance en ajoute une (vérification sur l'APK).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        Sauvegarde Android : rien vers le cloud (aucun service Google), transfert
+        d'appareil à appareil autorisé. La sauvegarde de Hora se fait en local (J4).
+    -->
+    <application
+        android:name=".HoraApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher_cadran"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_cadran"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Hora"
+        tools:ignore="DataExtractionRules">
+
+        <!-- Pas de filtre LAUNCHER ici : ce sont les alias ci-dessous, un par icône au choix. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Hora.Splash" />
+
+        <!--
+            Icônes au choix (Réglages → Icône) : un alias par icône, un seul activé à la
+            fois. Les noms de classe ne se renomment jamais (ils retiennent le choix).
+        -->
+        <activity-alias
+            android:name=".IconCadran"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_cadran"
+            android:roundIcon="@mipmap/ic_launcher_cadran"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".IconOmbre"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_ombre"
+            android:roundIcon="@mipmap/ic_launcher_ombre"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".IconSemaine"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_semaine"
+            android:roundIcon="@mipmap/ic_launcher_semaine"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".IconMidi"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_midi"
+            android:roundIcon="@mipmap/ic_launcher_midi"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+    </application>
+
+</manifest>

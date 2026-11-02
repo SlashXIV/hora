@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fond lapis de l'icône (design/icon/hora-icon.svg). -->
+    <color name="icon_background">#1D2B5C</color>
+    <!-- Fond de Midi (HoraPalettes.Midi.background). -->
+    <color name="window_background">#F3F5F7</color>
+</resources>

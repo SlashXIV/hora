@@ -29,6 +29,10 @@ javaxInject = "1"
 coroutines = "1.11.0"
 kotlinxSerialization = "1.11.0"
 
+# --- Récurrence ---
+# lib-recur (dmfs, Apache 2, celle de DAVx5) : RRULE RFC 5545 complète, Java pur.
+libRecur = "0.17.1"
+
 # --- Tests ---
 junit = "4.13.2"
 androidxTestExt = "1.3.0"
@@ -73,6 +77,9 @@ javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "j
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+
+# --- Récurrence ---
+lib-recur = { group = "org.dmfs", name = "lib-recur", version.ref = "libRecur" }
 
 # --- Tests ---
 junit = { group = "junit", name = "junit", version.ref = "junit" }

@@ -40,6 +40,17 @@
             android:taskAffinity=""
             android:theme="@style/Theme.Hora" />
 
+        <!-- Partage d'un événement : le .ics passe à l'application choisie, sans permission de stockage. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <!--
             Icônes au choix (Réglages → Icône) : un alias par icône, un seul activé à la
             fois. Les noms de classe ne se renomment jamais (ils retiennent le choix).

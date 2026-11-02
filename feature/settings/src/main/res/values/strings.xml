@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="fr">
     <string name="settings_title">Réglages</string>
 
     <string name="settings_appearance">Apparence</string>
@@ -64,4 +64,78 @@
     <string name="set_line">%1$s · %2$d rappels</string>
     <string name="set_delete">Supprimer le jeu %1$s</string>
     <string name="agenda_defaults_hint">Rappels ajoutés à chaque nouvel événement de cet agenda.</string>
+    <string name="settings_transfer">Importer et exporter</string>
+    <string name="settings_transfer_hint">Fichiers .ics, sauvegarde et restauration de l’agenda</string>
+    <string name="transfer_title">Importer et exporter</string>
+
+    <string name="import_section">Importer</string>
+    <string name="import_hint">Un fichier .ics : export de Fossify, de Google Agenda, d’Outlook… Un événement déjà importé est mis à jour, jamais mis en double.</string>
+    <string name="import_pick">Choisir un fichier .ics</string>
+    <string name="import_reading">Lecture du fichier…</string>
+    <string name="import_unreadable">Ce fichier ne contient aucun événement lisible.</string>
+    <!-- Agenda d’un fichier sans nom d’agenda (agenda local de Fossify, export sans X-WR-CALNAME). -->
+    <string name="import_unnamed">Importé</string>
+    <plurals name="import_count">
+        <item quantity="one">%d événement</item>
+        <item quantity="many">%d événements</item>
+        <item quantity="other">%d événements</item>
+    </plurals>
+    <string name="import_joins">rejoint l’agenda du même nom</string>
+    <string name="import_new">nouvel agenda</string>
+    <string name="import_include">Importer %1$s</string>
+    <plurals name="import_tasks">
+        <item quantity="one">%d tâche importée comme événement sur la journée.</item>
+        <item quantity="many">%d tâches importées comme événements sur la journée.</item>
+        <item quantity="other">%d tâches importées comme événements sur la journée.</item>
+    </plurals>
+    <plurals name="import_skipped">
+        <item quantity="one">%d élément sans date ou annulé, laissé de côté.</item>
+        <item quantity="many">%d éléments sans date ou annulés, laissés de côté.</item>
+        <item quantity="other">%d éléments sans date ou annulés, laissés de côté.</item>
+    </plurals>
+    <plurals name="import_shifted">
+        <item quantity="one">%d rappel placé après le début, ramené à l’heure du début.</item>
+        <item quantity="many">%d rappels placés après le début, ramenés à l’heure du début.</item>
+        <item quantity="other">%d rappels placés après le début, ramenés à l’heure du début.</item>
+    </plurals>
+    <string name="import_zones">Fuseau inconnu (%1$s) : ces heures sont lues dans celui du téléphone.</string>
+    <plurals name="import_confirm">
+        <item quantity="one">Importer %d événement</item>
+        <item quantity="many">Importer %d événements</item>
+        <item quantity="other">Importer %d événements</item>
+    </plurals>
+    <string name="import_done">Ajoutés : %1$d · mis à jour : %2$d · agendas créés : %3$d</string>
+    <string name="import_again">Importer un autre fichier</string>
+
+    <string name="export_section">Exporter</string>
+    <string name="export_hint">Un fichier .ics lisible par Fossify, Google Agenda ou Thunderbird ; les rappels et les couleurs voyagent avec.</string>
+    <string name="export_agenda">Exporter %1$s</string>
+    <plurals name="agenda_count">
+        <item quantity="one">%d agenda</item>
+        <item quantity="many">%d agendas</item>
+        <item quantity="other">%d agendas</item>
+    </plurals>
+    <string name="export_button">Exporter %1$s</string>
+    <string name="transfer_exported">Fichier .ics enregistré.</string>
+    <string name="transfer_export_failed">L’export a échoué : le fichier n’a pas pu être écrit.</string>
+
+    <string name="backup_section">Sauvegarde</string>
+    <string name="backup_hint">Une copie complète de l’agenda (événements, rappels, réglages) dans le dossier de votre choix, à restaurer sur ce téléphone ou un autre.</string>
+    <string name="backup_folder">Dossier</string>
+    <string name="backup_no_folder">Aucun dossier choisi</string>
+    <string name="backup_choose">Choisir</string>
+    <string name="backup_now">Sauvegarder maintenant</string>
+    <string name="backup_auto">Sauvegarde automatique</string>
+    <string name="backup_auto_hint">Chaque nuit ; les 7 dernières sont gardées.</string>
+    <string name="backup_last">Dernière sauvegarde : %1$s à %2$s</string>
+    <string name="backup_never">Aucune sauvegarde pour l’instant</string>
+    <string name="backup_failed">La dernière sauvegarde automatique a échoué : vérifiez le dossier.</string>
+    <string name="transfer_backed_up">Sauvegarde écrite.</string>
+    <string name="transfer_backup_failed">La sauvegarde a échoué : vérifiez le dossier.</string>
+    <string name="restore_pick">Restaurer une sauvegarde</string>
+    <string name="restore_title">Remplacer l’agenda ?</string>
+    <string name="restore_message">Cette sauvegarde (%1$s, %2$s) remplace tout l’agenda actuel, réglages compris. Une copie de l’agenda actuel est gardée sur le téléphone. Hora redémarre ensuite.</string>
+    <string name="restore_confirm">Restaurer</string>
+    <string name="transfer_not_hora">Ce fichier n’est pas une sauvegarde Hora.</string>
+    <string name="transfer_too_new">Cette sauvegarde vient d’une version plus récente de Hora : mettez l’application à jour d’abord.</string>
 </resources>

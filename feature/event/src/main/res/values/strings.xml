@@ -26,6 +26,8 @@
     <string name="action_delete">Supprimer</string>
     <string name="action_duplicate">Dupliquer</string>
     <string name="action_move">Déplacer</string>
+    <string name="action_share">Partager</string>
+    <string name="share_title">Partager l’événement</string>
     <string name="delete_title">Supprimer l’événement ?</string>
     <string name="delete_message">« %1$s » sera supprimé de l’agenda. On ne peut pas revenir en arrière.</string>
 

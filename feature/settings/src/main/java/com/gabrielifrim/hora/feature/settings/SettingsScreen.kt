@@ -51,9 +51,9 @@ import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import java.time.DayOfWeek
 
 @Composable
-fun SettingsScreen(onOpenAgendas: () -> Unit, modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(onOpenAgendas: () -> Unit, onOpenTransfer: () -> Unit, modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    settings?.let { SettingsContent(it, viewModel::update, onOpenAgendas, modifier) }
+    settings?.let { SettingsContent(it, viewModel::update, onOpenAgendas, onOpenTransfer, modifier) }
 }
 
 @Composable
@@ -61,6 +61,7 @@ private fun SettingsContent(
     settings: UserSettings,
     update: ((UserSettings) -> UserSettings) -> Unit,
     onOpenAgendas: () -> Unit,
+    onOpenTransfer: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
@@ -69,12 +70,8 @@ private fun SettingsContent(
 
         item {
             Section(stringResource(R.string.settings_agendas)) {
-                Column(
-                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onOpenAgendas).padding(vertical = 4.dp),
-                ) {
-                    HoraText(stringResource(R.string.settings_agendas), style = HoraTheme.type.body)
-                    HoraText(stringResource(R.string.settings_agendas_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
-                }
+                LinkRow(stringResource(R.string.settings_agendas), stringResource(R.string.settings_agendas_hint), onOpenAgendas)
+                LinkRow(stringResource(R.string.settings_transfer), stringResource(R.string.settings_transfer_hint), onOpenTransfer)
             }
         }
 
@@ -128,6 +125,14 @@ private fun SettingsContent(
                 ) { i -> haptics.tick(); update { it.copy(clockFormat = ClockFormat.entries[i]) } }
             }
         }
+    }
+}
+
+@Composable
+private fun LinkRow(title: String, hint: String, onClick: () -> Unit) {
+    Column(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick).padding(vertical = 4.dp)) {
+        HoraText(title, style = HoraTheme.type.body)
+        HoraText(hint, style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
     }
 }
 

@@ -53,6 +53,7 @@ import com.gabrielifrim.hora.feature.event.EventDetailScreen
 import com.gabrielifrim.hora.feature.event.EventEditorScreen
 import com.gabrielifrim.hora.feature.settings.AgendasScreen
 import com.gabrielifrim.hora.feature.settings.SettingsScreen
+import com.gabrielifrim.hora.feature.settings.TransferScreen
 import com.gabrielifrim.hora.feature.today.TodayScreen
 import java.time.LocalDate
 import kotlinx.serialization.Serializable
@@ -62,6 +63,7 @@ import kotlinx.serialization.Serializable
 @Serializable private data object SearchRoute
 @Serializable private data object SettingsRoute
 @Serializable private data object AgendasRoute
+@Serializable private data object TransferRoute
 /** Fiche : occurrence < 0 pour un événement simple, sinon la clé de l’occurrence d’une série. */
 @Serializable private data class EventRoute(val id: Long, val occurrence: Long = -1)
 
@@ -101,8 +103,9 @@ fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
             composable<TodayRoute> { TodayScreen(onOpenEvent = open, onCreate = { create(it, null) }) }
             composable<CalendarRoute> { CalendarScreen(onOpenEvent = open, onCreate = create) }
             composable<SearchRoute> { SearchScreen(onOpenEvent = open, modifier = Modifier.statusBarsPadding()) }
-            composable<SettingsRoute> { SettingsScreen(onOpenAgendas = { nav.navigate(AgendasRoute) }) }
+            composable<SettingsRoute> { SettingsScreen(onOpenAgendas = { nav.navigate(AgendasRoute) }, onOpenTransfer = { nav.navigate(TransferRoute) }) }
             composable<AgendasRoute> { AgendasScreen(onBack = nav::popBackStack) }
+            composable<TransferRoute> { TransferScreen(onBack = nav::popBackStack) }
             composable<EventRoute> { back ->
                 val route = back.toRoute<EventRoute>()
                 EventDetailScreen(

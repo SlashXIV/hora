@@ -1,5 +1,7 @@
 package com.gabrielifrim.hora.feature.event
 
+import android.content.ClipData
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,9 +18,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -45,6 +49,7 @@ import com.gabrielifrim.hora.core.ui.text.rememberFormats
 import com.gabrielifrim.hora.core.ui.text.timeRange
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import java.time.ZoneId
+import kotlinx.coroutines.launch
 
 /** La fiche d'un événement : quand, où, notes, et ce qu'on peut en faire. */
 @Composable
@@ -63,6 +68,9 @@ fun EventDetailScreen(
     val haptics = rememberHaptics()
     var moving by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val shareTitle = stringResource(R.string.share_title)
     // Un événement supprimé ailleurs (ou introuvable) ferme sa fiche.
     var seen by remember { mutableStateOf(false) }
     LaunchedEffect(event) { if (event != null) seen = true else if (seen) onBack() }
@@ -109,6 +117,23 @@ fun EventDetailScreen(
                     HoraButton(stringResource(R.string.action_duplicate), onClick = { onDuplicate(e.id, e.occurrence) }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
                     HoraButton(stringResource(R.string.action_move), onClick = { moving = true }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
                 }
+                HoraButton(
+                    stringResource(R.string.action_share),
+                    onClick = {
+                        scope.launch {
+                            val uri = viewModel.shareFile() ?: return@launch
+                            val send = Intent(Intent.ACTION_SEND)
+                                .setType("text/calendar")
+                                .putExtra(Intent.EXTRA_STREAM, uri)
+                                .putExtra(Intent.EXTRA_SUBJECT, e.title)
+                                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            send.clipData = ClipData.newRawUri(e.title, uri)
+                            context.startActivity(Intent.createChooser(send, shareTitle))
+                        }
+                    },
+                    style = ButtonStyle.Line,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
         Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

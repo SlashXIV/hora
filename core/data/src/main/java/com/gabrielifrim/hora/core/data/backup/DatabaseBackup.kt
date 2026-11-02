@@ -8,6 +8,7 @@ import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.provider.DocumentsContract
+import androidx.core.net.toUri
 import androidx.room.withTransaction
 import com.gabrielifrim.hora.core.data.database.HoraDatabase
 import com.gabrielifrim.hora.core.domain.repository.BackupRepository
@@ -61,9 +62,9 @@ class DatabaseBackup @Inject constructor(
 
     /** Garde l'accès au dossier choisi, au-delà du redémarrage. */
     override fun chooseFolder(uri: String) {
-        val tree = Uri.parse(uri)
+        val tree = uri.toUri()
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        _state.value.folder?.takeIf { it != uri }?.let(Uri::parse)?.let { old -> runCatching { context.contentResolver.releasePersistableUriPermission(old, flags) } }
+        _state.value.folder?.takeIf { it != uri }?.toUri()?.let { old -> runCatching { context.contentResolver.releasePersistableUriPermission(old, flags) } }
         context.contentResolver.takePersistableUriPermission(tree, flags)
         val name = runCatching {
             val doc = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
@@ -86,7 +87,7 @@ class DatabaseBackup @Inject constructor(
      */
     override suspend fun backupNow(auto: Boolean): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
-            val tree = Uri.parse(requireNotNull(_state.value.folder) { "aucun dossier" })
+            val tree = requireNotNull(_state.value.folder) { "aucun dossier" }.toUri()
             val resolver = context.contentResolver
             val parent = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
             val now = LocalDateTime.now()
@@ -135,7 +136,7 @@ class DatabaseBackup @Inject constructor(
     override suspend fun inspect(uri: String): RestoreCheck = withContext(Dispatchers.IO) {
         val copy = File(context.cacheDir, "restauration.db").apply { delete() }
         runCatching {
-            requireNotNull(context.contentResolver.openInputStream(Uri.parse(uri))).use { input -> copy.outputStream().use { input.copyTo(it) } }
+            requireNotNull(context.contentResolver.openInputStream(uri.toUri())).use { input -> copy.outputStream().use { input.copyTo(it) } }
             val header = copy.inputStream().use { it.readNBytesCompat(16) }
             if (!header.contentEquals(SQLITE_HEADER)) return@withContext RestoreCheck.NotHora
             SQLiteDatabase.openDatabase(copy.path, null, SQLiteDatabase.OPEN_READONLY).use { sqlite ->

@@ -1,5 +1,8 @@
 package com.gabrielifrim.hora.feature.event
 
+import android.content.Context
+import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gabrielifrim.hora.core.domain.model.Agenda
@@ -15,10 +18,14 @@ import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import com.gabrielifrim.hora.core.ics.IcsWriter
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +34,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * L'occurrence de clé [key] d'une série, calculée sur son jour ; la série elle-même
@@ -47,6 +55,7 @@ class EventDetailViewModel @AssistedInject constructor(
     @Assisted("occurrence") private val occurrence: Long,
     private val events: EventRepository,
     agendas: AgendaRepository,
+    @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -72,6 +81,23 @@ class EventDetailViewModel @AssistedInject constructor(
             } else {
                 events.save(moved)
             }
+        }
+    }
+
+    /**
+     * Écrit l'événement dans un .ics à partager : toute sa série, occurrences
+     * modifiées comprises, pour que le destinataire ait les mêmes dates.
+     */
+    suspend fun shareFile(): Uri? {
+        val shown = event.value ?: return null
+        val rootId = shown.parentId ?: eventId
+        val root = events.event(rootId).first() ?: return null
+        val text = IcsWriter.write(listOf(root) + events.children(rootId), agendas.value.filterKeys { it == root.agendaId })
+        return withContext(Dispatchers.IO) {
+            val dir = File(context.cacheDir, "partage").apply { deleteRecursively(); mkdirs() }
+            val name = root.title.replace(Regex("""[^\p{L}\p{N} _-]"""), "_").trim().take(60).ifEmpty { "evenement" } // texte-technique : nom de fichier
+            val file = File(dir, "$name.ics").apply { writeText(text) }
+            FileProvider.getUriForFile(context, context.packageName + ".files", file)
         }
     }
 

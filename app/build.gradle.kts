@@ -8,7 +8,7 @@ plugins {
 
 // Version publiée : la SEULE ligne à modifier lors d'une release.
 // Règle : correctif = patch, nouveau jalon = mineure, 1.0.0 = cahier des charges complet.
-val horaVersion = "0.4.1"
+val horaVersion = "0.5.0"
 
 android {
     namespace = "com.gabrielifrim.hora"

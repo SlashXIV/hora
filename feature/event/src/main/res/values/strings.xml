@@ -111,6 +111,13 @@
     <string name="quick_example_3">courses samedi 10h 30 min</string>
     <string name="quick_detail">Détailler</string>
     <string name="quick_templates">Modèles</string>
+    <string name="field_travel">Trajet</string>
+    <string name="travel_none">Aucun</string>
+    <string name="travel_minutes">%1$d min</string>
+    <string name="travel_hours">%1$d h</string>
+    <string name="travel_hours_minutes">%1$d h %2$02d</string>
+    <string name="travel_add_reminder">Rappel pour partir à %1$s</string>
+    <string name="travel_detail">%1$s · partir à %2$s</string>
     <string name="pin_today">Épingler sur Aujourd’hui</string>
     <string name="pin_today_hint">Compte à rebours jusqu’au jour J, puis « depuis » une fois passé.</string>
     <string name="template_delete">Supprimer le modèle %1$s</string>

@@ -63,4 +63,13 @@ class ReminderPlannerTest {
         assertThat(plan.due.single().snoozeId).isEqualTo(9)
         assertThat(plan.due.single().event.title).isEqualTo("Dentiste")
     }
+
+    @Test
+    fun `marge de trajet - le rappel du depart est reconnu, pas les autres`() {
+        val withTravel = dentist.copy(travelMinutes = 60)
+        val plan = ReminderPlanner.plan(listOf(withTravel), emptyMap(), emptyList(), firedAll(Reminder.Before(60)), t("2026-11-03T08:00"), paris)
+        assertThat(plan.due.single().isDeparture).isTrue()
+        val alarm = ReminderPlanner.plan(listOf(withTravel), emptyMap(), emptyList(), firedAll(Reminder.Before(10, alarm = true)), t("2026-11-03T08:50"), paris)
+        assertThat(alarm.due.single().isDeparture).isFalse()
+    }
 }

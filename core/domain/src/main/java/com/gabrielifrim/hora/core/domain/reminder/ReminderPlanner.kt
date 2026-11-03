@@ -20,7 +20,12 @@ data class DueReminder(
     /** Clé du journal ; null pour un report, qui s'efface une fois présenté. */
     val firedKey: String?,
     val snoozeId: Long? = null,
-)
+) {
+    /** Le rappel tombe à l'heure de partir (début moins la marge de trajet) : la notification dit « Partir ». */
+    val isDeparture: Boolean
+        get() = snoozeId == null && event.travelMinutes > 0 &&
+            (event.timing as? Timing.Timed)?.start?.minusSeconds(event.travelMinutes * 60L) == at
+}
 
 data class ReminderPlan(val due: List<DueReminder>, val next: Instant?, val nextIsAlarm: Boolean)
 

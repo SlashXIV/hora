@@ -50,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gabrielifrim.hora.core.domain.model.Agenda
+import com.gabrielifrim.hora.core.ui.component.HoraIcons
+import com.gabrielifrim.hora.core.domain.model.Reminder
 import com.gabrielifrim.hora.core.ui.component.AgendaMark
 import com.gabrielifrim.hora.core.ui.component.DatePickerSheet
 import com.gabrielifrim.hora.core.ui.component.Eyebrow
@@ -131,6 +133,9 @@ fun EventEditorScreen(
                     onDate = { picking = Picking.END_DATE }, onTime = { picking = Picking.END_TIME })
                 if (!d.allDay) {
                     HoraButton(stringResource(R.string.slot_find), onClick = { picking = Picking.SLOT }, style = ButtonStyle.Line)
+                    TravelChoice(d, formats, onChange = { m -> haptics.tick(); viewModel.update { it.copy(travelMinutes = m) } }, onAddReminder = {
+                        haptics.tick(); viewModel.update { it.copy(reminders = (it.reminders + Reminder.Before(it.travelMinutes)).distinct()) }
+                    })
                     ValueRow(stringResource(R.string.field_zone), d.zone.id, onClick = { picking = Picking.ZONE })
                 }
                 ValueRow(stringResource(R.string.field_repeat), repeatText(d.repeat, d.customRule, d.start.toLocalDate(), formats), onClick = { picking = Picking.REPEAT })
@@ -210,6 +215,37 @@ fun EventEditorScreen(
         Picking.SCOPE -> ScopeDialog(stringResource(R.string.edit_scope_title), onPick = { scope -> picking = null; viewModel.save(scope, onSaved) }, onDismiss = { picking = null })
         null -> Unit
     }
+}
+
+/** Marge de trajet : un choix de durées, puis le rappel pour partir, proposé tant qu'il manque. */
+@Composable
+private fun TravelChoice(d: EventDraft, formats: HoraFormats, onChange: (Int) -> Unit, onAddReminder: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Eyebrow(stringResource(R.string.field_travel))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            TRAVEL_CHOICES.forEach { m ->
+                Tag(if (m == 0) stringResource(R.string.travel_none) else travelText(m), selected = d.travelMinutes == m, onClick = { onChange(m) })
+            }
+        }
+        if (d.travelMinutes > 0 && Reminder.Before(d.travelMinutes) !in d.reminders) {
+            HoraButton(
+                stringResource(R.string.travel_add_reminder, formats.time(d.start.minusMinutes(d.travelMinutes.toLong()).toLocalTime())),
+                onClick = onAddReminder,
+                style = ButtonStyle.Text,
+                icon = HoraIcons.Add,
+            )
+        }
+    }
+}
+
+private val TRAVEL_CHOICES = listOf(0, 10, 15, 20, 30, 45, 60, 90)
+
+/** « 25 min », « 1 h », « 1 h 30 ». */
+@Composable
+internal fun travelText(minutes: Int): String = when {
+    minutes < 60 -> stringResource(R.string.travel_minutes, minutes)
+    minutes % 60 == 0 -> stringResource(R.string.travel_hours, minutes / 60)
+    else -> stringResource(R.string.travel_hours_minutes, minutes / 60, minutes % 60)
 }
 
 @Composable

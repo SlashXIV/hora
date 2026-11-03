@@ -63,6 +63,8 @@ data class Event(
     val busy: Boolean = true,
     /** Épinglé sur Aujourd'hui : compte à rebours, ou compteur « depuis » une fois passé. */
     val pinned: Boolean = false,
+    /** Marge de trajet avant le début, saisie à la main (sans réseau, pas d'itinéraire) ; 0 : aucune. */
+    val travelMinutes: Int = 0,
     val reminders: List<Reminder> = emptyList(),
     /** Règle de répétition, sur l'événement d'origine d'une série. */
     val recurrence: Recurrence? = null,

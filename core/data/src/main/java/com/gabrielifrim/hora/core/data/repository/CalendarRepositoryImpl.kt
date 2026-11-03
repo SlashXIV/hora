@@ -254,6 +254,7 @@ private fun EventEntity.toDomain() = Event(
     colorKey = colorKey,
     busy = busy,
     pinned = pinned,
+    travelMinutes = travelMinutes,
     timing = if (allDay) {
         Timing.AllDay(LocalDate.ofEpochDay(start), LocalDate.ofEpochDay(end))
     } else {
@@ -294,5 +295,6 @@ private fun Event.toEntity(): EventEntity {
         recurrenceId = recurrenceId,
         busy = busy,
         pinned = pinned,
+        travelMinutes = travelMinutes,
     )
 }

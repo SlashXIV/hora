@@ -66,6 +66,7 @@ class ReminderNotifier @Inject constructor(
         val text = listOf(timeText(event.timing), event.location).filter { it.isNotBlank() }.joinToString(" · ")
         val title = when {
             late -> context.getString(R.string.reminder_missed, event.title)
+            due.isDeparture -> context.getString(R.string.reminder_leave, event.title)
             else -> context.getString(R.string.reminder_title, event.title, untilText(event.timing))
         }
         val open = PendingIntent.getActivity(context, id, launcher.openEvent(context, event.id, due.occurrence), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

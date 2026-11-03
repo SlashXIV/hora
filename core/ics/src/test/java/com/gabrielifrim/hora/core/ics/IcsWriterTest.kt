@@ -22,7 +22,7 @@ class IcsWriterTest {
     private val series = Event(
         id = 10, uid = "serie-1", agendaId = 3, title = "Cours, salle 2",
         timing = Timing.Timed(at(23, 9), at(23, 10), paris),
-        location = "Bât. B", notes = "Ligne 1\nLigne 2 « citée »",
+        location = "Bât. B", travelMinutes = 25, notes = "Ligne 1\nLigne 2 « citée »",
         reminders = listOf(Reminder.Before(15), Reminder.Anchored(1, LocalTime.of(20, 0), alarm = true)),
         recurrence = Recurrence("FREQ=WEEKLY;BYDAY=MO", setOf(at(30, 9).toEpochMilli())),
     )

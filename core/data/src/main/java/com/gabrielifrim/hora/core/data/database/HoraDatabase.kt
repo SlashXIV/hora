@@ -21,7 +21,7 @@ abstract class HoraDatabase : RoomDatabase() {
         const val NAME = "hora.db"
 
         /** Version du schéma ; une sauvegarde plus récente ne se restaure pas. */
-        const val VERSION = 9
+        const val VERSION = 10
     }
 }
 
@@ -131,8 +131,15 @@ internal val MIGRATION_8_9 = object : Migration(8, 9) {
     }
 }
 
+/** v9 → v10 (J6) : marge de trajet ; aucune d'abord. */
+internal val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `event` ADD COLUMN `travel_minutes` INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
 /** Migrations explicites, dans l'ordre. Chacune a son test dans `MigrationTest`. */
-internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
 
 /**
  * Configuration de la base, définie une seule fois : les tests instrumentés

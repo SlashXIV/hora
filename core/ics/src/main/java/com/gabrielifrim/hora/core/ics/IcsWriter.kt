@@ -46,6 +46,7 @@ object IcsWriter {
         e.colorKey?.let { out += "X-HORA-COLOR:$it" }
         out += "TRANSP:" + if (e.busy) "OPAQUE" else "TRANSPARENT"
         if (e.pinned) out += "X-HORA-PINNED:1"
+        if (e.travelMinutes > 0) out += "X-HORA-TRAVEL:" + e.travelMinutes
         when (val t = e.timing) {
             is Timing.AllDay -> {
                 out += "DTSTART;VALUE=DATE:" + day(t.first)

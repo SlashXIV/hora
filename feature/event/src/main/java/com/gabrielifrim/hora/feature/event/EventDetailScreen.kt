@@ -122,6 +122,10 @@ fun EventDetailScreen(
                     )
                 }
                 if (!e.busy) Field(stringResource(R.string.field_availability), stringResource(R.string.availability_free))
+                (e.timing as? Timing.Timed)?.takeIf { e.travelMinutes > 0 }?.let { t ->
+                    val leave = formats.time(t.start.minusSeconds(e.travelMinutes * 60L).atZone(zone).toLocalTime())
+                    Field(stringResource(R.string.field_travel), stringResource(R.string.travel_detail, travelText(e.travelMinutes), leave))
+                }
                 if (e.location.isNotBlank()) Field(stringResource(R.string.field_location), e.location)
                 if (e.notes.isNotBlank()) Field(stringResource(R.string.field_notes), e.notes)
                 // Un férié ou une fête (agenda calculé) se lit, il ne se modifie pas.

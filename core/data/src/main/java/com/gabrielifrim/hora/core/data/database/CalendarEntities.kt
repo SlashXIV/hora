@@ -55,6 +55,7 @@ data class EventEntity(
     @ColumnInfo(name = "recurrence_id") val recurrenceId: Long? = null,
     @ColumnInfo(defaultValue = "1") val busy: Boolean = true,
     @ColumnInfo(defaultValue = "0") val pinned: Boolean = false,
+    @ColumnInfo(name = "travel_minutes", defaultValue = "0") val travelMinutes: Int = 0,
 )
 
 /** Un jeu de rappels réutilisable (« Rendez-vous du matin »). */

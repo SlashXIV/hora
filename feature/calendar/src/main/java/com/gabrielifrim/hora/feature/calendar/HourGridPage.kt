@@ -197,6 +197,15 @@ private fun DayColumn(
     ) {
         val width = maxWidth
         bands.forEach { (plage, label) -> PlageBand(plage, label) }
+        // Le trajet, hachuré à la couleur de l'événement, juste avant son bloc.
+        placed.filter { it.slice.event.travelMinutes > 0 && !it.slice.continuesBefore }.forEach { p ->
+            val from = maxOf(0, p.slice.startMinute - p.slice.event.travelMinutes)
+            val colWidth = width / p.columns
+            TravelHatch(
+                colorKeyOf(p.slice.event, agendas).color(),
+                Modifier.offset(x = colWidth * p.column, y = HOUR * (from / 60f)).width(colWidth).height(HOUR * ((p.slice.startMinute - from) / 60f)).padding(horizontal = 1.dp),
+            )
+        }
         placed.forEach { p ->
             val top = HOUR * (p.slice.startMinute / 60f)
             val height = HOUR * (maxOf(p.slice.endMinute - p.slice.startMinute, DayLayout.MIN_VISIBLE_MINUTES) / 60f)
@@ -207,6 +216,19 @@ private fun DayColumn(
             )
         }
         if (isToday) NowLine(width)
+    }
+}
+
+/** Hachures obliques, décoratives : le trajet se lit aussi sur la fiche. */
+@Composable
+private fun TravelHatch(color: Color, modifier: Modifier) {
+    Canvas(modifier.clip(RoundedCornerShape(3.dp))) {
+        val step = 6.dp.toPx()
+        var x = -size.height
+        while (x < size.width) {
+            drawLine(color.copy(alpha = 0.55f), Offset(x, size.height), Offset(x + size.height, 0f), 1.dp.toPx())
+            x += step
+        }
     }
 }
 

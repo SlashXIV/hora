@@ -10,6 +10,7 @@
 
     <!-- « Dentiste · dans 1 h » -->
     <string name="reminder_title">%1$s · %2$s</string>
+    <string name="reminder_leave">Partir maintenant · %1$s</string>
     <string name="reminder_missed">Rappel manqué : %1$s</string>
     <string name="reminder_all_day">Toute la journée</string>
     <string name="reminder_time_range">%1$s–%2$s</string>

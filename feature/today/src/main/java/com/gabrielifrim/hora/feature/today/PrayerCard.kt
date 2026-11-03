@@ -2,6 +2,7 @@ package com.gabrielifrim.hora.feature.today
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -11,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -47,6 +49,8 @@ internal fun PrayerCard(today: LocalDate, now: Instant, place: Place, settings: 
     val current = windows.lastOrNull { !now.isBefore(it.start) && now.isBefore(it.necessaryEnd) }?.prayer
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Eyebrow(stringResource(R.string.prayers_eyebrow, hDay, months[hMonth - 1], hYear))
+        // Chiffres à chasse fixe : la plus longue heure (« 11:50 AM ») donne sa largeur à toutes.
+        val widestStart = windows.map { time(it.start) }.maxBy { it.length }
         windows.forEach { w ->
             val isCurrent = w.prayer == current
             val late = isCurrent && !now.isBefore(w.preferredEnd)
@@ -68,7 +72,11 @@ internal fun PrayerCard(today: LocalDate, now: Instant, place: Place, settings: 
                     color = if (isCurrent) HoraTheme.colors.accent else HoraTheme.colors.ink,
                     modifier = Modifier.width(88.dp),
                 )
-                HoraText(time(w.start), style = HoraTheme.type.hour.copy(fontSize = HoraTheme.type.body.fontSize))
+                val hourStyle = HoraTheme.type.hour.copy(fontSize = HoraTheme.type.body.fontSize)
+                Box {
+                    HoraText(widestStart, style = hourStyle, modifier = Modifier.alpha(0f))
+                    HoraText(time(w.start), style = hourStyle)
+                }
                 Column(Modifier.weight(1f).padding(start = 4.dp)) {
                     HoraText(stringResource(R.string.prayer_until, preferred), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                     if (late) HoraText(necessity, style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)

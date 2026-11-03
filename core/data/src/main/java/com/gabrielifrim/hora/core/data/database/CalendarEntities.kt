@@ -64,6 +64,26 @@ data class ReminderSetEntity(
     val spec: String,
 )
 
+/** Un modèle d'événement : tout sauf la date (`EventTemplate`). L'agenda supprimé laisse un modèle sans agenda. */
+@Entity(
+    tableName = "event_template",
+    foreignKeys = [ForeignKey(entity = AgendaEntity::class, parentColumns = ["id"], childColumns = ["agenda_id"], onDelete = ForeignKey.SET_NULL)],
+    indices = [Index("agenda_id")],
+)
+data class EventTemplateEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String,
+    @ColumnInfo(name = "agenda_id") val agendaId: Long?,
+    @ColumnInfo(name = "color_key") val colorKey: String?,
+    val location: String,
+    val notes: String,
+    @ColumnInfo(name = "all_day") val allDay: Boolean,
+    val minutes: Int,
+    val busy: Boolean,
+    /** Rappels (`ReminderCodec`). */
+    val reminders: String,
+)
+
 /** Rappel déjà présenté : jamais deux fois, et ce qui manque se rattrape au redémarrage. */
 @Entity(tableName = "fired_reminder", primaryKeys = ["event_id", "occurrence", "reminder"])
 data class FiredReminderEntity(
@@ -189,6 +209,15 @@ interface ReminderDao {
 
     @Query("DELETE FROM reminder_set WHERE id = :id")
     suspend fun deleteSet(id: Long)
+
+    @Query("SELECT * FROM event_template ORDER BY title")
+    fun observeTemplates(): Flow<List<EventTemplateEntity>>
+
+    @Upsert
+    suspend fun upsertTemplate(template: EventTemplateEntity): Long
+
+    @Query("DELETE FROM event_template WHERE id = :id")
+    suspend fun deleteTemplate(id: Long)
 
     @Query("SELECT * FROM fired_reminder WHERE fired_at >= :since")
     suspend fun firedSince(since: Long): List<FiredReminderEntity>

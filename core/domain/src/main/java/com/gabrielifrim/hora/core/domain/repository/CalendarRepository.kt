@@ -1,5 +1,6 @@
 package com.gabrielifrim.hora.core.domain.repository
 
+import com.gabrielifrim.hora.core.domain.model.EventTemplate
 import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.model.Event
 import com.gabrielifrim.hora.core.domain.model.Reminder
@@ -47,6 +48,15 @@ interface EventRepository {
 }
 
 data class ReminderSet(val id: Long = 0, val name: String, val reminders: List<Reminder>)
+
+interface TemplateRepository {
+    /** Par titre. */
+    val templates: Flow<List<EventTemplate>>
+
+    suspend fun save(template: EventTemplate): Long
+
+    suspend fun delete(id: Long)
+}
 
 interface ReminderSetRepository {
     val sets: Flow<List<ReminderSet>>

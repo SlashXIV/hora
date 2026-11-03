@@ -27,6 +27,9 @@ import com.gabrielifrim.hora.core.domain.repository.ImportReport
 import com.gabrielifrim.hora.core.domain.repository.TransferRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderSet
 import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
+import com.gabrielifrim.hora.core.domain.repository.TemplateRepository
+import com.gabrielifrim.hora.core.domain.model.EventTemplate
+import com.gabrielifrim.hora.core.data.database.EventTemplateEntity
 import com.gabrielifrim.hora.core.domain.repository.ReminderStore
 import com.gabrielifrim.hora.core.domain.repository.Snooze
 import com.gabrielifrim.hora.core.domain.repository.firedKey
@@ -112,6 +115,19 @@ internal class ReminderSetRepositoryImpl @Inject constructor(private val dao: Re
         dao.upsertSet(ReminderSetEntity(set.id, set.name, ReminderCodec.encode(set.reminders))).let { if (it == -1L) set.id else it }
 
     override suspend fun delete(id: Long) = dao.deleteSet(id)
+}
+
+internal class TemplateRepositoryImpl @Inject constructor(private val dao: ReminderDao) : TemplateRepository {
+    override val templates: Flow<List<EventTemplate>> = dao.observeTemplates().map { list ->
+        list.map { EventTemplate(it.id, it.title, it.agendaId, it.colorKey, it.location, it.notes, it.allDay, it.minutes, it.busy, ReminderCodec.decode(it.reminders)) }
+    }
+
+    override suspend fun save(template: EventTemplate): Long = with(template) {
+        dao.upsertTemplate(EventTemplateEntity(id, title, agendaId, colorKey, location, notes, allDay, minutes, busy, ReminderCodec.encode(reminders)))
+            .let { if (it == -1L) id else it }
+    }
+
+    override suspend fun delete(id: Long) = dao.deleteTemplate(id)
 }
 
 internal class ReminderStoreImpl @Inject constructor(

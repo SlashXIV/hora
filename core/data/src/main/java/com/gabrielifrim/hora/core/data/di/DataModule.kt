@@ -13,6 +13,8 @@ import com.gabrielifrim.hora.core.data.repository.AgendaRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.AlmanacRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.EventRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.ReminderSetRepositoryImpl
+import com.gabrielifrim.hora.core.data.repository.TemplateRepositoryImpl
+import com.gabrielifrim.hora.core.domain.repository.TemplateRepository
 import com.gabrielifrim.hora.core.data.repository.ReminderStoreImpl
 import com.gabrielifrim.hora.core.data.repository.SettingsRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.TransferRepositoryImpl
@@ -71,6 +73,10 @@ internal abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun reminderSets(impl: ReminderSetRepositoryImpl): ReminderSetRepository
+
+    @Binds
+    @Singleton
+    abstract fun templates(impl: TemplateRepositoryImpl): TemplateRepository
 
     @Binds
     @Singleton

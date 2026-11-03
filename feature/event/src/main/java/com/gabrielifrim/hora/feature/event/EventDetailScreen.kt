@@ -63,6 +63,7 @@ fun EventDetailScreen(
 ) {
     val event by viewModel.event.collectAsStateWithLifecycle()
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
+    val templateSaved by viewModel.templateSaved.collectAsStateWithLifecycle()
     val formats = rememberFormats()
     val zone = ZoneId.systemDefault()
     val haptics = rememberHaptics()
@@ -135,6 +136,13 @@ fun EventDetailScreen(
                                 context.startActivity(Intent.createChooser(send, shareTitle))
                             }
                         },
+                        style = ButtonStyle.Line,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    HoraButton(
+                        stringResource(if (templateSaved) R.string.template_saved else R.string.action_save_template),
+                        onClick = { haptics.confirm(); viewModel.saveAsTemplate() },
+                        enabled = !templateSaved,
                         style = ButtonStyle.Line,
                         modifier = Modifier.fillMaxWidth(),
                     )

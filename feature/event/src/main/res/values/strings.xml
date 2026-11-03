@@ -110,5 +110,9 @@
     <string name="quick_example_2">resto vendredi 20h @Chez Léa</string>
     <string name="quick_example_3">courses samedi 10h 30 min</string>
     <string name="quick_detail">Détailler</string>
+    <string name="quick_templates">Modèles</string>
+    <string name="template_delete">Supprimer le modèle %1$s</string>
+    <string name="action_save_template">Enregistrer comme modèle</string>
+    <string name="template_saved">Modèle enregistré</string>
     <string name="quick_create">Créer</string>
 </resources>

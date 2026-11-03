@@ -62,4 +62,17 @@ class EventDraftTest {
         val call = base.withQuick(QuickEntry.parse("Appeler maman", now))
         assertThat(call.start to call.end).isEqualTo(LocalDateTime.of(2026, 11, 3, 11, 0) to LocalDateTime.of(2026, 11, 3, 12, 0))
     }
+
+    @Test
+    fun `modèle - tout sauf la date, durée reprise`() {
+        val base = EventDraft.new(agendaId = 1, date = LocalDate.of(2026, 11, 3), minute = 9 * 60, zone = paris)
+        val dentist = com.gabrielifrim.hora.core.domain.model.EventTemplate(
+            title = "Dentiste", agendaId = 4, location = "Cabinet", minutes = 45, busy = true, reminders = listOf(Reminder.Before(60)),
+        )
+        val d = base.withTemplate(dentist)
+        assertThat(listOf(d.title, d.agendaId, d.location, d.reminders)).containsExactly("Dentiste", 4L, "Cabinet", listOf(Reminder.Before(60))).inOrder()
+        assertThat(d.start to d.end).isEqualTo(LocalDateTime.of(2026, 11, 3, 9, 0) to LocalDateTime.of(2026, 11, 3, 9, 45))
+        // Un modèle dont l'agenda a été supprimé garde celui du brouillon.
+        assertThat(base.withTemplate(dentist.copy(agendaId = null)).agendaId).isEqualTo(1L)
+    }
 }

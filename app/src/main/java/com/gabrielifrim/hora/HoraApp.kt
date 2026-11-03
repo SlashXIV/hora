@@ -71,9 +71,9 @@ import kotlinx.serialization.Serializable
 
 /**
  * Éditeur : id > 0 modifie, duplicateOf > 0 copie, sinon crée au jour epochDay (minute < 0 : heure par défaut),
- * pré-rempli par la phrase [quick] de la saisie rapide si elle n'est pas vide.
+ * pré-rempli par la phrase [quick] de la saisie rapide si elle n'est pas vide, ou par le modèle [template] (> 0).
  */
-@Serializable private data class EditRoute(val id: Long = 0, val occurrence: Long = -1, val duplicateOf: Long = 0, val epochDay: Long = 0, val minute: Int = -1, val quick: String = "")
+@Serializable private data class EditRoute(val id: Long = 0, val occurrence: Long = -1, val duplicateOf: Long = 0, val epochDay: Long = 0, val minute: Int = -1, val quick: String = "", val template: Long = 0)
 
 private enum class Tab(val route: Any, val label: Int, val icon: ImageVector) {
     TODAY(TodayRoute, R.string.tab_today, HoraIcons.Today),
@@ -117,6 +117,7 @@ fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
                     onClose = { nav.popBackStack() },
                     onDetail = { text -> nav.navigate(EditRoute(epochDay = LocalDate.now().toEpochDay(), quick = text)) { popUpTo<QuickRoute> { inclusive = true } } },
                     onCreated = { id -> nav.navigate(EventRoute(id)) { popUpTo<QuickRoute> { inclusive = true } } },
+                    onTemplate = { id -> nav.navigate(EditRoute(epochDay = LocalDate.now().toEpochDay(), template = id)) { popUpTo<QuickRoute> { inclusive = true } } },
                 )
             }
             composable<EventRoute> { back ->
@@ -138,6 +139,7 @@ fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
                     date = if (route.id == 0L && route.duplicateOf == 0L) LocalDate.ofEpochDay(route.epochDay) else LocalDate.now(),
                     minute = route.minute.takeIf { it >= 0 },
                     quick = route.quick,
+                    template = route.template,
                     onClose = { nav.popBackStack() },
                     onSaved = { savedId ->
                         // Après une création, la fiche remplace l'éditeur ; après une modification, on revient à la fiche.

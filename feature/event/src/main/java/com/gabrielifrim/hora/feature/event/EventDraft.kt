@@ -6,6 +6,7 @@ import com.gabrielifrim.hora.core.domain.model.Reminder
 import com.gabrielifrim.hora.core.domain.recurrence.RepeatSpec
 import com.gabrielifrim.hora.core.domain.model.Timing
 import com.gabrielifrim.hora.core.domain.quick.QuickEntry
+import com.gabrielifrim.hora.core.domain.model.EventTemplate
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -50,6 +51,13 @@ data class EventDraft(
     private fun endDateTimeForSave(): LocalDateTime = if (allDay) end.toLocalDate().atStartOfDay() else end
 
     val repeats: Boolean get() = repeat != null || customRule != null
+
+    /** Nouveau depuis un modèle : tout sauf la date, qui reste celle du brouillon. */
+    fun withTemplate(t: EventTemplate): EventDraft = copy(
+        title = t.title, agendaId = t.agendaId ?: agendaId, colorKey = t.colorKey, location = t.location, notes = t.notes,
+        busy = t.busy, reminders = t.reminders, allDay = t.allDay,
+        end = if (t.allDay) end else start.plusMinutes(t.minutes.toLong()),
+    )
 
     /**
      * Saisie rapide : ce qui a été dit remplace le brouillon neuf. Un jour sans heure

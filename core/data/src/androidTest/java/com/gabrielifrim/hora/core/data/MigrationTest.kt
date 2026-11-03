@@ -11,8 +11,10 @@ import com.gabrielifrim.hora.core.data.database.MIGRATION_3_4
 import com.gabrielifrim.hora.core.data.database.MIGRATION_4_5
 import com.gabrielifrim.hora.core.data.database.MIGRATION_5_6
 import com.gabrielifrim.hora.core.data.database.MIGRATION_6_7
+import com.gabrielifrim.hora.core.data.database.MIGRATION_7_8
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -173,6 +175,18 @@ class MigrationTest {
         val row = db.settingsDao().get()!!
         assertThat(row.prayer).isEqualTo("on=true")
         assertThat(row.plages).isEmpty()
+        db.close()
+    }
+
+    @Test
+    fun v7_to_v8_addsEmptyTemplates() = runTest {
+        helper.createDatabase(DB, 7).close()
+        helper.runMigrationsAndValidate(DB, 8, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        assertThat(db.reminderDao().observeTemplates().first()).isEmpty()
         db.close()
     }
 

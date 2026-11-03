@@ -17,6 +17,8 @@ import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderSet
 import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
+import com.gabrielifrim.hora.core.domain.repository.TemplateRepository
+import com.gabrielifrim.hora.core.domain.model.EventTemplate
 import com.gabrielifrim.hora.core.domain.calendar.FreeSlots
 import com.gabrielifrim.hora.core.domain.model.Plage
 import com.gabrielifrim.hora.core.domain.quick.QuickEntry
@@ -65,6 +67,7 @@ class EventDetailViewModel @AssistedInject constructor(
     agendas: AgendaRepository,
     @param:ApplicationContext private val context: Context,
     almanac: AlmanacRepository,
+    private val templates: TemplateRepository,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -79,6 +82,14 @@ class EventDetailViewModel @AssistedInject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     val agendas: StateFlow<Map<Long, Agenda>> = combine(agendas.agendas, almanac.agendas) { a, b -> a + b }.map { l -> l.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    /** Vrai une fois le modèle enregistré : le bouton le dit. */
+    val templateSaved = MutableStateFlow(false)
+
+    fun saveAsTemplate() {
+        val shown = event.value ?: return
+        viewModelScope.launch { templates.save(EventTemplate.of(shown)); templateSaved.value = true }
+    }
 
     /** Déplacer une occurrence d'une série ne déplace qu'elle. */
     fun moveTo(date: LocalDate) {
@@ -145,7 +156,10 @@ class EventEditorViewModel @AssistedInject constructor(
     @Assisted("minute") private val minute: Int?,
     /** Phrase de saisie rapide, vide sinon : elle pré-remplit un nouvel événement. */
     @Assisted("quick") private val quick: String,
+    /** Modèle de départ (> 0), sinon 0. */
+    @Assisted("template") private val template: Long,
     private val events: EventRepository,
+    private val templates: TemplateRepository,
     private val agendaRepository: AgendaRepository,
     private val setRepository: ReminderSetRepository,
     settings: SettingsRepository,
@@ -159,6 +173,7 @@ class EventEditorViewModel @AssistedInject constructor(
             date: LocalDate,
             @Assisted("minute") minute: Int?,
             @Assisted("quick") quick: String,
+            @Assisted("template") template: Long,
         ): EventEditorViewModel
     }
 
@@ -203,6 +218,7 @@ class EventEditorViewModel @AssistedInject constructor(
                 val agenda = list.firstOrNull { !it.hidden } ?: list.first()
                 EventDraft.new(agendaId = agenda.id, date = date, minute = minute, zone = zone, reminders = agenda.defaultReminders)
                     .let { d -> if (quick.isBlank()) d else d.withQuick(QuickEntry.parse(quick, LocalDateTime.now())) }
+                    .let { d -> templates.templates.first().firstOrNull { it.id == template }?.let(d::withTemplate) ?: d }
             }
         }
     }

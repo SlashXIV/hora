@@ -34,6 +34,14 @@ import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.quick.QuickEntry
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
+import com.gabrielifrim.hora.core.domain.repository.TemplateRepository
+import com.gabrielifrim.hora.core.domain.model.EventTemplate
+import com.gabrielifrim.hora.core.ui.component.HoraIcons
+import com.gabrielifrim.hora.core.ui.component.IconAction
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role
 import com.gabrielifrim.hora.core.ui.component.ButtonStyle
 import com.gabrielifrim.hora.core.ui.component.EventRow
 import com.gabrielifrim.hora.core.ui.component.Eyebrow
@@ -67,7 +75,17 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class QuickEntryViewModel @Inject constructor(agendaRepository: AgendaRepository, private val events: EventRepository) : ViewModel() {
+class QuickEntryViewModel @Inject constructor(
+    agendaRepository: AgendaRepository,
+    private val events: EventRepository,
+    private val templateRepository: TemplateRepository,
+) : ViewModel() {
+    val templates: StateFlow<List<EventTemplate>> = templateRepository.templates.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun deleteTemplate(id: Long) {
+        viewModelScope.launch { templateRepository.delete(id) }
+    }
+
     private val zone = ZoneId.systemDefault()
     val text = MutableStateFlow("")
     val agendas: StateFlow<Map<Long, Agenda>> = agendaRepository.agendas.map { list -> list.associateBy { it.id } }
@@ -91,7 +109,14 @@ class QuickEntryViewModel @Inject constructor(agendaRepository: AgendaRepository
  * « Créer ». « Détailler » ouvre l'éditeur pré-rempli.
  */
 @Composable
-fun QuickEntryScreen(onClose: () -> Unit, onDetail: (String) -> Unit, onCreated: (Long) -> Unit, viewModel: QuickEntryViewModel = hiltViewModel()) {
+fun QuickEntryScreen(
+    onClose: () -> Unit,
+    onDetail: (String) -> Unit,
+    onCreated: (Long) -> Unit,
+    onTemplate: (Long) -> Unit,
+    viewModel: QuickEntryViewModel = hiltViewModel(),
+) {
+    val templates by viewModel.templates.collectAsStateWithLifecycle()
     val text by viewModel.text.collectAsStateWithLifecycle()
     val draft by viewModel.draft.collectAsStateWithLifecycle()
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
@@ -142,6 +167,22 @@ fun QuickEntryScreen(onClose: () -> Unit, onDetail: (String) -> Unit, onCreated:
                     d.reminders.forEach { r -> HoraText(reminderText(r, formats), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2) }
                 } else {
                     HoraText(stringResource(R.string.quick_preview_empty), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+                }
+                // « Nouveau depuis un modèle » : le modèle ouvre l'éditeur à la prochaine heure pleine.
+                if (templates.isNotEmpty()) {
+                    Eyebrow(stringResource(R.string.quick_templates))
+                    Column {
+                        templates.forEach { t ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                HoraText(
+                                    t.title,
+                                    style = HoraTheme.type.body,
+                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp).clickable(role = Role.Button) { onTemplate(t.id) }.padding(vertical = 12.dp),
+                                )
+                                IconAction(HoraIcons.Close, stringResource(R.string.template_delete, t.title), onClick = { haptics.tick(); viewModel.deleteTemplate(t.id) })
+                            }
+                        }
+                    }
                 }
                 Eyebrow(stringResource(R.string.quick_examples))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

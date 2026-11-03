@@ -7,7 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import java.util.concurrent.Executors
 
 @Database(
-    entities = [SettingsEntity::class, AgendaEntity::class, EventEntity::class, ReminderSetEntity::class, FiredReminderEntity::class, SnoozeEntity::class],
+    entities = [SettingsEntity::class, AgendaEntity::class, EventEntity::class, ReminderSetEntity::class, EventTemplateEntity::class, FiredReminderEntity::class, SnoozeEntity::class],
     version = HoraDatabase.VERSION,
     exportSchema = true,
 )
@@ -21,7 +21,7 @@ abstract class HoraDatabase : RoomDatabase() {
         const val NAME = "hora.db"
 
         /** Version du schéma ; une sauvegarde plus récente ne se restaure pas. */
-        const val VERSION = 7
+        const val VERSION = 8
     }
 }
 
@@ -111,8 +111,21 @@ internal val MIGRATION_6_7 = object : Migration(6, 7) {
     }
 }
 
+/** v7 → v8 (J6) : modèles d'événement. */
+internal val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `event_template` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, " +
+                "`agenda_id` INTEGER, `color_key` TEXT, `location` TEXT NOT NULL, `notes` TEXT NOT NULL, `all_day` INTEGER NOT NULL, " +
+                "`minutes` INTEGER NOT NULL, `busy` INTEGER NOT NULL, `reminders` TEXT NOT NULL, " +
+                "FOREIGN KEY(`agenda_id`) REFERENCES `agenda`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_event_template_agenda_id` ON `event_template` (`agenda_id`)")
+    }
+}
+
 /** Migrations explicites, dans l'ordre. Chacune a son test dans `MigrationTest`. */
-internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
 
 /**
  * Configuration de la base, définie une seule fois : les tests instrumentés

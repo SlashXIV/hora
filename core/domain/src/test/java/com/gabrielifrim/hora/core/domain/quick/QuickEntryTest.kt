@@ -64,4 +64,25 @@ class QuickEntryTest {
         assertThat(parse("Rappel")).isEqualTo(QuickEntry(title = "Rappel"))
         assertThat(parse("Lire 3 chapitres").title).isEqualTo("Lire 3 chapitres")
     }
+
+    @Test
+    fun `rappel la veille - 20 h par défaut, ou l'heure dite`() {
+        assertThat(parse("Contrôle technique vendredi 9h rappel la veille").reminders).containsExactly(Reminder.Anchored(1, LocalTime.of(20, 0)))
+        parse("Contrôle vendredi rappel la veille à 18h").let {
+            assertThat(it.reminders).containsExactly(Reminder.Anchored(1, LocalTime.of(18, 0)))
+            assertThat(it.title).isEqualTo("Contrôle")
+        }
+    }
+
+    @Test
+    fun `parties - chaque mot coloré selon ce qu'il est devenu`() {
+        val text = "Dîner de famille  demain à 20h @Chez Léa rappel 1h avant"
+        val parts = QuickEntry.parts(text, now).map { (range, part) -> text.substring(range) to part }
+        assertThat(parts).containsExactly(
+            "Dîner" to QuickEntry.Part.TITLE, "de" to QuickEntry.Part.TITLE, "famille" to QuickEntry.Part.TITLE,
+            "demain" to QuickEntry.Part.WHEN, "à" to QuickEntry.Part.WHEN, "20h" to QuickEntry.Part.WHEN,
+            "@Chez" to QuickEntry.Part.PLACE, "Léa" to QuickEntry.Part.PLACE,
+            "rappel" to QuickEntry.Part.REMINDER, "1h" to QuickEntry.Part.REMINDER, "avant" to QuickEntry.Part.REMINDER,
+        ).inOrder()
+    }
 }

@@ -45,7 +45,14 @@ import com.gabrielifrim.hora.core.ui.component.Tag
 import com.gabrielifrim.hora.core.ui.component.reminderText
 import com.gabrielifrim.hora.core.ui.motion.rememberHaptics
 import com.gabrielifrim.hora.core.ui.text.rememberFormats
+import com.gabrielifrim.hora.core.ui.theme.AgendaColorKey
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
+import com.gabrielifrim.hora.core.ui.text.color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -95,6 +102,22 @@ fun QuickEntryScreen(onClose: () -> Unit, onDetail: (String) -> Unit, onCreated:
     val d = draft
     val canCreate = d != null && d.canSave
     val create = { if (canCreate) { haptics.confirm(); viewModel.create(onCreated) } }
+    // Les mots compris prennent la couleur de ce qu'ils sont devenus, comme sur la planche.
+    val partColors = mapOf(
+        QuickEntry.Part.TITLE to HoraTheme.colors.accent,
+        QuickEntry.Part.WHEN to AgendaColorKey.FIR.color(),
+        QuickEntry.Part.REMINDER to AgendaColorKey.BRICK.color(),
+        QuickEntry.Part.PLACE to AgendaColorKey.TEAL.color(),
+    )
+    val highlight = VisualTransformation { input ->
+        val styled = buildAnnotatedString {
+            append(input.text)
+            QuickEntry.parts(input.text, LocalDateTime.now()).forEach { (range, part) ->
+                addStyle(SpanStyle(color = partColors.getValue(part)), range.first, range.last + 1)
+            }
+        }
+        TransformedText(styled, OffsetMapping.Identity)
+    }
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -108,6 +131,7 @@ fun QuickEntryScreen(onClose: () -> Unit, onDetail: (String) -> Unit, onCreated:
                     modifier = Modifier.focusRequester(focus),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { create() }),
+                    visualTransformation = highlight,
                 )
                 Eyebrow(stringResource(R.string.quick_preview))
                 if (d != null && d.title.isNotBlank()) {

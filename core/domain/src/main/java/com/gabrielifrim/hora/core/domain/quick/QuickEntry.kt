@@ -30,15 +30,27 @@ data class QuickEntry(
          * l'heure n'est pas passée), « le 12 », « 12/11 », « 12 novembre » ; « 14h », « 14h30 »,
          * « 14:30 », « midi » ; une fin (« de 14h à 16h », « 14h-16h ») ou une durée (« 1h »,
          * « 30 min », « pendant 2h ») ; « rappel 1h avant » ; un lieu après « @ ».
-         * Le reste fait le titre.
+         * « rappel la veille » (à 20:00, ou « à 18h »). Le reste fait le titre.
          */
-        fun parse(text: String, now: LocalDateTime): QuickEntry = Parser(text.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }, now).run()
+        fun parse(text: String, now: LocalDateTime): QuickEntry = Parser(WORD.findAll(text).map { it.value }.toList(), now).run()
+
+        /** Ce que chaque mot de [text] est devenu, en plages de caractères : pour colorer la saisie. */
+        fun parts(text: String, now: LocalDateTime): List<Pair<IntRange, Part>> {
+            val found = WORD.findAll(text).toList()
+            val parser = Parser(found.map { it.value }, now).also { it.run() }
+            return found.mapIndexed { i, m -> m.range to parser.kinds[i] }
+        }
+
+        private val WORD = Regex("\\S+")
     }
+
+    enum class Part { TITLE, WHEN, REMINDER, PLACE }
 }
 
 private class Parser(private val words: List<String>, private val now: LocalDateTime) {
     private val keys = words.map(::normalize)
     private val used = BooleanArray(words.size)
+    val kinds = Array(words.size) { QuickEntry.Part.TITLE }
     private var date: LocalDate? = null
     private var weekday: DayOfWeek? = null
     private var start: LocalTime? = null
@@ -57,6 +69,7 @@ private class Parser(private val words: List<String>, private val now: LocalDate
         }
         val at = keys.indexOfFirst { it.startsWith("@") }
         val free = words.indices.filter { !used[it] }
+        if (at >= 0) free.filter { it >= at }.forEach { kinds[it] = QuickEntry.Part.PLACE }
         fun text(range: List<Int>) = range.joinToString(" ") { words[it] }.removePrefix("@").trim()
         return QuickEntry(
             title = text(free.filter { at < 0 || it < at }),
@@ -76,13 +89,20 @@ private class Parser(private val words: List<String>, private val now: LocalDate
         if (w in CONNECTORS && i + 1 < words.size) {
             val next = match(i + 1) ?: return null
             used[i] = true
+            kinds[i] = kinds[i + 1]
             return next
         }
         if (w == "rappel" || w == "rappeler") {
+            if (keys.getOrNull(i + 1) == "la" && keys.getOrNull(i + 2) == "veille") {
+                // « la veille à 18h » ; sans heure, 20:00 comme sur la planche.
+                val at = if (keys.getOrNull(i + 3) == "a") timeAt(i + 4) else null
+                reminders += Reminder.Anchored(1, at?.first ?: LocalTime.of(20, 0))
+                return consume(i, 3 + (at?.let { 1 + it.second } ?: 0), QuickEntry.Part.REMINDER)
+            }
             val (d, n) = durationAt(i + 1) ?: return null
             reminders += Reminder.Before(d.toMinutes().toInt())
             val after = if (keys.getOrNull(i + 1 + n) == "avant") n + 1 else n
-            return consume(i, 1 + after)
+            return consume(i, 1 + after, QuickEntry.Part.REMINDER)
         }
         if (w == "pendant") {
             val (d, n) = durationAt(i + 1) ?: return null
@@ -114,8 +134,8 @@ private class Parser(private val words: List<String>, private val now: LocalDate
         return null
     }
 
-    private fun consume(i: Int, n: Int): Int {
-        for (k in i until i + n) used[k] = true
+    private fun consume(i: Int, n: Int, kind: QuickEntry.Part = QuickEntry.Part.WHEN): Int {
+        for (k in i until i + n) { used[k] = true; kinds[k] = kind }
         return i + n
     }
 

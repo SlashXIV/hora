@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 
@@ -36,6 +37,7 @@ fun HoraTextField(
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     val colors = HoraTheme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -49,6 +51,7 @@ fun HoraTextField(
         minLines = minLines,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        visualTransformation = visualTransformation,
         interactionSource = interaction,
         cursorBrush = SolidColor(colors.accent),
         decorationBox = { inner ->

@@ -83,6 +83,14 @@ class EventDetailViewModel @AssistedInject constructor(
     val agendas: StateFlow<Map<Long, Agenda>> = combine(agendas.agendas, almanac.agendas) { a, b -> a + b }.map { l -> l.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
+    /** Épingle la série entière (ou l'événement) : son compte à rebours suit la prochaine occurrence. */
+    fun setPinned(on: Boolean) {
+        viewModelScope.launch {
+            val stored = events.event(eventId).first() ?: return@launch
+            events.save(stored.copy(pinned = on))
+        }
+    }
+
     /** Vrai une fois le modèle enregistré : le bouton le dit. */
     val templateSaved = MutableStateFlow(false)
 

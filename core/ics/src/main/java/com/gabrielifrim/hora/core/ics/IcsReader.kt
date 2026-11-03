@@ -135,6 +135,7 @@ object IcsReader {
             notes = c.first("DESCRIPTION")?.text?.trim().orEmpty(),
             colorKey = c.first("X-HORA-COLOR")?.value?.trim(),
             busy = c.first("TRANSP")?.value?.trim()?.uppercase() != "TRANSPARENT",
+            pinned = c.first("X-HORA-PINNED")?.value?.trim() == "1",
             reminders = reminders,
             recurrence = if (recurrenceId == null && rule != null) Recurrence(rule, exceptions) else null,
             recurrenceId = recurrenceId,

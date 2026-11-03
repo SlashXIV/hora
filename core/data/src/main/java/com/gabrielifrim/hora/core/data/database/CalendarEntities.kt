@@ -54,6 +54,7 @@ data class EventEntity(
     @ColumnInfo(name = "parent_id") val parentId: Long? = null,
     @ColumnInfo(name = "recurrence_id") val recurrenceId: Long? = null,
     @ColumnInfo(defaultValue = "1") val busy: Boolean = true,
+    @ColumnInfo(defaultValue = "0") val pinned: Boolean = false,
 )
 
 /** Un jeu de rappels réutilisable (« Rendez-vous du matin »). */
@@ -123,6 +124,9 @@ interface AgendaDao {
 
 @Dao
 interface EventDao {
+    @Query("SELECT event.* FROM event JOIN agenda ON agenda.id = event.agenda_id WHERE pinned = 1 AND agenda.hidden = 0 ORDER BY start")
+    fun observePinned(): Flow<List<EventEntity>>
+
     /**
      * Événements des agendas visibles qui touchent la période : à heure fixe, ceux
      * qui commencent avant [toMs] et finissent après [fromMs] (ou qui, de durée

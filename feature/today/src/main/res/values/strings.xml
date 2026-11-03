@@ -43,4 +43,20 @@
         <item>dhou al-qi‘da</item>
         <item>dhou al-hijja</item>
     </string-array>
+    <string name="countdown_label">Compte à rebours</string>
+    <string name="since_label">Depuis</string>
+    <string name="countdown_figure">J-%1$d</string>
+    <string name="since_figure">J+%1$d</string>
+    <string name="countdown_today_figure">Jour J</string>
+    <string name="countdown_today_spoken">c’est aujourd’hui</string>
+    <plurals name="countdown_spoken">
+        <item quantity="one">dans %1$d jour</item>
+        <item quantity="many">dans %1$d jours</item>
+        <item quantity="other">dans %1$d jours</item>
+    </plurals>
+    <plurals name="since_spoken">
+        <item quantity="one">depuis %1$d jour</item>
+        <item quantity="many">depuis %1$d jours</item>
+        <item quantity="other">depuis %1$d jours</item>
+    </plurals>
 </resources>

@@ -31,7 +31,7 @@ class IcsWriterTest {
         timing = Timing.Timed(at(13, 14), at(13, 15), paris), parentId = 10, recurrenceId = at(6 + 7, 9).toEpochMilli(),
     )
     private val trip = Event(
-        id = 12, uid = "voyage", agendaId = 3, title = "Voyage", colorKey = "TEAL", busy = false,
+        id = 12, uid = "voyage", agendaId = 3, title = "Voyage", colorKey = "TEAL", busy = false, pinned = true,
         timing = Timing.AllDay(LocalDate.of(2026, 3, 28), LocalDate.of(2026, 3, 31)),
         reminders = listOf(Reminder.Anchored(2, LocalTime.of(9, 30))),
     )

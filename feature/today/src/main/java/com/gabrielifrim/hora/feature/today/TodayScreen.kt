@@ -2,6 +2,8 @@ package com.gabrielifrim.hora.feature.today
 
 import com.gabrielifrim.hora.core.ui.R as UiR
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import com.gabrielifrim.hora.core.domain.calendar.Countdown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -88,6 +90,8 @@ fun TodayScreen(
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
     val place by viewModel.place.collectAsStateWithLifecycle()
     val prayer by viewModel.prayer.collectAsStateWithLifecycle()
+    val pinned by viewModel.pinned.collectAsStateWithLifecycle()
+    val countdowns = remember(pinned, today) { pinned.mapNotNull { e -> Countdown.days(e, today, zone)?.let { e to it } } }
     val sun = remember(today, place) { Sun.day(today, place) }
     val events by remember(today, zone) { viewModel.upcoming(today, zone) }.collectAsStateWithLifecycle(emptyList())
     val todays = remember(events, today) {
@@ -126,10 +130,41 @@ fun TodayScreen(
                     todays.forEach { e -> EventRow(e, agendas, zone, formats, onClick = { onOpenEvent(e.id, e.occurrence) }, day = today) }
                 }
             }
+            if (countdowns.isNotEmpty()) {
+                Rule()
+                countdowns.forEach { (e, days) -> CountdownRow(e.title, days) { onOpenEvent(e.id, null) } }
+            }
         }
     }
     // La saisie rapide reste à portée, au-dessus des onglets.
     QuickEntryBar(onQuick, Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
+    }
+}
+
+/** « Compte à rebours · Week-end à Lyon · J-12 », comme sur la planche ; « Depuis … J+40 » une fois passé. */
+@Composable
+private fun CountdownRow(title: String, days: Long, onClick: () -> Unit) {
+    val n = kotlin.math.abs(days).toInt()
+    val (label, figure, spoken) = when {
+        days > 0 -> Triple(stringResource(R.string.countdown_label), stringResource(R.string.countdown_figure, n), pluralStringResource(R.plurals.countdown_spoken, n, n))
+        days < 0 -> Triple(stringResource(R.string.since_label), stringResource(R.string.since_figure, n), pluralStringResource(R.plurals.since_spoken, n, n))
+        else -> Triple(stringResource(R.string.countdown_label), stringResource(R.string.countdown_today_figure), stringResource(R.string.countdown_today_spoken))
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .clickable(onClick = onClick)
+            .clearAndSetSemantics { contentDescription = "$title, $spoken"; role = Role.Button }
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Eyebrow(label)
+            HoraText(title, style = HoraTheme.type.body)
+        }
+        HoraText(figure, style = HoraTheme.type.figure)
     }
 }
 

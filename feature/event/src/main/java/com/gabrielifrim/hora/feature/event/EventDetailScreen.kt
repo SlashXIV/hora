@@ -42,6 +42,7 @@ import com.gabrielifrim.hora.core.ui.component.HoraButton
 import com.gabrielifrim.hora.core.ui.component.HoraText
 import com.gabrielifrim.hora.core.ui.component.PageHeader
 import com.gabrielifrim.hora.core.ui.component.Rule
+import com.gabrielifrim.hora.core.ui.component.ToggleRow
 import com.gabrielifrim.hora.core.ui.motion.rememberHaptics
 import com.gabrielifrim.hora.core.ui.text.color
 import com.gabrielifrim.hora.core.ui.text.colorKeyOf
@@ -111,6 +112,14 @@ fun EventDetailScreen(
                             HoraText(reminderText(r, formats) + if (r.alarm) " · " + stringResource(UiR.string.reminder_alarm) else "", style = HoraTheme.type.body)
                         }
                     }
+                }
+                if (editable) {
+                    ToggleRow(
+                        title = stringResource(R.string.pin_today),
+                        hint = stringResource(R.string.pin_today_hint),
+                        checked = e.pinned,
+                        onCheckedChange = { on -> haptics.tick(); viewModel.setPinned(on) },
+                    )
                 }
                 if (!e.busy) Field(stringResource(R.string.field_availability), stringResource(R.string.availability_free))
                 if (e.location.isNotBlank()) Field(stringResource(R.string.field_location), e.location)

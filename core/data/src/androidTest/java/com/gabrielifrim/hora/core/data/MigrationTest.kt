@@ -12,6 +12,7 @@ import com.gabrielifrim.hora.core.data.database.MIGRATION_4_5
 import com.gabrielifrim.hora.core.data.database.MIGRATION_5_6
 import com.gabrielifrim.hora.core.data.database.MIGRATION_6_7
 import com.gabrielifrim.hora.core.data.database.MIGRATION_7_8
+import com.gabrielifrim.hora.core.data.database.MIGRATION_8_9
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
@@ -187,6 +188,26 @@ class MigrationTest {
             .applyHoraConfiguration()
             .build()
         assertThat(db.reminderDao().observeTemplates().first()).isEmpty()
+        db.close()
+    }
+
+    @Test
+    fun v8_to_v9_leavesEventsUnpinned() = runTest {
+        helper.createDatabase(DB, 8).apply {
+            execSQL("INSERT INTO agenda (id, name, color_key, hidden, sort_order, default_reminders) VALUES (1, 'Perso', 'BLUE', 0, 0, '')")
+            execSQL(
+                "INSERT INTO event (id, uid, agenda_id, title, location, notes, color_key, all_day, start, `end`, time_zone, reminders, rrule, exdates, busy) " +
+                    "VALUES (5, 'u-5', 1, 'Lyon', '', '', NULL, 1, 20400, 20401, NULL, '', NULL, '', 1)",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(DB, 9, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        assertThat(db.eventDao().get(5)!!.pinned).isFalse()
+        assertThat(db.eventDao().observePinned().first()).isEmpty()
         db.close()
     }
 

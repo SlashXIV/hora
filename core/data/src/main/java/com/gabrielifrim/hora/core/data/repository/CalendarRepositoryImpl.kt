@@ -81,6 +81,8 @@ internal class EventRepositoryImpl @Inject constructor(
 
     override fun event(id: Long): Flow<Event?> = dao.observe(id).map { it?.toDomain() }
 
+    override val pinned: Flow<List<Event>> = dao.observePinned().map { list -> list.map { it.toDomain() } }
+
     override suspend fun children(seriesId: Long): List<Event> = dao.children(seriesId).map { it.toDomain() }
 
     override fun search(query: String): Flow<List<Event>> {
@@ -251,6 +253,7 @@ private fun EventEntity.toDomain() = Event(
     notes = notes,
     colorKey = colorKey,
     busy = busy,
+    pinned = pinned,
     timing = if (allDay) {
         Timing.AllDay(LocalDate.ofEpochDay(start), LocalDate.ofEpochDay(end))
     } else {
@@ -290,5 +293,6 @@ private fun Event.toEntity(): EventEntity {
         parentId = parentId,
         recurrenceId = recurrenceId,
         busy = busy,
+        pinned = pinned,
     )
 }

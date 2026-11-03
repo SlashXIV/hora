@@ -61,6 +61,8 @@ data class Event(
     val colorKey: String? = null,
     /** Occupé (TRANSP:OPAQUE) ; un événement libre ne bloque pas un créneau. */
     val busy: Boolean = true,
+    /** Épinglé sur Aujourd'hui : compte à rebours, ou compteur « depuis » une fois passé. */
+    val pinned: Boolean = false,
     val reminders: List<Reminder> = emptyList(),
     /** Règle de répétition, sur l'événement d'origine d'une série. */
     val recurrence: Recurrence? = null,

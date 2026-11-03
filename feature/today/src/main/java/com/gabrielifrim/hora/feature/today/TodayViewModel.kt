@@ -41,6 +41,10 @@ class TodayViewModel @Inject constructor(
     val prayer: StateFlow<PrayerSettings> = settings.settings.map { it.prayer }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PrayerSettings())
 
+    /** Événements épinglés : compte à rebours ou « depuis ». */
+    val pinned: StateFlow<List<Event>> = eventRepository.pinned
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     /** Aujourd'hui et le mois qui suit : de quoi trouver le prochain rendez-vous ; fériés et fêtes du fil compris. */
     fun upcoming(today: LocalDate, zone: ZoneId): Flow<List<Event>> {
         val last = today.plusDays(UPCOMING_DAYS)

@@ -111,6 +111,8 @@
     <string name="quick_example_3">courses samedi 10h 30 min</string>
     <string name="quick_detail">Détailler</string>
     <string name="quick_templates">Modèles</string>
+    <string name="pin_today">Épingler sur Aujourd’hui</string>
+    <string name="pin_today_hint">Compte à rebours jusqu’au jour J, puis « depuis » une fois passé.</string>
     <string name="template_delete">Supprimer le modèle %1$s</string>
     <string name="action_save_template">Enregistrer comme modèle</string>
     <string name="template_saved">Modèle enregistré</string>

@@ -32,6 +32,9 @@ interface EventRepository {
 
     fun event(id: Long): Flow<Event?>
 
+    /** Événements épinglés sur Aujourd'hui des agendas visibles, séries non développées. */
+    val pinned: Flow<List<Event>>
+
     /** Les occurrences modifiées à part d'une série. */
     suspend fun children(seriesId: Long): List<Event>
 

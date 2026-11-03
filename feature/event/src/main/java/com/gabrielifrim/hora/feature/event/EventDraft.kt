@@ -30,6 +30,8 @@ data class EventDraft(
     val colorKey: String? = null,
     val allDay: Boolean = false,
     val busy: Boolean = true,
+    /** Gardé tel quel : l'épingle se pose depuis la fiche, l'éditeur ne doit pas l'ôter. */
+    val pinned: Boolean = false,
     val start: LocalDateTime,
     val end: LocalDateTime,
     val zone: ZoneId,
@@ -91,6 +93,7 @@ data class EventDraft(
         notes = notes.trim(),
         colorKey = colorKey,
         busy = busy,
+        pinned = pinned,
         reminders = reminders,
         recurrence = (repeat?.toRule(start.toLocalDate(), if (allDay) null else zone) ?: customRule)?.let { Recurrence(it, exceptions) },
         timing = if (allDay) {
@@ -129,12 +132,12 @@ data class EventDraft(
         private fun base(event: Event, displayZone: ZoneId): EventDraft = when (val t = event.timing) {
             is Timing.AllDay -> EventDraft(
                 id = event.id, uid = event.uid, agendaId = event.agendaId, title = event.title,
-                location = event.location, notes = event.notes, colorKey = event.colorKey, busy = event.busy,
+                location = event.location, notes = event.notes, colorKey = event.colorKey, busy = event.busy, pinned = event.pinned,
                 allDay = true, start = t.first.atTime(9, 0), end = t.last.atTime(10, 0), zone = displayZone,
             )
             is Timing.Timed -> EventDraft(
                 id = event.id, uid = event.uid, agendaId = event.agendaId, title = event.title,
-                location = event.location, notes = event.notes, colorKey = event.colorKey, busy = event.busy,
+                location = event.location, notes = event.notes, colorKey = event.colorKey, busy = event.busy, pinned = event.pinned,
                 start = LocalDateTime.ofInstant(t.start, t.zone), end = LocalDateTime.ofInstant(t.end, t.zone), zone = t.zone,
             )
         }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,11 +36,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.model.ClockFormat
 import com.gabrielifrim.hora.core.domain.model.MotionPreference
 import com.gabrielifrim.hora.core.domain.model.ThemePreference
 import com.gabrielifrim.hora.core.domain.model.UserSettings
+import com.gabrielifrim.hora.core.ui.component.AgendaMark
 import com.gabrielifrim.hora.core.ui.component.Eyebrow
+import com.gabrielifrim.hora.core.ui.component.Tag
+import com.gabrielifrim.hora.core.ui.text.agendaColorKey
+import com.gabrielifrim.hora.core.ui.text.color
 import com.gabrielifrim.hora.core.ui.component.HoraText
 import com.gabrielifrim.hora.core.ui.component.PageHeader
 import com.gabrielifrim.hora.core.ui.component.Rule
@@ -56,12 +62,14 @@ import com.gabrielifrim.hora.core.ui.text.rememberFormats
 @Composable
 fun SettingsScreen(onOpenAgendas: () -> Unit, onOpenTransfer: () -> Unit, modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    settings?.let { SettingsContent(it, viewModel::update, onOpenAgendas, onOpenTransfer, modifier) }
+    val agendas by viewModel.agendas.collectAsStateWithLifecycle()
+    settings?.let { SettingsContent(it, agendas, viewModel::update, onOpenAgendas, onOpenTransfer, modifier) }
 }
 
 @Composable
 private fun SettingsContent(
     settings: UserSettings,
+    agendas: List<Agenda>,
     update: ((UserSettings) -> UserSettings) -> Unit,
     onOpenAgendas: () -> Unit,
     onOpenTransfer: () -> Unit,
@@ -75,6 +83,7 @@ private fun SettingsContent(
             Section(stringResource(R.string.settings_agendas)) {
                 LinkRow(stringResource(R.string.settings_agendas), stringResource(R.string.settings_agendas_hint), onOpenAgendas)
                 LinkRow(stringResource(R.string.settings_transfer), stringResource(R.string.settings_transfer_hint), onOpenTransfer)
+                PopoteAgenda(agendas, settings.popoteAgenda) { id -> haptics.tick(); update { it.copy(popoteAgenda = id) } }
             }
         }
 
@@ -170,6 +179,23 @@ private fun SettingsContent(
                 ) { i -> haptics.tick(); update { it.copy(clockFormat = ClockFormat.entries[i]) } }
             }
         }
+    }
+}
+
+/** L'agenda dont les événements ouvrent Popote ; un agenda supprimé revient à « Aucun ». */
+@Composable
+private fun PopoteAgenda(agendas: List<Agenda>, selected: Long?, onSelect: (Long?) -> Unit) {
+    val current = selected?.takeIf { id -> agendas.any { it.id == id } }
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        HoraText(stringResource(R.string.popote_agenda), style = HoraTheme.type.body)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Tag(stringResource(R.string.popote_none), selected = current == null, onClick = { onSelect(null) })
+            agendas.forEach { agenda ->
+                val key = agendaColorKey(agenda.colorKey)
+                Tag(agenda.name, selected = agenda.id == current, onClick = { onSelect(agenda.id) }, leading = { AgendaMark(key.shape, key.color(), size = 10.dp) })
+            }
+        }
+        HoraText(stringResource(R.string.popote_agenda_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
     }
 }
 

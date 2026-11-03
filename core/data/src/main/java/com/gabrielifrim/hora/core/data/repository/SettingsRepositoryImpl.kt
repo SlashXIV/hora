@@ -50,6 +50,7 @@ private fun SettingsEntity.toDomain(): UserSettings {
         prayer = PrayerCodec.decode(prayer),
         plages = PlageCodec.decode(plages),
         digest = if (digest.isEmpty()) null else runCatching { LocalTime.parse(digest) }.getOrDefault(defaults.digest),
+        popoteAgenda = popoteAgenda,
     )
 }
 
@@ -70,4 +71,5 @@ private fun UserSettings.toEntity() = SettingsEntity(
     prayer = PrayerCodec.encode(prayer),
     plages = PlageCodec.encode(plages),
     digest = digest?.toString().orEmpty(),
+    popoteAgenda = popoteAgenda,
 )

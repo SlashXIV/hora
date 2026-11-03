@@ -65,6 +65,7 @@ fun EventDetailScreen(
     val event by viewModel.event.collectAsStateWithLifecycle()
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
     val templateSaved by viewModel.templateSaved.collectAsStateWithLifecycle()
+    val popoteAgenda by viewModel.popoteAgenda.collectAsStateWithLifecycle()
     val formats = rememberFormats()
     val zone = ZoneId.systemDefault()
     val haptics = rememberHaptics()
@@ -84,6 +85,12 @@ fun EventDetailScreen(
         is Timing.Timed -> t.start.atZone(zone).toLocalDate()
         is Timing.AllDay -> t.first
     }
+    // Popote absente : pas de bouton, plutôt qu'un bouton qui ne mène nulle part.
+    val popote = remember(e.agendaId, popoteAgenda) {
+        if (e.agendaId == popoteAgenda) context.packageManager.getLaunchIntentForPackage(POPOTE_PACKAGE) else null
+    }
+    val shareText = listOf(e.title, formats.dayLong(day) + " · " + timeRange(e, zone, formats), e.location, e.notes)
+        .filter { it.isNotBlank() }.joinToString("\n")
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars)) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -129,6 +136,9 @@ fun EventDetailScreen(
                 if (e.location.isNotBlank()) Field(stringResource(R.string.field_location), e.location)
                 if (e.notes.isNotBlank()) Field(stringResource(R.string.field_notes), e.notes)
                 // Un férié ou une fête (agenda calculé) se lit, il ne se modifie pas.
+                if (popote != null) {
+                    HoraButton(stringResource(R.string.action_open_popote), onClick = { context.startActivity(popote) }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth())
+                }
                 if (editable) {
                     Rule()
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -148,6 +158,15 @@ fun EventDetailScreen(
                                 send.clipData = ClipData.newRawUri(e.title, uri)
                                 context.startActivity(Intent.createChooser(send, shareTitle))
                             }
+                        },
+                        style = ButtonStyle.Line,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    HoraButton(
+                        stringResource(R.string.action_share_text),
+                        onClick = {
+                            val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, shareText)
+                            context.startActivity(Intent.createChooser(send, shareTitle))
                         },
                         style = ButtonStyle.Line,
                         modifier = Modifier.fillMaxWidth(),
@@ -194,6 +213,8 @@ fun EventDetailScreen(
         )
     }
 }
+
+private const val POPOTE_PACKAGE = "onl.nci.popote"
 
 @Composable
 private fun Field(label: String, value: String) {

@@ -68,6 +68,7 @@ class EventDetailViewModel @AssistedInject constructor(
     @param:ApplicationContext private val context: Context,
     almanac: AlmanacRepository,
     private val templates: TemplateRepository,
+    settings: SettingsRepository,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -82,6 +83,10 @@ class EventDetailViewModel @AssistedInject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     val agendas: StateFlow<Map<Long, Agenda>> = combine(agendas.agendas, almanac.agendas) { a, b -> a + b }.map { l -> l.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    /** L'agenda relié à Popote (Réglages), null s'il n'y en a pas. */
+    val popoteAgenda: StateFlow<Long?> = settings.settings.map { it.popoteAgenda }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Épingle la série entière (ou l'événement) : son compte à rebours suit la prochaine occurrence. */
     fun setPinned(on: Boolean) {

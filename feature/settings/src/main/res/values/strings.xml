@@ -200,4 +200,7 @@
     <string name="digest">Résumé du lendemain</string>
     <string name="digest_hint">Chaque soir, une notification avec ce qui t’attend demain ; rien si la journée est vide.</string>
     <string name="digest_time">Heure du résumé</string>
+    <string name="popote_agenda">Agenda relié à Popote</string>
+    <string name="popote_agenda_hint">Ses événements ont « Ouvrir Popote » sur leur fiche.</string>
+    <string name="popote_none">Aucun</string>
 </resources>

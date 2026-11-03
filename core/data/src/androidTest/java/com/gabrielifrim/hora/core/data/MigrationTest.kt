@@ -15,6 +15,7 @@ import com.gabrielifrim.hora.core.data.database.MIGRATION_7_8
 import com.gabrielifrim.hora.core.data.database.MIGRATION_8_9
 import com.gabrielifrim.hora.core.data.database.MIGRATION_9_10
 import com.gabrielifrim.hora.core.data.database.MIGRATION_10_11
+import com.gabrielifrim.hora.core.data.database.MIGRATION_11_12
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
@@ -252,6 +253,27 @@ class MigrationTest {
         val row = db.settingsDao().get()!!
         assertThat(row.digest).isEqualTo("20:00")
         assertThat(row.plages).isEqualTo("09:00-17:30;MONDAY;Taff")
+        db.close()
+    }
+
+    @Test
+    fun v11_to_v12_noPopoteAgendaByDefault() = runTest {
+        helper.createDatabase(DB, 11).apply {
+            execSQL(
+                "INSERT INTO settings (id, theme, motion, haptics, first_day_of_week, show_week_numbers, clock_format, " +
+                    "alsace_moselle, bridges, more_feasts, hidden_almanac, place_name, latitude, longitude, prayer, plages, digest) " +
+                    "VALUES (0, 'MIDI', 'CALM', 1, NULL, 1, 'H24', 0, 1, 0, 'MOON', 'Talence', 44.809, -0.588, '', '', '21:30')",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(DB, 12, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        val row = db.settingsDao().get()!!
+        assertThat(row.popoteAgenda).isNull()
+        assertThat(row.digest).isEqualTo("21:30")
         db.close()
     }
 

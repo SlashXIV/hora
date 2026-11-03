@@ -32,6 +32,8 @@ data class SettingsEntity(
     @ColumnInfo(defaultValue = "") val plages: String = "",
     /** Heure du résumé du lendemain (« 20:00 ») ; vide : pas de résumé. */
     @ColumnInfo(defaultValue = "20:00") val digest: String = "20:00",
+    /** Id de l'agenda relié à Popote, null s'il n'y en a pas. */
+    @ColumnInfo(name = "popote_agenda") val popoteAgenda: Long? = null,
 ) {
     companion object {
         const val SINGLE_ROW_ID = 0

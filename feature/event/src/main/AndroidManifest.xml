@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Android 11+ cache les autres applications : déclarer Popote pour savoir si elle est installée. -->
+    <queries>
+        <package android:name="onl.nci.popote" />
+    </queries>
+</manifest>

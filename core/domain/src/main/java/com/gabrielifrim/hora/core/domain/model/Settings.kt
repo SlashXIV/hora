@@ -40,4 +40,6 @@ data class UserSettings(
     val plages: List<Plage> = emptyList(),
     /** Heure du résumé du lendemain ; null : pas de résumé. */
     val digest: LocalTime? = LocalTime.of(20, 0),
+    /** Agenda dont les événements ont « Ouvrir Popote » sur leur fiche ; null : aucun. */
+    val popoteAgenda: Long? = null,
 )

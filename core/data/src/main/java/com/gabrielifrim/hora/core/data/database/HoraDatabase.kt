@@ -21,7 +21,7 @@ abstract class HoraDatabase : RoomDatabase() {
         const val NAME = "hora.db"
 
         /** Version du schéma ; une sauvegarde plus récente ne se restaure pas. */
-        const val VERSION = 11
+        const val VERSION = 12
     }
 }
 
@@ -145,8 +145,15 @@ internal val MIGRATION_10_11 = object : Migration(10, 11) {
     }
 }
 
+/** v11 → v12 (J6) : agenda relié à Popote, aucun d'abord. */
+internal val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `popote_agenda` INTEGER")
+    }
+}
+
 /** Migrations explicites, dans l'ordre. Chacune a son test dans `MigrationTest`. */
-internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
 
 /**
  * Configuration de la base, définie une seule fois : les tests instrumentés

@@ -4,6 +4,7 @@ import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -99,6 +100,9 @@ fun IconAction(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     tint: Color = HoraTheme.colors.ink,
+    /** Appui long, annoncé par TalkBack avec [onLongClickLabel]. */
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
     Box(
@@ -106,7 +110,15 @@ fun IconAction(
             .size(48.dp)
             .pressScale(interaction)
             .clip(RoundedCornerShape(50))
-            .clickable(interaction, LocalIndication.current, enabled = enabled, role = Role.Button, onClick = onClick)
+            .combinedClickable(
+                interactionSource = interaction,
+                indication = LocalIndication.current,
+                enabled = enabled,
+                role = Role.Button,
+                onLongClickLabel = onLongClickLabel,
+                onLongClick = onLongClick,
+                onClick = onClick,
+            )
             .alpha(if (enabled) 1f else DISABLED_ALPHA),
         contentAlignment = Alignment.Center,
     ) {

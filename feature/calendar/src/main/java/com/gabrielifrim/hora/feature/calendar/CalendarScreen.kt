@@ -1,5 +1,6 @@
 package com.gabrielifrim.hora.feature.calendar
 
+import com.gabrielifrim.hora.core.ui.R as UiR
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,6 +51,7 @@ import kotlinx.coroutines.launch
 fun CalendarScreen(
     onOpenEvent: (Long, Long?) -> Unit,
     onCreate: (LocalDate, Int?) -> Unit,
+    onQuick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CalendarViewModel = hiltViewModel(),
 ) {
@@ -79,6 +81,7 @@ fun CalendarScreen(
                 onNext = { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
                 onToday = { viewModel.anchor.value = today; if (anchor == today) scope.launch { pager.animateScrollToPage(CENTER) } },
                 onAdd = { onCreate(if (mode == CalendarMode.DAY) shown else today, null) },
+                onQuick = onQuick,
             )
             Row(Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp)) {
                 SegmentedChoice(
@@ -124,6 +127,7 @@ private fun Header(
     onNext: () -> Unit,
     onToday: () -> Unit,
     onAdd: () -> Unit,
+    onQuick: () -> Unit,
 ) {
     val (eyebrow, title) = when (mode) {
         CalendarMode.DAY -> stringResource(R.string.week_number, formats.week(shown)) to formats.dayLong(shown)
@@ -147,7 +151,7 @@ private fun Header(
             IconAction(HoraIcons.Next, stringResource(R.string.next_period), onClick = onNext)
         }
         HoraButton(stringResource(R.string.today), onClick = onToday, style = ButtonStyle.Line)
-        IconAction(HoraIcons.Add, stringResource(R.string.new_event), onClick = onAdd)
+        IconAction(HoraIcons.Add, stringResource(R.string.new_event), onClick = onAdd, onLongClick = onQuick, onLongClickLabel = stringResource(UiR.string.quick_title))
     }
 }
 

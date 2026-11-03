@@ -1,6 +1,8 @@
 package com.gabrielifrim.hora.feature.event
 
+import com.gabrielifrim.hora.core.domain.model.Reminder
 import com.gabrielifrim.hora.core.domain.model.Timing
+import com.gabrielifrim.hora.core.domain.quick.QuickEntry
 import com.google.common.truth.Truth.assertThat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -43,5 +45,21 @@ class EventDraftTest {
     fun `toute la journee couvre du premier au dernier jour`() {
         val draft = EventDraft(agendaId = 1, title = "Congés", allDay = true, start = LocalDateTime.of(2026, 8, 3, 9, 0), end = LocalDateTime.of(2026, 8, 14, 10, 0), zone = paris)
         assertThat(draft.toEvent().timing).isEqualTo(Timing.AllDay(LocalDate.of(2026, 8, 3), LocalDate.of(2026, 8, 14)))
+    }
+
+    @Test
+    fun `saisie rapide - heure et durée, journée sans heure, rappels ajoutés aux défauts`() {
+        val base = EventDraft.new(agendaId = 1, date = LocalDate.of(2026, 11, 3), minute = null, zone = paris, now = LocalDateTime.of(2026, 11, 3, 10, 20), reminders = listOf(Reminder.Before(15)))
+        val now = LocalDateTime.of(2026, 11, 3, 10, 20)
+        val rdv = base.withQuick(QuickEntry.parse("Dentiste jeudi 14h30 45 min rappel 1h avant", now))
+        assertThat(rdv.title).isEqualTo("Dentiste")
+        assertThat(rdv.start to rdv.end).isEqualTo(LocalDateTime.of(2026, 11, 5, 14, 30) to LocalDateTime.of(2026, 11, 5, 15, 15))
+        assertThat(rdv.reminders).containsExactly(Reminder.Before(15), Reminder.Before(60))
+        val anniv = base.withQuick(QuickEntry.parse("Anniversaire Léa samedi", now))
+        assertThat(anniv.allDay).isTrue()
+        assertThat(anniv.start.toLocalDate()).isEqualTo(LocalDate.of(2026, 11, 7))
+        // Rien de daté : l'heure par défaut du brouillon, une heure.
+        val call = base.withQuick(QuickEntry.parse("Appeler maman", now))
+        assertThat(call.start to call.end).isEqualTo(LocalDateTime.of(2026, 11, 3, 11, 0) to LocalDateTime.of(2026, 11, 3, 12, 0))
     }
 }

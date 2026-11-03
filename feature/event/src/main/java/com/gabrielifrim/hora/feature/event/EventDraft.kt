@@ -5,6 +5,7 @@ import com.gabrielifrim.hora.core.domain.model.Recurrence
 import com.gabrielifrim.hora.core.domain.model.Reminder
 import com.gabrielifrim.hora.core.domain.recurrence.RepeatSpec
 import com.gabrielifrim.hora.core.domain.model.Timing
+import com.gabrielifrim.hora.core.domain.quick.QuickEntry
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -49,6 +50,29 @@ data class EventDraft(
     private fun endDateTimeForSave(): LocalDateTime = if (allDay) end.toLocalDate().atStartOfDay() else end
 
     val repeats: Boolean get() = repeat != null || customRule != null
+
+    /**
+     * Saisie rapide : ce qui a été dit remplace le brouillon neuf. Un jour sans heure
+     * donne la journée entière ; sans fin ni durée, une heure.
+     */
+    fun withQuick(q: QuickEntry): EventDraft {
+        val day = q.date ?: start.toLocalDate()
+        val base = copy(
+            title = q.title,
+            location = q.location.ifEmpty { location },
+            reminders = (reminders + q.reminders).distinct(),
+        )
+        val from = q.start?.let(day::atTime) ?: day.atTime(start.toLocalTime())
+        val length = when {
+            q.end != null && q.start != null -> Duration.between(q.start, q.end)
+            q.duration != null -> q.duration
+            else -> Duration.between(start, end)
+        }
+        return when {
+            q.start == null && q.date != null && q.duration == null -> base.copy(allDay = true, start = day.atTime(9, 0), end = day.atTime(10, 0))
+            else -> base.copy(allDay = false, start = from, end = from.plus(length))
+        }
+    }
 
     fun toEvent(): Event = Event(
         id = id,

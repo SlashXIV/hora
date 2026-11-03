@@ -84,8 +84,9 @@ fun EventEditorScreen(
     minute: Int?,
     onClose: () -> Unit,
     onSaved: (Long) -> Unit,
+    quick: String = "",
     viewModel: EventEditorViewModel = hiltViewModel<EventEditorViewModel, EventEditorViewModel.Factory> {
-        it.create(eventId, occurrence, duplicateOf, date, minute)
+        it.create(eventId, occurrence, duplicateOf, date, minute, quick)
     },
 ) {
     val draft by viewModel.draft.collectAsStateWithLifecycle()

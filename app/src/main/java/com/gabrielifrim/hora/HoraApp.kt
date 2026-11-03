@@ -51,6 +51,7 @@ import com.gabrielifrim.hora.feature.calendar.CalendarScreen
 import com.gabrielifrim.hora.feature.calendar.SearchScreen
 import com.gabrielifrim.hora.feature.event.EventDetailScreen
 import com.gabrielifrim.hora.feature.event.EventEditorScreen
+import com.gabrielifrim.hora.feature.event.QuickEntryScreen
 import com.gabrielifrim.hora.feature.settings.AgendasScreen
 import com.gabrielifrim.hora.feature.settings.SettingsScreen
 import com.gabrielifrim.hora.feature.settings.TransferScreen
@@ -64,11 +65,15 @@ import kotlinx.serialization.Serializable
 @Serializable private data object SettingsRoute
 @Serializable private data object AgendasRoute
 @Serializable private data object TransferRoute
+@Serializable private data object QuickRoute
 /** Fiche : occurrence < 0 pour un événement simple, sinon la clé de l’occurrence d’une série. */
 @Serializable private data class EventRoute(val id: Long, val occurrence: Long = -1)
 
-/** Éditeur : id > 0 modifie, duplicateOf > 0 copie, sinon crée au jour epochDay (minute < 0 : heure par défaut). */
-@Serializable private data class EditRoute(val id: Long = 0, val occurrence: Long = -1, val duplicateOf: Long = 0, val epochDay: Long = 0, val minute: Int = -1)
+/**
+ * Éditeur : id > 0 modifie, duplicateOf > 0 copie, sinon crée au jour epochDay (minute < 0 : heure par défaut),
+ * pré-rempli par la phrase [quick] de la saisie rapide si elle n'est pas vide.
+ */
+@Serializable private data class EditRoute(val id: Long = 0, val occurrence: Long = -1, val duplicateOf: Long = 0, val epochDay: Long = 0, val minute: Int = -1, val quick: String = "")
 
 private enum class Tab(val route: Any, val label: Int, val icon: ImageVector) {
     TODAY(TodayRoute, R.string.tab_today, HoraIcons.Today),
@@ -90,6 +95,7 @@ fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
     val fadeMs = if (LocalMotionLevel.current.animates) Motion.CALM_MS else 0
     val currentTab = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.route::class) == true }
     val create: (LocalDate, Int?) -> Unit = { date, minute -> nav.navigate(EditRoute(epochDay = date.toEpochDay(), minute = minute ?: -1)) }
+    val quick: () -> Unit = { nav.navigate(QuickRoute) }
     val open: (Long, Long?) -> Unit = { id, occurrence -> nav.navigate(EventRoute(id, occurrence ?: -1)) }
 
     Column(Modifier.fillMaxSize()) {
@@ -100,12 +106,19 @@ fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
             enterTransition = { fadeIn(tween(fadeMs)) },
             exitTransition = { fadeOut(tween(fadeMs)) },
         ) {
-            composable<TodayRoute> { TodayScreen(onOpenEvent = open, onCreate = { create(it, null) }) }
-            composable<CalendarRoute> { CalendarScreen(onOpenEvent = open, onCreate = create) }
+            composable<TodayRoute> { TodayScreen(onOpenEvent = open, onCreate = { create(it, null) }, onQuick = quick) }
+            composable<CalendarRoute> { CalendarScreen(onOpenEvent = open, onCreate = create, onQuick = quick) }
             composable<SearchRoute> { SearchScreen(onOpenEvent = open, modifier = Modifier.statusBarsPadding()) }
             composable<SettingsRoute> { SettingsScreen(onOpenAgendas = { nav.navigate(AgendasRoute) }, onOpenTransfer = { nav.navigate(TransferRoute) }) }
             composable<AgendasRoute> { AgendasScreen(onBack = nav::popBackStack) }
             composable<TransferRoute> { TransferScreen(onBack = nav::popBackStack) }
+            composable<QuickRoute> {
+                QuickEntryScreen(
+                    onClose = { nav.popBackStack() },
+                    onDetail = { text -> nav.navigate(EditRoute(epochDay = LocalDate.now().toEpochDay(), quick = text)) { popUpTo<QuickRoute> { inclusive = true } } },
+                    onCreated = { id -> nav.navigate(EventRoute(id)) { popUpTo<QuickRoute> { inclusive = true } } },
+                )
+            }
             composable<EventRoute> { back ->
                 val route = back.toRoute<EventRoute>()
                 EventDetailScreen(
@@ -124,6 +137,7 @@ fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
                     duplicateOf = route.duplicateOf,
                     date = if (route.id == 0L && route.duplicateOf == 0L) LocalDate.ofEpochDay(route.epochDay) else LocalDate.now(),
                     minute = route.minute.takeIf { it >= 0 },
+                    quick = route.quick,
                     onClose = { nav.popBackStack() },
                     onSaved = { savedId ->
                         // Après une création, la fiche remplace l'éditeur ; après une modification, on revient à la fiche.

@@ -1,5 +1,6 @@
 package com.gabrielifrim.hora.feature.today
 
+import com.gabrielifrim.hora.core.ui.R as UiR
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import com.gabrielifrim.hora.core.ui.component.Eyebrow
 import com.gabrielifrim.hora.core.ui.component.HoraIcons
 import com.gabrielifrim.hora.core.ui.component.HoraText
 import com.gabrielifrim.hora.core.ui.component.IconAction
+import com.gabrielifrim.hora.core.ui.component.QuickEntryBar
 import com.gabrielifrim.hora.core.ui.component.PageHeader
 import com.gabrielifrim.hora.core.ui.component.Rule
 import com.gabrielifrim.hora.core.ui.text.HoraFormats
@@ -63,6 +65,7 @@ import kotlinx.coroutines.delay
 fun TodayScreen(
     onOpenEvent: (Long, Long?) -> Unit,
     onCreate: (LocalDate) -> Unit,
+    onQuick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TodayViewModel = hiltViewModel(),
 ) {
@@ -96,12 +99,15 @@ fun TodayScreen(
         events.filter { it.id > 0 }.mapNotNull { e -> (e.timing as? Timing.Timed)?.takeIf { it.start.isAfter(now) }?.let { e to it.start } }.minByOrNull { it.second }
     }
 
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column(modifier.fillMaxSize()) {
+    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
         PageHeader(
             title = formats.dayMonth(today),
             eyebrow = stringResource(R.string.today_eyebrow, formats.weekday(today), formats.week(today)),
             poster = true,
-            actions = { IconAction(HoraIcons.Add, stringResource(R.string.new_event), onClick = { onCreate(today) }) },
+            actions = {
+                IconAction(HoraIcons.Add, stringResource(R.string.new_event), onClick = { onCreate(today) }, onLongClick = onQuick, onLongClickLabel = stringResource(UiR.string.quick_title))
+            },
         )
         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SunLine(sun, place, zone, formats)
@@ -121,6 +127,9 @@ fun TodayScreen(
                 }
             }
         }
+    }
+    // La saisie rapide reste à portée, au-dessus des onglets.
+    QuickEntryBar(onQuick, Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
     }
 }
 

@@ -101,4 +101,14 @@
     <string name="slot_results">Prochains créneaux</string>
     <string name="slot_label">%1$s · %2$s–%3$s</string>
     <string name="slot_none">Aucun créneau libre de cette durée dans les deux prochaines semaines.</string>
+    <string name="quick_screen_title">Saisie rapide</string>
+    <string name="quick_label">Écris comme tu parles</string>
+    <string name="quick_preview">Aperçu · rien n’est créé avant de valider</string>
+    <string name="quick_preview_empty">Un titre, puis le jour, l’heure, la durée, « @ lieu » ou « rappel 1h avant ».</string>
+    <string name="quick_examples">D’autres exemples</string>
+    <string name="quick_example_1">dentiste jeudi 14h30 rappel 1h avant</string>
+    <string name="quick_example_2">resto vendredi 20h @Chez Léa</string>
+    <string name="quick_example_3">courses samedi 10h 30 min</string>
+    <string name="quick_detail">Détailler</string>
+    <string name="quick_create">Créer</string>
 </resources>

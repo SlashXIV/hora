@@ -19,6 +19,7 @@ import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
 import com.gabrielifrim.hora.core.domain.calendar.FreeSlots
 import com.gabrielifrim.hora.core.domain.model.Plage
+import com.gabrielifrim.hora.core.domain.quick.QuickEntry
 import java.time.Duration
 import java.time.LocalDateTime
 import dagger.assisted.Assisted
@@ -142,6 +143,8 @@ class EventEditorViewModel @AssistedInject constructor(
     @Assisted("duplicateOf") private val duplicateOf: Long,
     @Assisted private val date: LocalDate,
     @Assisted("minute") private val minute: Int?,
+    /** Phrase de saisie rapide, vide sinon : elle pré-remplit un nouvel événement. */
+    @Assisted("quick") private val quick: String,
     private val events: EventRepository,
     private val agendaRepository: AgendaRepository,
     private val setRepository: ReminderSetRepository,
@@ -155,6 +158,7 @@ class EventEditorViewModel @AssistedInject constructor(
             @Assisted("duplicateOf") duplicateOf: Long,
             date: LocalDate,
             @Assisted("minute") minute: Int?,
+            @Assisted("quick") quick: String,
         ): EventEditorViewModel
     }
 
@@ -198,6 +202,7 @@ class EventEditorViewModel @AssistedInject constructor(
                 val list = agendaRepository.agendas.first { it.isNotEmpty() }
                 val agenda = list.firstOrNull { !it.hidden } ?: list.first()
                 EventDraft.new(agendaId = agenda.id, date = date, minute = minute, zone = zone, reminders = agenda.defaultReminders)
+                    .let { d -> if (quick.isBlank()) d else d.withQuick(QuickEntry.parse(quick, LocalDateTime.now())) }
             }
         }
     }

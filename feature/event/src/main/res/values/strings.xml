@@ -33,6 +33,7 @@
     <string name="share_title">Partager l’événement</string>
     <string name="action_share_text">Partager en texte</string>
     <string name="action_open_popote">Ouvrir Popote</string>
+    <string name="action_install_popote">Installer Popote</string>
     <string name="delete_title">Supprimer l’événement ?</string>
     <string name="delete_message">« %1$s » sera supprimé de l’agenda. On ne peut pas revenir en arrière.</string>
 

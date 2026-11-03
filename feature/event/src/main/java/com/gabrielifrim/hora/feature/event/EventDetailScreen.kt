@@ -1,7 +1,9 @@
 package com.gabrielifrim.hora.feature.event
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -85,10 +87,8 @@ fun EventDetailScreen(
         is Timing.Timed -> t.start.atZone(zone).toLocalDate()
         is Timing.AllDay -> t.first
     }
-    // Popote absente : pas de bouton, plutôt qu'un bouton qui ne mène nulle part.
-    val popote = remember(e.agendaId, popoteAgenda) {
-        if (e.agendaId == popoteAgenda) context.packageManager.getLaunchIntentForPackage(POPOTE_PACKAGE) else null
-    }
+    // Popote absente : le bouton mène à ses releases, ouvertes par le navigateur (Hora reste sans réseau).
+    val popoteInstalled = remember(e.agendaId, popoteAgenda) { context.packageManager.getLaunchIntentForPackage(POPOTE_PACKAGE) }
     val shareText = listOf(e.title, formats.dayLong(day) + " · " + timeRange(e, zone, formats), e.location, e.notes)
         .filter { it.isNotBlank() }.joinToString("\n")
 
@@ -136,8 +136,16 @@ fun EventDetailScreen(
                 if (e.location.isNotBlank()) Field(stringResource(R.string.field_location), e.location)
                 if (e.notes.isNotBlank()) Field(stringResource(R.string.field_notes), e.notes)
                 // Un férié ou une fête (agenda calculé) se lit, il ne se modifie pas.
-                if (popote != null) {
-                    HoraButton(stringResource(R.string.action_open_popote), onClick = { context.startActivity(popote) }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth())
+                if (e.agendaId == popoteAgenda) {
+                    HoraButton(
+                        stringResource(if (popoteInstalled != null) R.string.action_open_popote else R.string.action_install_popote),
+                        onClick = {
+                            val open = popoteInstalled ?: Intent(Intent.ACTION_VIEW, Uri.parse(POPOTE_RELEASES))
+                            try { context.startActivity(open) } catch (_: ActivityNotFoundException) { /* aucun navigateur : rien à ouvrir */ }
+                        },
+                        style = ButtonStyle.Line,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
                 if (editable) {
                     Rule()
@@ -215,6 +223,7 @@ fun EventDetailScreen(
 }
 
 private const val POPOTE_PACKAGE = "onl.nci.popote"
+private const val POPOTE_RELEASES = "https://github.com/SlashXIV/Popote/releases/latest"
 
 @Composable
 private fun Field(label: String, value: String) {

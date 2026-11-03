@@ -6,6 +6,7 @@ import com.gabrielifrim.hora.core.domain.almanac.Place
 import com.gabrielifrim.hora.core.domain.almanac.PrayerSettings
 import com.gabrielifrim.hora.core.domain.almanac.Places
 import java.time.DayOfWeek
+import java.time.LocalTime
 
 /** Apparence choisie : suivre le téléphone, ou forcer Midi (clair) ou Nocturne (sombre). */
 enum class ThemePreference { SYSTEM, MIDI, NOCTURNE }
@@ -37,4 +38,6 @@ data class UserSettings(
     val prayer: PrayerSettings = PrayerSettings(),
     /** Plages récurrentes, dans l'ordre où on les a créées. */
     val plages: List<Plage> = emptyList(),
+    /** Heure du résumé du lendemain ; null : pas de résumé. */
+    val digest: LocalTime? = LocalTime.of(20, 0),
 )

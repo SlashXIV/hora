@@ -33,6 +33,16 @@
     <string name="snooze_morning">Demain matin</string>
     <string name="alarm_stop">Arrêter</string>
     <!-- Pratique musulmane (facultative) -->
+    <string name="channel_digest">Résumé du lendemain</string>
+    <string name="channel_digest_hint">Chaque soir, ce qui t’attend demain.</string>
+    <string name="digest_title">Demain, %1$s</string>
+    <string name="digest_all_day">Journée</string>
+    <string name="digest_line">%1$s · %2$s</string>
+    <plurals name="digest_count">
+        <item quantity="one">%1$d événement · %2$s</item>
+        <item quantity="many">%1$d événements · %2$s</item>
+        <item quantity="other">%1$d événements · %2$s</item>
+    </plurals>
     <string name="channel_prayers">Prières</string>
     <string name="channel_prayers_hint">Début des prières et fin du temps préférable, si tu les as demandés.</string>
     <string name="prayer_sobh">Sobh</string>

@@ -46,10 +46,12 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 class RescheduleReceiver : BroadcastReceiver() {
     @Inject lateinit var engine: ReminderEngine
     @Inject lateinit var prayers: PrayerAlarms
+    @Inject lateinit var digest: DigestAlarms
 
     override fun onReceive(context: Context, intent: Intent) = work {
         engine.run()
         prayers.run()
+        digest.run()
     }
 }
 

@@ -197,4 +197,7 @@
     <string name="plage_save">Enregistrer</string>
     <string name="plage_delete">Supprimer la plage</string>
     <string name="plage_incomplete">Donne un nom et au moins un jour pour enregistrer.</string>
+    <string name="digest">Résumé du lendemain</string>
+    <string name="digest_hint">Chaque soir, une notification avec ce qui t’attend demain ; rien si la journée est vide.</string>
+    <string name="digest_time">Heure du résumé</string>
 </resources>

@@ -24,6 +24,7 @@
         <receiver android:name=".ReminderAlarmReceiver" android:exported="false" />
         <receiver android:name=".SnoozeReceiver" android:exported="false" />
         <receiver android:name=".PrayerReceiver" android:exported="false" />
+        <receiver android:name=".DigestReceiver" android:exported="false" />
         <!-- Replanifier : démarrage du téléphone, heure ou fuseau changés, application mise à jour. -->
         <receiver android:name=".RescheduleReceiver" android:exported="true">
             <intent-filter>

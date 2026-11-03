@@ -49,6 +49,9 @@ import com.gabrielifrim.hora.core.ui.component.bleed
 import com.gabrielifrim.hora.core.ui.motion.rememberHaptics
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import java.time.DayOfWeek
+import java.time.LocalTime
+import com.gabrielifrim.hora.core.ui.component.TimePickerSheet
+import com.gabrielifrim.hora.core.ui.text.rememberFormats
 
 @Composable
 fun SettingsScreen(onOpenAgendas: () -> Unit, onOpenTransfer: () -> Unit, modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
@@ -84,6 +87,7 @@ private fun SettingsContent(
         item {
             Section(stringResource(R.string.settings_reminders)) {
                 ReminderReliability()
+                DigestSetting(settings.digest) { t -> haptics.tick(); update { it.copy(digest = t) } }
                 HoraText(stringResource(R.string.settings_sets), style = HoraTheme.type.body)
                 ReminderSets()
             }
@@ -166,6 +170,23 @@ private fun SettingsContent(
                 ) { i -> haptics.tick(); update { it.copy(clockFormat = ClockFormat.entries[i]) } }
             }
         }
+    }
+}
+
+/** Résumé du lendemain : un interrupteur, et l'heure quand il est allumé. */
+@Composable
+private fun DigestSetting(at: LocalTime?, onChange: (LocalTime?) -> Unit) {
+    val formats = rememberFormats()
+    var picking by remember { mutableStateOf(false) }
+    ToggleRow(
+        title = stringResource(R.string.digest),
+        hint = stringResource(R.string.digest_hint),
+        checked = at != null,
+        onCheckedChange = { on -> onChange(if (on) LocalTime.of(20, 0) else null) },
+    )
+    if (at != null) {
+        LinkRow(stringResource(R.string.digest_time), formats.time(at)) { picking = true }
+        if (picking) TimePickerSheet(at, formats, onPick = { onChange(it); picking = false }, onDismiss = { picking = false })
     }
 }
 

@@ -14,6 +14,7 @@ import com.gabrielifrim.hora.core.data.database.MIGRATION_6_7
 import com.gabrielifrim.hora.core.data.database.MIGRATION_7_8
 import com.gabrielifrim.hora.core.data.database.MIGRATION_8_9
 import com.gabrielifrim.hora.core.data.database.MIGRATION_9_10
+import com.gabrielifrim.hora.core.data.database.MIGRATION_10_11
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
@@ -230,6 +231,27 @@ class MigrationTest {
         val event = db.eventDao().get(5)!!
         assertThat(event.travelMinutes).isEqualTo(0)
         assertThat(event.pinned).isTrue()
+        db.close()
+    }
+
+    @Test
+    fun v10_to_v11_digestAtEightByDefault() = runTest {
+        helper.createDatabase(DB, 10).apply {
+            execSQL(
+                "INSERT INTO settings (id, theme, motion, haptics, first_day_of_week, show_week_numbers, clock_format, " +
+                    "alsace_moselle, bridges, more_feasts, hidden_almanac, place_name, latitude, longitude, prayer, plages) " +
+                    "VALUES (0, 'MIDI', 'CALM', 1, NULL, 1, 'H24', 0, 1, 0, 'MOON', 'Talence', 44.809, -0.588, '', '09:00-17:30;MONDAY;Taff')",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(DB, 11, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        val row = db.settingsDao().get()!!
+        assertThat(row.digest).isEqualTo("20:00")
+        assertThat(row.plages).isEqualTo("09:00-17:30;MONDAY;Taff")
         db.close()
     }
 

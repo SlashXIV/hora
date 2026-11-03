@@ -10,6 +10,7 @@ import com.gabrielifrim.hora.core.domain.model.PlageCodec
 import com.gabrielifrim.hora.core.domain.model.UserSettings
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
 import java.time.DayOfWeek
+import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -48,6 +49,7 @@ private fun SettingsEntity.toDomain(): UserSettings {
         place = Place(placeName, latitude, longitude),
         prayer = PrayerCodec.decode(prayer),
         plages = PlageCodec.decode(plages),
+        digest = if (digest.isEmpty()) null else runCatching { LocalTime.parse(digest) }.getOrDefault(defaults.digest),
     )
 }
 
@@ -67,4 +69,5 @@ private fun UserSettings.toEntity() = SettingsEntity(
     longitude = place.longitude,
     prayer = PrayerCodec.encode(prayer),
     plages = PlageCodec.encode(plages),
+    digest = digest?.toString().orEmpty(),
 )

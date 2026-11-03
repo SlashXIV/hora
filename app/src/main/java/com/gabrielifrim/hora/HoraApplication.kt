@@ -5,6 +5,7 @@ import com.gabrielifrim.hora.core.data.backup.DatabaseBackup
 import com.gabrielifrim.hora.core.domain.repository.BackupRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderStore
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
+import com.gabrielifrim.hora.core.reminders.DigestAlarms
 import com.gabrielifrim.hora.core.reminders.PrayerAlarms
 import com.gabrielifrim.hora.core.reminders.ReminderEngine
 import com.gabrielifrim.hora.core.reminders.ReminderNotifier
@@ -27,6 +28,7 @@ class HoraApplication : Application() {
     @Inject lateinit var backup: BackupRepository
     @Inject lateinit var prayers: PrayerAlarms
     @Inject lateinit var settings: SettingsRepository
+    @Inject lateinit var digest: DigestAlarms
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -41,5 +43,7 @@ class HoraApplication : Application() {
         scope.launch { store.changes.debounce(500).collect { engine.run() } }
         // Les notifications de prière suivent les réglages (lieu, angles, choix) dès qu'ils changent.
         scope.launch { settings.settings.map { it.place to it.prayer }.distinctUntilChanged().debounce(500).collect { prayers.run() } }
+        // Le résumé du lendemain suit son heure ; armé aussi au lancement.
+        scope.launch { settings.settings.map { it.digest }.distinctUntilChanged().collect { digest.run() } }
     }
 }

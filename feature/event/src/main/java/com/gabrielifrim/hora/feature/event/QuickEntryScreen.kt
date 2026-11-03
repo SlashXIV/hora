@@ -150,8 +150,10 @@ fun QuickEntryScreen(
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 HoraTextField(
                     value = text,
-                    onValueChange = { viewModel.text.value = it },
+                    // Plusieurs lignes pour tout lire à 200 % ; la phrase, elle, reste d'un seul tenant.
+                    onValueChange = { viewModel.text.value = it.replace('\n', ' ') },
                     label = stringResource(R.string.quick_label),
+                    singleLine = false,
                     placeholder = stringResource(R.string.quick_example_1),
                     modifier = Modifier.focusRequester(focus),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),

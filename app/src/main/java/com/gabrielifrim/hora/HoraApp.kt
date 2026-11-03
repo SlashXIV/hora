@@ -192,7 +192,7 @@ private fun TabBar(selected: Tab, onSelect: (Tab) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
                 ) {
                     HoraIcon(tab.icon, contentDescription = null, tint = if (on) colors.accent else colors.ink2, size = 22.dp)
-                    FitText(stringResource(tab.label), style = HoraTheme.type.bodySmall, color = if (on) colors.ink else colors.ink2, minFontSize = 8.sp)
+                    FitText(stringResource(tab.label), Modifier.padding(horizontal = 4.dp), style = HoraTheme.type.bodySmall, color = if (on) colors.ink else colors.ink2, minFontSize = 8.sp)
                     Box(Modifier.width(18.dp).height(2.dp).background(if (on) colors.accent else colors.background, RoundedCornerShape(1.dp)))
                 }
             }

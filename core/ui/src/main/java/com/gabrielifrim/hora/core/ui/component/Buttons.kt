@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gabrielifrim.hora.core.ui.motion.pressScale
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
@@ -80,15 +81,16 @@ fun HoraButton(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) HoraIcon(icon, contentDescription = null, tint = fg, size = 20.dp)
-        // Deux lignes plutôt qu'un libellé coupé : à 200 %, un demi-bouton perd son
-        // dernier mot. Un bouton texte reste aligné sur son icône, les autres se centrent.
+        // Trois lignes plutôt qu'un libellé coupé : à 200 %, « Réglages du fabricant (…) »
+        // en demande trois. Un bouton texte reste aligné sur son icône, les autres se centrent.
         HoraText(
             text,
             style = HoraTheme.type.action.copy(
                 textAlign = if (style == ButtonStyle.Text) TextAlign.Start else TextAlign.Center,
             ),
             color = fg,
-            maxLines = 2,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

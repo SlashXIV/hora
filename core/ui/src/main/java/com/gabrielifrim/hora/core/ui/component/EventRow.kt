@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,7 +67,8 @@ fun EventRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        HoraText(hour, style = HoraTheme.type.hour, color = colors.ink2, modifier = Modifier.width(52.dp).padding(top = 2.dp))
+        // Largeur minimale plutôt que fixe : à 200 % ou en 12 h, l'heure ne se coupe pas en deux lignes.
+        HoraText(hour, style = HoraTheme.type.hour, color = colors.ink2, maxLines = 1, softWrap = false, modifier = Modifier.widthIn(min = 52.dp).padding(top = 2.dp))
         AgendaMark(key.shape, key.color(), Modifier.padding(top = 4.dp), size = 11.dp)
         Column(Modifier.weight(1f)) {
             HoraText(event.title, style = HoraTheme.type.body.copy(fontWeight = HoraTheme.type.action.fontWeight), maxLines = 2, overflow = TextOverflow.Ellipsis)

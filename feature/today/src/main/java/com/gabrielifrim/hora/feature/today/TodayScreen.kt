@@ -57,6 +57,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.delay
 
 /**
@@ -196,9 +197,9 @@ private fun NextUp(
     onOpenEvent: (Long, Long?) -> Unit,
 ) {
     val key = colorKeyOf(event, agendas)
-    val delayText = relativeDelay(inTime)
-    val spoken = stringResource(R.string.next_spoken, delayText, spokenEvent(event, zone, formats))
     val start = (event.timing as Timing.Timed).start.atZone(zone).toLocalDate()
+    val delayText = relativeDelay(inTime, ChronoUnit.DAYS.between(today, start))
+    val spoken = stringResource(R.string.next_spoken, delayText, spokenEvent(event, zone, formats))
     val whenText = if (start == today) timeRange(event, zone, formats) else stringResource(R.string.day_and_time, formats.dayLong(start), timeRange(event, zone, formats))
     Column(
         Modifier.fillMaxWidth().clickable { onOpenEvent(event.id, event.occurrence) }
@@ -216,13 +217,13 @@ private fun NextUp(
     }
 }
 
-/** « 2 h 12 », « 25 min », « 3 jours ». */
+/** « 2 h 12 », « 25 min », « 3 jours » ; au-delà d'un jour, en jours du calendrier, comme le compte à rebours. */
 @Composable
-private fun relativeDelay(d: Duration): String {
+private fun relativeDelay(d: Duration, calendarDays: Long): String {
     val minutes = d.toMinutes().coerceAtLeast(1)
     return when {
         minutes < 60 -> pluralStringResource(R.plurals.in_minutes, minutes.toInt(), minutes.toInt())
         minutes < 24 * 60 -> stringResource(R.string.in_hours_minutes, minutes / 60, minutes % 60)
-        else -> (minutes / (24 * 60)).toInt().let { pluralStringResource(R.plurals.in_days, it, it) }
+        else -> calendarDays.toInt().let { pluralStringResource(R.plurals.in_days, it, it) }
     }
 }

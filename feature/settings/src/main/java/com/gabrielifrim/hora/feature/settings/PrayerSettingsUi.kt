@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.gabrielifrim.hora.core.domain.almanac.Opinion
 import com.gabrielifrim.hora.core.domain.almanac.Place
 import com.gabrielifrim.hora.core.domain.almanac.Prayer
 import com.gabrielifrim.hora.core.domain.almanac.PrayerSettings
@@ -47,11 +46,6 @@ internal fun PrayerSection(p: PrayerSettings, place: Place, update: ((PrayerSett
         onCheckedChange = { on -> update { it.copy(enabled = on) } },
     )
     if (!p.enabled) return
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        HoraText(stringResource(R.string.prayer_opinion), style = HoraTheme.type.body)
-        SegmentedChoice(listOf(stringResource(R.string.prayer_mashhour), stringResource(R.string.prayer_rajih)), p.opinion.ordinal, { i -> update { it.copy(opinion = Opinion.entries[i]) } })
-        HoraText(stringResource(R.string.prayer_opinion_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
-    }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         HoraText(stringResource(R.string.prayer_dawn_name), style = HoraTheme.type.body)
         SegmentedChoice(

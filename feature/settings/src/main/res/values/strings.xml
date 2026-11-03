@@ -160,11 +160,7 @@
     <string name="agenda_computed_hint">Calculé, en lecture seule</string>
     <string name="settings_prayer">Pratique musulmane</string>
     <string name="prayer_enable">Prières</string>
-    <string name="prayer_enable_hint">Les cinq prières selon l’école malikite sur Aujourd’hui (début, temps préférable, temps de nécessité), date de l’hégire, notifications au choix. Calculées sur le téléphone, sans connexion.</string>
-    <string name="prayer_opinion">Avis</string>
-    <string name="prayer_mashhour">Mashhour</string>
-    <string name="prayer_rajih">Rajih</string>
-    <string name="prayer_opinion_hint">Change la fin du temps préférable de l’aube (Isfar ou lever) et de Maghrib (15 min ou ‘Isha).</string>
+    <string name="prayer_enable_hint">Les cinq prières sur Aujourd’hui (début et fin du temps préférable), date de l’hégire, notifications au choix. Avis mashhour de l’école malikite, calculé sur le téléphone sans connexion ; l’horaire de votre mosquée fait foi.</string>
     <string name="prayer_dawn_name">Nom de la prière de l’aube</string>
     <string name="prayer_notify_start">Notifier le début de chaque prière</string>
     <string name="prayer_notify_end">Notifier 15 min avant la fin du temps préférable</string>

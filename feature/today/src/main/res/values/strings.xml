@@ -25,10 +25,11 @@
     <!-- « Prières · 21 joumada al-oula 1448 » -->
     <string name="prayers_eyebrow">Prières · %1$d %2$s %3$d</string>
     <!-- « préférable 17:24 · nécessité 17:49 » ; ≈ marque une fin estimée -->
-    <string name="prayer_bounds">préférable %1$s · nécessité %2$s</string>
-    <string name="prayer_spoken">%1$s à %2$s ; temps préférable jusqu’à %3$s, de nécessité jusqu’à %4$s</string>
-    <string name="prayer_spoken_estimated">%1$s à %2$s ; temps préférable jusqu’à %3$s environ, de nécessité jusqu’à %4$s</string>
-    <string name="prayers_legend">≈ : fin estimée (Isfar, Isfirar), à vérifier au ciel.</string>
+    <string name="prayer_until">préférable jusqu’à %1$s</string>
+    <string name="prayer_spoken">%1$s à %2$s ; temps préférable jusqu’à %3$s</string>
+    <string name="prayer_spoken_estimated">%1$s à %2$s ; temps préférable jusqu’à %3$s environ</string>
+    <string name="prayers_legend">≈ : fin estimée (Isfar, Isfirar), à vérifier au ciel. Avis mashhour de l’école malikite ; l’horaire de votre mosquée fait foi.</string>
+    <string name="prayer_necessity">temps de nécessité jusqu’à %1$s</string>
     <string-array name="hijri_months">
         <item>mouharram</item>
         <item>safar</item>

@@ -30,9 +30,10 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * Les cinq prières du jour selon le fiqh malikite : début, fin du temps préférable
- * (« ≈ » quand elle est estimée) et fin du temps de nécessité ; la prière en cours
- * est soulignée d'accent. En tête, la date de l'hégire.
+ * Les cinq prières du jour (avis mashhour, école malikite) : début et fin du temps
+ * préférable (« ≈ » quand elle est estimée). La fin du temps de nécessité ne paraît
+ * que pour la prière en cours dont le préférable est passé : là où elle sert, sans
+ * se lire comme une heure limite ordinaire. En tête, la date de l'hégire.
  */
 @Composable
 internal fun PrayerCard(today: LocalDate, now: Instant, place: Place, settings: PrayerSettings, zone: ZoneId, formats: HoraFormats) {
@@ -48,12 +49,14 @@ internal fun PrayerCard(today: LocalDate, now: Instant, place: Place, settings: 
         Eyebrow(stringResource(R.string.prayers_eyebrow, hDay, months[hMonth - 1], hYear))
         windows.forEach { w ->
             val isCurrent = w.prayer == current
+            val late = isCurrent && !now.isBefore(w.preferredEnd)
             val name = stringResource(PrayerAlarms.prayerName(w.prayer, settings.fajrName))
             val preferred = if (w.estimated) "≈ " + time(w.preferredEnd) else time(w.preferredEnd) // texte-technique : signe « environ »
+            val necessity = stringResource(R.string.prayer_necessity, time(w.necessaryEnd))
             val spokenText = stringResource(
                 if (w.estimated) R.string.prayer_spoken_estimated else R.string.prayer_spoken,
-                name, spoken(w.start), spoken(w.preferredEnd), spoken(w.necessaryEnd),
-            )
+                name, spoken(w.start), spoken(w.preferredEnd),
+            ) + if (late) " ; " + stringResource(R.string.prayer_necessity, spoken(w.necessaryEnd)) else ""
             Row(
                 Modifier.fillMaxWidth().heightIn(min = 40.dp).clearAndSetSemantics { contentDescription = spokenText },
                 verticalAlignment = Alignment.CenterVertically,
@@ -66,12 +69,10 @@ internal fun PrayerCard(today: LocalDate, now: Instant, place: Place, settings: 
                     modifier = Modifier.width(88.dp),
                 )
                 HoraText(time(w.start), style = HoraTheme.type.hour.copy(fontSize = HoraTheme.type.body.fontSize))
-                HoraText(
-                    stringResource(R.string.prayer_bounds, preferred, time(w.necessaryEnd)),
-                    style = HoraTheme.type.bodySmall,
-                    color = HoraTheme.colors.ink2,
-                    modifier = Modifier.weight(1f).padding(start = 4.dp),
-                )
+                Column(Modifier.weight(1f).padding(start = 4.dp)) {
+                    HoraText(stringResource(R.string.prayer_until, preferred), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+                    if (late) HoraText(necessity, style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+                }
             }
         }
         HoraText(stringResource(R.string.prayers_legend), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)

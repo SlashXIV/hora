@@ -12,9 +12,6 @@ import kotlin.math.tan
 
 enum class Prayer { SOBH, DHOHR, ASR, MAGHRIB, ISHA }
 
-/** Avis retenu pour Sobh et Maghrib : mashhour (le plus répandu) ou rajih (le plus fort). */
-enum class Opinion { MASHHOUR, RAJIH }
-
 /**
  * Réglages de la pratique musulmane. Valeurs de départ calées sur l'horaire publié de
  * la mosquée de Talence (Mawaqit) : aube et 'Isha à 12,8°, Dhohr au zénith + 5 min,
@@ -22,7 +19,6 @@ enum class Opinion { MASHHOUR, RAJIH }
  */
 data class PrayerSettings(
     val enabled: Boolean = false,
-    val opinion: Opinion = Opinion.MASHHOUR,
     val dawnAngle: Double = 12.8,
     val ishaAngle: Double = 12.8,
     /** Décalage en minutes ajouté au début de chaque prière, comme le font les mosquées. */
@@ -50,7 +46,10 @@ data class PrayerSettings(
  */
 data class PrayerWindow(val prayer: Prayer, val start: Instant, val preferredEnd: Instant, val necessaryEnd: Instant, val estimated: Boolean)
 
-/** Fenêtres de prière selon le fiqh malikite (voir la feuille de route, J5). */
+/**
+ * Fenêtres de prière selon l'avis mashhour de l'école malikite, le seul retenu :
+ * l'appli affiche des horaires, elle ne tranche pas entre les avis.
+ */
 object Prayers {
 
     /** Les cinq prières de [date] à [place] ; null si le soleil n'atteint pas les angles (latitudes extrêmes). */
@@ -71,12 +70,11 @@ object Prayers {
         val isha = shift(Prayer.ISHA, ishaAt)
         // La nuit va du coucher à l'aube ; le préférable de 'Isha finit au premier tiers.
         val firstThird = sunset.plus(Duration.between(sunset, nextDawn).dividedBy(3))
-        val rajih = s.opinion == Opinion.RAJIH
         return listOf(
-            PrayerWindow(Prayer.SOBH, sobh, if (rajih) sunrise else sunrise.minus(Duration.ofMinutes(s.isfarMinutes.toLong())), sunrise, estimated = !rajih),
+            PrayerWindow(Prayer.SOBH, sobh, sunrise.minus(Duration.ofMinutes(s.isfarMinutes.toLong())), sunrise, estimated = true),
             PrayerWindow(Prayer.DHOHR, dhohr, asr, sunset, estimated = false),
             PrayerWindow(Prayer.ASR, asr, sunset.minus(Duration.ofMinutes(s.isfirarMinutes.toLong())), sunset, estimated = true),
-            PrayerWindow(Prayer.MAGHRIB, maghrib, if (rajih) isha else maghrib.plus(Duration.ofMinutes(s.maghribMinutes.toLong())), nextDawn, estimated = false),
+            PrayerWindow(Prayer.MAGHRIB, maghrib, maghrib.plus(Duration.ofMinutes(s.maghribMinutes.toLong())), nextDawn, estimated = false),
             PrayerWindow(Prayer.ISHA, isha, maxOf(firstThird, isha), nextDawn, estimated = false),
         )
     }
@@ -109,7 +107,7 @@ object Prayers {
  */
 object PrayerCodec {
     fun encode(s: PrayerSettings): String = listOf(
-        "on" to s.enabled, "opinion" to s.opinion.name, "dawn" to s.dawnAngle, "isha" to s.ishaAngle,
+        "on" to s.enabled, "dawn" to s.dawnAngle, "isha" to s.ishaAngle,
         "offsets" to Prayer.entries.joinToString(",") { "${it.name}:${s.offset(it)}" },
         "isfar" to s.isfarMinutes, "isfirar" to s.isfirarMinutes, "maghrib" to s.maghribMinutes,
         "fajr" to s.fajrName, "notifyStart" to s.notifyStart, "notifyEnd" to s.notifyPreferredEnd, "hijri" to s.hijriAdjust,
@@ -124,7 +122,6 @@ object PrayerCodec {
         }?.toMap() ?: d.offsets
         return PrayerSettings(
             enabled = m["on"]?.toBooleanStrictOrNull() ?: d.enabled,
-            opinion = Opinion.entries.firstOrNull { it.name == m["opinion"] } ?: d.opinion,
             dawnAngle = m["dawn"]?.toDoubleOrNull() ?: d.dawnAngle,
             ishaAngle = m["isha"]?.toDoubleOrNull() ?: d.ishaAngle,
             offsets = offsets,

@@ -49,16 +49,11 @@ class PrayersTest {
     }
 
     @Test
-    fun `mashhour ou rajih - seuls Sobh et Maghrib changent`() {
+    fun `mashhour - Isfar 30 min avant le lever, Maghrib préférable 15 min`() {
         val d = LocalDate.of(2026, 6, 21)
         val mashhour = Prayers.day(d, parisPlace, defaults)!!.associateBy { it.prayer }
-        val rajih = Prayers.day(d, parisPlace, defaults.copy(opinion = Opinion.RAJIH))!!.associateBy { it.prayer }
-        // Mashhour : Isfar 30 min avant le lever, Maghrib 15 min ; rajih : jusqu'au lever, jusqu'à 'Isha.
         assertThat(Duration.between(mashhour.getValue(Prayer.SOBH).preferredEnd, mashhour.getValue(Prayer.SOBH).necessaryEnd)).isEqualTo(Duration.ofMinutes(30))
-        assertThat(rajih.getValue(Prayer.SOBH).preferredEnd).isEqualTo(rajih.getValue(Prayer.SOBH).necessaryEnd)
         assertThat(Duration.between(mashhour.getValue(Prayer.MAGHRIB).start, mashhour.getValue(Prayer.MAGHRIB).preferredEnd)).isEqualTo(Duration.ofMinutes(15))
-        assertThat(rajih.getValue(Prayer.MAGHRIB).preferredEnd).isEqualTo(rajih.getValue(Prayer.ISHA).start)
-        for (p in listOf(Prayer.DHOHR, Prayer.ASR, Prayer.ISHA)) assertThat(rajih.getValue(p)).isEqualTo(mashhour.getValue(p))
     }
 
     @Test
@@ -71,9 +66,11 @@ class PrayersTest {
 
     @Test
     fun `réglages - aller-retour, et un texte abîmé garde les valeurs par défaut`() {
-        val s = PrayerSettings(enabled = true, opinion = Opinion.RAJIH, dawnAngle = 15.0, offsets = mapOf(Prayer.ASR to 3), fajrName = true, hijriAdjust = -1)
+        val s = PrayerSettings(enabled = true, dawnAngle = 15.0, offsets = mapOf(Prayer.ASR to 3), fajrName = true, hijriAdjust = -1)
         assertThat(PrayerCodec.decode(PrayerCodec.encode(s))).isEqualTo(s.copy(offsets = Prayer.entries.associateWith { s.offset(it) }))
         assertThat(PrayerCodec.decode("dawn=abc;inconnu=1")).isEqualTo(PrayerSettings())
+        // Un ancien réglage « rajih » (avant la v0.6.2) se lit sans erreur : l'avis n'existe plus.
+        assertThat(PrayerCodec.decode("on=true;opinion=RAJIH").enabled).isTrue()
     }
 
     @Test

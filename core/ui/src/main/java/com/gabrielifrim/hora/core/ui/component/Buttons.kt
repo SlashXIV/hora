@@ -62,6 +62,9 @@ fun HoraButton(
     Row(
         modifier = modifier
             .pressScale(interaction)
+            // Tout le bouton s'estompe d'un bloc : une couche alpha posée sous clickable ne
+            // redessinait plus le fond ni le contour au passage de désactivé à activé.
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .defaultMinSize(minHeight = 48.dp)
             .clip(Shape)
             .then(
@@ -72,7 +75,6 @@ fun HoraButton(
                 },
             )
             .clickable(interaction, LocalIndication.current, enabled = enabled, role = Role.Button, onClick = onClick)
-            .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .padding(horizontal = if (style == ButtonStyle.Text) 12.dp else 18.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,

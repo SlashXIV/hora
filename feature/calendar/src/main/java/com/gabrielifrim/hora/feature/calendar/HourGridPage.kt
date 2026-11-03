@@ -51,6 +51,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gabrielifrim.hora.core.domain.calendar.DayLayout
 import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.model.Event
+import com.gabrielifrim.hora.core.domain.model.Plage
+import com.gabrielifrim.hora.core.ui.component.Eyebrow
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.res.stringResource
 import com.gabrielifrim.hora.core.ui.component.HoraText
 import com.gabrielifrim.hora.core.ui.component.Rule
 import com.gabrielifrim.hora.core.ui.text.HoraFormats
@@ -85,6 +89,7 @@ internal fun HourGridPage(
     val colors = HoraTheme.colors
     val events by remember(days.first(), days.size, zone) { viewModel.events(days.first(), days.last(), zone) }
         .collectAsStateWithLifecycle(emptyList())
+    val plages by viewModel.plages.collectAsStateWithLifecycle()
     val today = LocalDate.now()
     val scroll = rememberScrollState()
     val hourPx = with(LocalDensity.current) { HOUR.toPx() }
@@ -112,7 +117,15 @@ internal fun HourGridPage(
         Row(Modifier.fillMaxSize().verticalScroll(scroll)) {
             HourGutter(formats)
             days.forEach { day ->
-                DayColumn(day, events, agendas, zone, formats, isToday = day == today, onOpenEvent, onCreate, Modifier.weight(1f))
+                // Le nom d'une plage : en entier dans la vue jour, sur son premier jour en semaine.
+                val bands = plages.filter { it.isOn(day.dayOfWeek) }.map { p ->
+                    p to when {
+                        days.size == 1 -> stringResource(R.string.plage_label, p.name, formats.time(p.start), formats.time(p.end))
+                        days.first { p.isOn(it.dayOfWeek) } == day -> p.name
+                        else -> null
+                    }
+                }
+                DayColumn(day, events, agendas, zone, formats, isToday = day == today, bands, onOpenEvent, onCreate, Modifier.weight(1f))
             }
         }
     }
@@ -158,6 +171,7 @@ private fun DayColumn(
     zone: ZoneId,
     formats: HoraFormats,
     isToday: Boolean,
+    bands: List<Pair<Plage, String?>>,
     onOpenEvent: (Long, Long?) -> Unit,
     onCreate: (LocalDate, Int?) -> Unit,
     modifier: Modifier,
@@ -181,6 +195,7 @@ private fun DayColumn(
             },
     ) {
         val width = maxWidth
+        bands.forEach { (plage, label) -> PlageBand(plage, label) }
         placed.forEach { p ->
             val top = HOUR * (p.slice.startMinute / 60f)
             val height = HOUR * (maxOf(p.slice.endMinute - p.slice.startMinute, DayLayout.MIN_VISIBLE_MINUTES) / 60f)
@@ -191,6 +206,23 @@ private fun DayColumn(
             )
         }
         if (isToday) NowLine(width)
+    }
+}
+
+/** Une plage : bande d'ombre pâle sous les événements, bordée de pointillés. */
+@Composable
+private fun PlageBand(plage: Plage, label: String?) {
+    val colors = HoraTheme.colors
+    val top = HOUR * (plage.start.toSecondOfDay() / 3600f)
+    val height = HOUR * ((plage.end.toSecondOfDay() - plage.start.toSecondOfDay()) / 3600f)
+    Box(
+        Modifier.offset(y = top).fillMaxWidth().height(height).background(colors.band).drawBehind {
+            val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
+            drawLine(colors.rule, Offset(0f, 0f), Offset(size.width, 0f), 1.dp.toPx(), pathEffect = dash)
+            drawLine(colors.rule, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx(), pathEffect = dash)
+        },
+    ) {
+        if (label != null) Eyebrow(label, Modifier.padding(start = 4.dp, top = 2.dp), maxLines = 1)
     }
 }
 

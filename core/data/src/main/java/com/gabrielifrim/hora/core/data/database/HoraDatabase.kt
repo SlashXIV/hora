@@ -21,7 +21,7 @@ abstract class HoraDatabase : RoomDatabase() {
         const val NAME = "hora.db"
 
         /** Version du schéma ; une sauvegarde plus récente ne se restaure pas. */
-        const val VERSION = 6
+        const val VERSION = 7
     }
 }
 
@@ -104,8 +104,15 @@ internal val MIGRATION_5_6 = object : Migration(5, 6) {
     }
 }
 
+/** v6 → v7 (J6) : plages récurrentes, en une colonne (`PlageCodec`). */
+internal val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `settings` ADD COLUMN `plages` TEXT NOT NULL DEFAULT ''")
+    }
+}
+
 /** Migrations explicites, dans l'ordre. Chacune a son test dans `MigrationTest`. */
-internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+internal val HORA_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
 
 /**
  * Configuration de la base, définie une seule fois : les tests instrumentés

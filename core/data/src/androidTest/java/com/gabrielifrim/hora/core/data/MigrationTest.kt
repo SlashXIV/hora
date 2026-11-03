@@ -10,6 +10,7 @@ import com.gabrielifrim.hora.core.data.database.MIGRATION_2_3
 import com.gabrielifrim.hora.core.data.database.MIGRATION_3_4
 import com.gabrielifrim.hora.core.data.database.MIGRATION_4_5
 import com.gabrielifrim.hora.core.data.database.MIGRATION_5_6
+import com.gabrielifrim.hora.core.data.database.MIGRATION_6_7
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -151,6 +152,27 @@ class MigrationTest {
         val event = db.eventDao().get(5)!!
         assertThat(event.title).isEqualTo("Dentiste")
         assertThat(event.busy).isTrue()
+        db.close()
+    }
+
+    @Test
+    fun v6_to_v7_keepsSettingsWithoutPlages() = runTest {
+        helper.createDatabase(DB, 6).apply {
+            execSQL(
+                "INSERT INTO settings (id, theme, motion, haptics, first_day_of_week, show_week_numbers, clock_format, " +
+                    "alsace_moselle, bridges, more_feasts, hidden_almanac, place_name, latitude, longitude, prayer) " +
+                    "VALUES (0, 'MIDI', 'CALM', 1, NULL, 1, 'H24', 0, 1, 0, 'MOON', 'Talence', 44.809, -0.588, 'on=true')",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(DB, 7, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        val row = db.settingsDao().get()!!
+        assertThat(row.prayer).isEqualTo("on=true")
+        assertThat(row.plages).isEmpty()
         db.close()
     }
 

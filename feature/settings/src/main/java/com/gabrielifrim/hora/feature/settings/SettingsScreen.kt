@@ -76,6 +76,12 @@ private fun SettingsContent(
         }
 
         item {
+            Section(stringResource(R.string.settings_plages)) {
+                PlagesSection(settings.plages) { list -> haptics.tick(); update { it.copy(plages = list) } }
+            }
+        }
+
+        item {
             Section(stringResource(R.string.settings_reminders)) {
                 ReminderReliability()
                 HoraText(stringResource(R.string.settings_sets), style = HoraTheme.type.body)

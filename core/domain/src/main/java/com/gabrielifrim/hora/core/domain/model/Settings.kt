@@ -35,4 +35,6 @@ data class UserSettings(
     val place: Place = Places.DEFAULT,
     /** Pratique musulmane : désactivée par défaut (voir le journal des décisions). */
     val prayer: PrayerSettings = PrayerSettings(),
+    /** Plages récurrentes, dans l'ordre où on les a créées. */
+    val plages: List<Plage> = emptyList(),
 )

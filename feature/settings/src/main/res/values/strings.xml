@@ -185,4 +185,16 @@
     <string name="prayer_maghrib_minutes">Maghrib préférable : après son début</string>
     <string name="prayer_hijri_adjust">Hégire</string>
     <string name="prayer_hijri_hint">Le calendrier calculé (Umm al-Qura) peut avoir un jour d’écart avec l’observation de la lune.</string>
+    <string name="settings_plages">Plages</string>
+    <string name="plages_hint">Tes heures habituelles (travail, sport…), en bande pâle sous les événements des vues jour et semaine.</string>
+    <string name="plage_add">Ajouter une plage</string>
+    <string name="plage_summary">%1$s · %2$s–%3$s</string>
+    <string name="plage_name">Nom</string>
+    <string name="plage_name_placeholder">Taff, Sport…</string>
+    <string name="plage_days">Jours</string>
+    <string name="plage_start">Début</string>
+    <string name="plage_end">Fin</string>
+    <string name="plage_save">Enregistrer</string>
+    <string name="plage_delete">Supprimer la plage</string>
+    <string name="plage_incomplete">Donne un nom et au moins un jour pour enregistrer.</string>
 </resources>

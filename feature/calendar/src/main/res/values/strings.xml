@@ -31,4 +31,5 @@
         <item quantity="one">%d événement trouvé</item>
         <item quantity="other">%d événements trouvés</item>
     </plurals>
+    <string name="plage_label">%1$s · %2$s–%3$s</string>
 </resources>

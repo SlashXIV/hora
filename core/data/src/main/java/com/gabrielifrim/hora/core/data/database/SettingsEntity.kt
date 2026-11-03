@@ -28,6 +28,8 @@ data class SettingsEntity(
     @ColumnInfo(defaultValue = "-0.5792") val longitude: Double = -0.5792,
     /** Réglages des prières (`PrayerCodec`) ; vide : valeurs par défaut, pratique désactivée. */
     @ColumnInfo(defaultValue = "") val prayer: String = "",
+    /** Plages récurrentes (`PlageCodec`), vide s'il n'y en a pas. */
+    @ColumnInfo(defaultValue = "") val plages: String = "",
 ) {
     companion object {
         const val SINGLE_ROW_ID = 0

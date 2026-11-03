@@ -50,12 +50,17 @@ fun Tag(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     leading: (@Composable () -> Unit)? = null,
+    /** Choix multiple (jours d'une plage) : lu comme une case à cocher. */
+    multiple: Boolean = false,
 ) {
     val colors = HoraTheme.colors
     Box(
         modifier
             .defaultMinSize(minHeight = 48.dp)
-            .selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
+            .then(
+                if (multiple) Modifier.toggleable(value = selected, role = Role.Checkbox, onValueChange = { onClick() })
+                else Modifier.selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Row(

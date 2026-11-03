@@ -7,6 +7,8 @@ import com.gabrielifrim.hora.core.domain.model.Event
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
+import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
+import com.gabrielifrim.hora.core.domain.model.Plage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import java.time.ZoneId
@@ -26,7 +28,11 @@ class CalendarViewModel @Inject constructor(
     agendaRepository: AgendaRepository,
     private val eventRepository: EventRepository,
     private val almanac: AlmanacRepository,
+    settings: SettingsRepository,
 ) : ViewModel() {
+
+    val plages: StateFlow<List<Plage>> = settings.settings.map { it.plages }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val agendas: StateFlow<Map<Long, Agenda>> = combine(agendaRepository.agendas, almanac.agendas) { a, b -> a + b }
         .map { list -> list.associateBy { it.id } }

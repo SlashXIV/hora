@@ -94,4 +94,11 @@
     <string name="save_as_set">Enregistrer comme jeu de rappels</string>
     <string name="set_name">Nom du jeu</string>
     <string name="set_name_hint">Rendez-vous du matin</string>
+    <string name="slot_find">Trouver un créneau</string>
+    <string name="slot_title">Créneau libre</string>
+    <string name="slot_where">Chercher dans</string>
+    <string name="slot_day">%1$s–%2$s</string>
+    <string name="slot_results">Prochains créneaux</string>
+    <string name="slot_label">%1$s · %2$s–%3$s</string>
+    <string name="slot_none">Aucun créneau libre de cette durée dans les deux prochaines semaines.</string>
 </resources>

@@ -73,7 +73,7 @@ import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import java.time.LocalDate
 import java.time.ZoneId
 
-private enum class Picking { START_DATE, START_TIME, END_DATE, END_TIME, ZONE, REPEAT, REMINDER, SAVE_SET, SCOPE }
+private enum class Picking { SLOT, START_DATE, START_TIME, END_DATE, END_TIME, ZONE, REPEAT, REMINDER, SAVE_SET, SCOPE }
 
 @Composable
 fun EventEditorScreen(
@@ -91,6 +91,7 @@ fun EventEditorScreen(
     val draft by viewModel.draft.collectAsStateWithLifecycle()
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
     val sets by viewModel.reminderSets.collectAsStateWithLifecycle()
+    val plages by viewModel.plages.collectAsStateWithLifecycle()
     val formats = rememberFormats()
     val haptics = rememberHaptics()
     var picking by remember { mutableStateOf<Picking?>(null) }
@@ -127,6 +128,7 @@ fun EventEditorScreen(
                 WhenRow(stringResource(R.string.field_end), d.end.toLocalDate(), d.end.toLocalTime().takeUnless { d.allDay }, formats,
                     onDate = { picking = Picking.END_DATE }, onTime = { picking = Picking.END_TIME })
                 if (!d.allDay) {
+                    HoraButton(stringResource(R.string.slot_find), onClick = { picking = Picking.SLOT }, style = ButtonStyle.Line)
                     ValueRow(stringResource(R.string.field_zone), d.zone.id, onClick = { picking = Picking.ZONE })
                 }
                 ValueRow(stringResource(R.string.field_repeat), repeatText(d.repeat, d.customRule, d.start.toLocalDate(), formats), onClick = { picking = Picking.REPEAT })
@@ -180,6 +182,9 @@ fun EventEditorScreen(
     }
 
     when (picking) {
+        Picking.SLOT -> FreeSlotSheet(plages, java.time.Duration.between(d.start, d.end), formats, viewModel::freeSlots, onPick = { start ->
+            haptics.tick(); viewModel.update { it.withStart(start) }; picking = null
+        }, onDismiss = { picking = null })
         Picking.START_DATE -> DatePickerSheet(d.start.toLocalDate(), formats, onPick = { day ->
             viewModel.update { it.withStart(day.atTime(it.start.toLocalTime())) }; picking = null
         }, onDismiss = { picking = null })

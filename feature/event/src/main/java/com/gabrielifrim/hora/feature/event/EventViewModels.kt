@@ -16,6 +16,11 @@ import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderSet
 import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
+import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
+import com.gabrielifrim.hora.core.domain.calendar.FreeSlots
+import com.gabrielifrim.hora.core.domain.model.Plage
+import java.time.Duration
+import java.time.LocalDateTime
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -140,6 +145,7 @@ class EventEditorViewModel @AssistedInject constructor(
     private val events: EventRepository,
     private val agendaRepository: AgendaRepository,
     private val setRepository: ReminderSetRepository,
+    settings: SettingsRepository,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -156,6 +162,17 @@ class EventEditorViewModel @AssistedInject constructor(
 
     val agendas: StateFlow<List<Agenda>> = agendaRepository.agendas.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val reminderSets: StateFlow<List<ReminderSet>> = setRepository.sets.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val plages: StateFlow<List<Plage>> = settings.settings.map { it.plages }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Créneaux libres de la durée du brouillon, à partir de son jour (pas avant maintenant). */
+    suspend fun freeSlots(plage: Plage?): List<LocalDateTime> {
+        val d = draft.value ?: return emptyList()
+        val from = maxOf(LocalDateTime.now(), d.start.toLocalDate().atStartOfDay())
+        val others = events.eventsBetween(from.toLocalDate(), from.toLocalDate().plusDays(14), d.zone).first()
+            .filter { d.id == 0L || it.id != d.id } // l'événement qu'on déplace ne se bloque pas lui-même
+        return FreeSlots.find(others, from, Duration.between(d.start, d.end), plage, d.zone)
+    }
 
     /** null tant que le brouillon se charge. */
     val draft = MutableStateFlow<EventDraft?>(null)

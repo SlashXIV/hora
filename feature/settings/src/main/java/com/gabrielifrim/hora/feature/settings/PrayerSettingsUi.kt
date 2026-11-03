@@ -76,7 +76,8 @@ internal fun PrayerSection(p: PrayerSettings, place: Place, update: ((PrayerSett
 
 private fun format(angle: Double) = "%.1f".format(angle).replace('.', ',') // texte-technique : virgule décimale
 
-private fun parseTime(text: String): LocalTime? = Regex("""^\s*(\d{1,2})\s*[:hH.]\s*(\d{2})\s*$""").matchEntire(text)?.destructured
+/** « 06:13 », « 6h13 », « 6.13 », ou les chiffres seuls (« 0613 ») : le clavier numérique n'a pas de « : ». */
+private fun parseTime(text: String): LocalTime? = Regex("""^\s*(\d{1,2})\s*[:hH.]?\s*(\d{2})\s*$""").matchEntire(text)?.destructured
     ?.let { (h, m) -> runCatching { LocalTime.of(h.toInt(), m.toInt()) }.getOrNull() }
 
 /** L'heure de Sobh et de 'Isha d'aujourd'hui lues sur l'horaire de la mosquée donnent les deux angles. */
@@ -98,10 +99,15 @@ private fun CalibrateSheet(p: PrayerSettings, place: Place, onApply: (Double, Do
         HoraText(stringResource(R.string.prayer_calibrate_explain, place.name), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
         val time = KeyboardOptions(keyboardType = KeyboardType.Number)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HoraTextField(sobh, { sobh = it }, label = stringResource(PrayerAlarms.prayerName(Prayer.SOBH, p.fajrName)), placeholder = "06:13", modifier = Modifier.weight(1f), keyboardOptions = time) // texte-technique : exemple d'heure
-            HoraTextField(isha, { isha = it }, label = stringResource(PrayerAlarms.prayerName(Prayer.ISHA, false)), placeholder = "21:51", modifier = Modifier.weight(1f), keyboardOptions = time) // texte-technique : exemple d'heure
+            HoraTextField(sobh, { sobh = it }, label = stringResource(PrayerAlarms.prayerName(Prayer.SOBH, p.fajrName)), placeholder = "0613", modifier = Modifier.weight(1f), keyboardOptions = time) // texte-technique : exemple d'heure
+            HoraTextField(isha, { isha = it }, label = stringResource(PrayerAlarms.prayerName(Prayer.ISHA, false)), placeholder = "2151", modifier = Modifier.weight(1f), keyboardOptions = time) // texte-technique : exemple d'heure
         }
-        result?.let { (d, i) -> HoraText(stringResource(R.string.prayer_calibrate_result, format(d), format(i)), style = HoraTheme.type.body) }
+        when {
+            result != null -> HoraText(stringResource(R.string.prayer_calibrate_result, format(result.first), format(result.second)), style = HoraTheme.type.body)
+            // Deux heures lisibles mais un soleil levé (ou bien trop bas) : on dit pourquoi le bouton reste grisé.
+            parseTime(sobh) != null && parseTime(isha) != null ->
+                HoraText(stringResource(R.string.prayer_calibrate_invalid), style = HoraTheme.type.body, color = HoraTheme.colors.error)
+        }
     }
 }
 

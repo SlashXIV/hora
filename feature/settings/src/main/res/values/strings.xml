@@ -173,6 +173,7 @@
     <string name="prayer_calibrate_explain">Recopiez l’heure de Sobh et de ‘Isha d’aujourd’hui affichée par votre mosquée (Mawaqit, calendrier) : Hora en déduit les angles pour %1$s.</string>
     <string name="prayer_calibrate_result">Aube à %1$s°, ‘Isha à %2$s°</string>
     <string name="prayer_calibrate_apply">Appliquer ces angles</string>
+    <string name="prayer_calibrate_invalid">Ces heures ne correspondent pas à une aube et à une nuit d’aujourd’hui ici : vérifiez-les, ou le lieu choisi.</string>
     <string name="prayer_tuning">Angles et décalages</string>
     <string name="prayer_tuning_hint">Pour coller à l’horaire de la mosquée, et ajuster l’hégire.</string>
     <string name="prayer_dawn_angle">Aube (°)</string>

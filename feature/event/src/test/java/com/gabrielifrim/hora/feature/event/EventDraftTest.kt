@@ -57,6 +57,7 @@ class EventDraftTest {
         assertThat(rdv.reminders).containsExactly(Reminder.Before(15), Reminder.Before(60))
         val anniv = base.withQuick(QuickEntry.parse("Anniversaire Léa samedi", now))
         assertThat(anniv.allDay).isTrue()
+        assertThat(anniv.canSave).isTrue()
         assertThat(anniv.start.toLocalDate()).isEqualTo(LocalDate.of(2026, 11, 7))
         // Rien de daté : l'heure par défaut du brouillon, une heure.
         val call = base.withQuick(QuickEntry.parse("Appeler maman", now))

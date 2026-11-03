@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -279,7 +280,8 @@ private fun Block(event: Event, agendas: Map<Long, Agenda>, zone: ZoneId, format
     ) {
         HoraText(
             event.title,
-            style = if (compact) HoraTheme.type.label.copy(letterSpacing = HoraTheme.type.bodySmall.letterSpacing) else HoraTheme.type.bodySmall,
+            // Colonne de semaine : un mot trop long se coupe avec un tiret, pas au hasard (« Anniver-saire »).
+            style = if (compact) HoraTheme.type.label.copy(letterSpacing = HoraTheme.type.bodySmall.letterSpacing, hyphens = Hyphens.Auto) else HoraTheme.type.bodySmall,
             maxLines = if (compact) 3 else 2,
             overflow = TextOverflow.Ellipsis,
         )

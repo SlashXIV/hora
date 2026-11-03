@@ -86,7 +86,7 @@ fun SearchScreen(onOpenEvent: (Long, Long?) -> Unit, modifier: Modifier = Modifi
                 EventRow(
                     event, agendas, zone, formats,
                     onClick = { onOpenEvent(event.id, event.occurrence) },
-                    subtitle = formats.dayShort(day) + " · " + timeRange(event, zone, formats),
+                    subtitle = formats.dayShortWithYear(day) + " · " + timeRange(event, zone, formats),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

@@ -24,6 +24,7 @@
     <string name="spoken_all_day">%1$s, toute la journée</string>
     <string name="spoken_date_range">du %1$s au %2$s</string>
     <string name="spoken_timed">%1$s, %2$s à %3$s</string>
+    <string name="spoken_instant">%1$s, à %2$s</string>
     <string name="spoken_leave">partir à %1$s</string>
     <string name="spoken_timed_multi">du %1$s %2$s au %3$s %4$s</string>
 

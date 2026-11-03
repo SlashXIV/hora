@@ -48,9 +48,14 @@ class HoraFormats(val locale: Locale, val clock24: Boolean, val firstDayOfWeek: 
     fun hourLabel(hour: Int): String = if (clock24) "%02d".format(hour) else hourOnly.format(LocalTime.of(hour, 0))
     fun dayLong(d: LocalDate): String = dayLong.format(d).capitalized()
 
-    /** Pour une phrase : « mardi 3 novembre », sans capitale. */
-    fun daySpoken(d: LocalDate): String = dayLong.format(d)
+    /** Pour une phrase : « mardi 3 novembre », sans capitale ; l'année seulement si ce n'est pas celle-ci. */
+    fun daySpoken(d: LocalDate): String = dayLong.format(d) + yearIfOther(d)
     fun dayShort(d: LocalDate): String = dayShort.format(d)
+
+    /** « jeu. 26 juin 2025 » dans une liste qui mêle les années (recherche). */
+    fun dayShortWithYear(d: LocalDate): String = dayShort.format(d) + yearIfOther(d)
+
+    private fun yearIfOther(d: LocalDate): String = if (d.year != LocalDate.now().year) " ${d.year}" else ""
     fun month(d: LocalDate): String = month.format(d).capitalized()
     fun dayMonth(d: LocalDate): String = dayMonth.format(d)
     fun weekday(d: LocalDate): String = weekday.format(d).capitalized()
@@ -107,7 +112,8 @@ fun timeRange(event: Event, zone: ZoneId, formats: HoraFormats): String = when (
     } else {
         stringResource(R.string.date_range, formats.dayShort(t.first), formats.dayShort(t.last))
     }
-    is Timing.Timed -> stringResource(
+    // Un instant (phase de lune) : une heure, pas « 08:02–08:02 ».
+    is Timing.Timed -> if (t.start == t.end) formats.time(t.start.atZone(zone).toLocalTime()) else stringResource(
         R.string.time_range,
         formats.time(t.start.atZone(zone).toLocalTime()),
         formats.time(t.end.atZone(zone).toLocalTime()),
@@ -129,7 +135,9 @@ fun spokenEvent(event: Event, zone: ZoneId, formats: HoraFormats): String {
         is Timing.Timed -> {
             val start = t.start.atZone(zone)
             val end = t.end.atZone(zone)
-            if (start.toLocalDate() == end.toLocalDate()) {
+            if (start == end) {
+                stringResource(R.string.spoken_instant, formats.daySpoken(start.toLocalDate()), formats.spoken(start.toLocalTime()))
+            } else if (start.toLocalDate() == end.toLocalDate()) {
                 stringResource(R.string.spoken_timed, formats.daySpoken(start.toLocalDate()), formats.spoken(start.toLocalTime()), formats.spoken(end.toLocalTime()))
             } else {
                 stringResource(

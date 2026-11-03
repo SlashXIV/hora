@@ -43,15 +43,15 @@ data class EventDraft(
     val customRule: String? = null,
     val exceptions: Set<Long> = emptySet(),
 ) {
-    val canSave: Boolean get() = title.isNotBlank() && !endDateTimeForSave().isBefore(start)
+    // Toute la journée, on compare des jours : sinon « jeudi 00:00 » serait avant « jeudi 09:00 ».
+    val canSave: Boolean get() = title.isNotBlank() &&
+        if (allDay) !end.toLocalDate().isBefore(start.toLocalDate()) else !end.isBefore(start)
 
     /** Change le début en gardant la durée : déplacer un rendez-vous ne le raccourcit pas. */
     fun withStart(newStart: LocalDateTime): EventDraft = copy(start = newStart, end = newStart.plus(Duration.between(start, end)))
 
     /** Toute la journée, la fin est un jour ; à heure fixe, un instant. */
     fun withEnd(newEnd: LocalDateTime): EventDraft = copy(end = if (newEnd.isBefore(start)) start else newEnd)
-
-    private fun endDateTimeForSave(): LocalDateTime = if (allDay) end.toLocalDate().atStartOfDay() else end
 
     val repeats: Boolean get() = repeat != null || customRule != null
 

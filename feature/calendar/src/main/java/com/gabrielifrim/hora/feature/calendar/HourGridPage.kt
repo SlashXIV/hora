@@ -52,7 +52,8 @@ import com.gabrielifrim.hora.core.domain.calendar.DayLayout
 import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.model.Event
 import com.gabrielifrim.hora.core.domain.model.Plage
-import com.gabrielifrim.hora.core.ui.component.Eyebrow
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.stringResource
 import com.gabrielifrim.hora.core.ui.component.HoraText
@@ -222,7 +223,16 @@ private fun PlageBand(plage: Plage, label: String?) {
             drawLine(colors.rule, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx(), pathEffect = dash)
         },
     ) {
-        if (label != null) Eyebrow(label, Modifier.padding(start = 4.dp, top = 2.dp), maxLines = 1)
+        // Une colonne de semaine est étroite : le nom rapetisse plutôt que d'être coupé (police à 200 %).
+        if (label != null) {
+            FitText(
+                label.uppercase(),
+                Modifier.padding(start = 4.dp, top = 2.dp, end = 2.dp).clearAndSetSemantics { text = AnnotatedString(label) },
+                style = HoraTheme.type.eyebrow,
+                color = colors.ink2,
+                minFontSize = 7.sp,
+            )
+        }
     }
 }
 

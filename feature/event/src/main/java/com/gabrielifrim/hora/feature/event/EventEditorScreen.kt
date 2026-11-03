@@ -130,6 +130,11 @@ fun EventEditorScreen(
                     ValueRow(stringResource(R.string.field_zone), d.zone.id, onClick = { picking = Picking.ZONE })
                 }
                 ValueRow(stringResource(R.string.field_repeat), repeatText(d.repeat, d.customRule, d.start.toLocalDate(), formats), onClick = { picking = Picking.REPEAT })
+                ToggleRow(
+                    title = stringResource(R.string.field_busy),
+                    checked = d.busy,
+                    onCheckedChange = { on -> haptics.tick(); viewModel.update { it.copy(busy = on) } },
+                )
                 Rule()
                 ReminderList(
                     reminders = d.reminders,

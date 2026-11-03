@@ -111,6 +111,7 @@ fun EventDetailScreen(
                         }
                     }
                 }
+                if (!e.busy) Field(stringResource(R.string.field_availability), stringResource(R.string.availability_free))
                 if (e.location.isNotBlank()) Field(stringResource(R.string.field_location), e.location)
                 if (e.notes.isNotBlank()) Field(stringResource(R.string.field_notes), e.notes)
                 // Un férié ou une fête (agenda calculé) se lit, il ne se modifie pas.

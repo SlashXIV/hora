@@ -44,6 +44,7 @@ object IcsWriter {
             out += "X-HORA-AGENDA-COLOR:" + it.colorKey
         }
         e.colorKey?.let { out += "X-HORA-COLOR:$it" }
+        out += "TRANSP:" + if (e.busy) "OPAQUE" else "TRANSPARENT"
         when (val t = e.timing) {
             is Timing.AllDay -> {
                 out += "DTSTART;VALUE=DATE:" + day(t.first)

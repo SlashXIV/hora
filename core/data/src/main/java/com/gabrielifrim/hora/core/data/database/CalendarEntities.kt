@@ -53,6 +53,7 @@ data class EventEntity(
     /** Occurrence modifiée seule : la série d'origine et la clé remplacée. */
     @ColumnInfo(name = "parent_id") val parentId: Long? = null,
     @ColumnInfo(name = "recurrence_id") val recurrenceId: Long? = null,
+    @ColumnInfo(defaultValue = "1") val busy: Boolean = true,
 )
 
 /** Un jeu de rappels réutilisable (« Rendez-vous du matin »). */

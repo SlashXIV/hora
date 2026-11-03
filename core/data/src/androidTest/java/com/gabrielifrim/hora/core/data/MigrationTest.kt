@@ -9,6 +9,7 @@ import com.gabrielifrim.hora.core.data.database.MIGRATION_1_2
 import com.gabrielifrim.hora.core.data.database.MIGRATION_2_3
 import com.gabrielifrim.hora.core.data.database.MIGRATION_3_4
 import com.gabrielifrim.hora.core.data.database.MIGRATION_4_5
+import com.gabrielifrim.hora.core.data.database.MIGRATION_5_6
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -129,6 +130,27 @@ class MigrationTest {
         assertThat(row.placeName).isEqualTo("Talence")
         assertThat(row.alsaceMoselle).isTrue()
         assertThat(row.prayer).isEmpty()
+        db.close()
+    }
+
+    @Test
+    fun v5_to_v6_keepsEventsBusy() = runTest {
+        helper.createDatabase(DB, 5).apply {
+            execSQL("INSERT INTO agenda (id, name, color_key, hidden, sort_order, default_reminders) VALUES (1, 'Perso', 'BLUE', 0, 0, '')")
+            execSQL(
+                "INSERT INTO event (id, uid, agenda_id, title, location, notes, color_key, all_day, start, `end`, time_zone, reminders, rrule, exdates) " +
+                    "VALUES (5, 'u-5', 1, 'Dentiste', 'Cabinet', '', NULL, 0, 1793700000000, 1793701800000, 'Europe/Paris', '', NULL, '')",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(DB, 6, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).close()
+
+        val db = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HoraDatabase::class.java, DB)
+            .applyHoraConfiguration()
+            .build()
+        val event = db.eventDao().get(5)!!
+        assertThat(event.title).isEqualTo("Dentiste")
+        assertThat(event.busy).isTrue()
         db.close()
     }
 

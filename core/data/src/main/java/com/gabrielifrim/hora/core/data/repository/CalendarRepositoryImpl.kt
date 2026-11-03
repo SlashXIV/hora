@@ -234,6 +234,7 @@ private fun EventEntity.toDomain() = Event(
     location = location,
     notes = notes,
     colorKey = colorKey,
+    busy = busy,
     timing = if (allDay) {
         Timing.AllDay(LocalDate.ofEpochDay(start), LocalDate.ofEpochDay(end))
     } else {
@@ -272,5 +273,6 @@ private fun Event.toEntity(): EventEntity {
         exdates = recurrence?.exceptions.orEmpty().sorted().joinToString(","),
         parentId = parentId,
         recurrenceId = recurrenceId,
+        busy = busy,
     )
 }

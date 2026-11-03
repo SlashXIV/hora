@@ -59,6 +59,8 @@ data class Event(
     val notes: String = "",
     /** Couleur propre à l'événement ; null : celle de son agenda. */
     val colorKey: String? = null,
+    /** Occupé (TRANSP:OPAQUE) ; un événement libre ne bloque pas un créneau. */
+    val busy: Boolean = true,
     val reminders: List<Reminder> = emptyList(),
     /** Règle de répétition, sur l'événement d'origine d'une série. */
     val recurrence: Recurrence? = null,

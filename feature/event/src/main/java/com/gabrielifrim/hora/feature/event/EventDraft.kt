@@ -27,6 +27,7 @@ data class EventDraft(
     val notes: String = "",
     val colorKey: String? = null,
     val allDay: Boolean = false,
+    val busy: Boolean = true,
     val start: LocalDateTime,
     val end: LocalDateTime,
     val zone: ZoneId,
@@ -57,6 +58,7 @@ data class EventDraft(
         location = location.trim(),
         notes = notes.trim(),
         colorKey = colorKey,
+        busy = busy,
         reminders = reminders,
         recurrence = (repeat?.toRule(start.toLocalDate(), if (allDay) null else zone) ?: customRule)?.let { Recurrence(it, exceptions) },
         timing = if (allDay) {
@@ -95,12 +97,12 @@ data class EventDraft(
         private fun base(event: Event, displayZone: ZoneId): EventDraft = when (val t = event.timing) {
             is Timing.AllDay -> EventDraft(
                 id = event.id, uid = event.uid, agendaId = event.agendaId, title = event.title,
-                location = event.location, notes = event.notes, colorKey = event.colorKey,
+                location = event.location, notes = event.notes, colorKey = event.colorKey, busy = event.busy,
                 allDay = true, start = t.first.atTime(9, 0), end = t.last.atTime(10, 0), zone = displayZone,
             )
             is Timing.Timed -> EventDraft(
                 id = event.id, uid = event.uid, agendaId = event.agendaId, title = event.title,
-                location = event.location, notes = event.notes, colorKey = event.colorKey,
+                location = event.location, notes = event.notes, colorKey = event.colorKey, busy = event.busy,
                 start = LocalDateTime.ofInstant(t.start, t.zone), end = LocalDateTime.ofInstant(t.end, t.zone), zone = t.zone,
             )
         }

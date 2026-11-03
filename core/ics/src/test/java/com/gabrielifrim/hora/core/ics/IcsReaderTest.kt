@@ -27,6 +27,14 @@ class IcsReaderTest {
     }
 
     @Test
+    fun `libre ou occupé - TRANSP de Fossify gardé, occupé par défaut`() {
+        val result = fossify()
+        assertThat(result.byUid("Caldav-6-68").item.event.busy).isFalse()
+        assertThat(result.byUid("Caldav-1-77").item.event.busy).isTrue()
+        assertThat(result.byUid("00000000000000000000000000000000000000000001").item.event.busy).isTrue() // tâche, sans TRANSP
+    }
+
+    @Test
     fun `anniversaire Fossify - DTEND égal à DTSTART donne un jour, la série est gardée`() {
         val alice = fossify().byUid("12").item.event
         assertThat(alice.timing).isEqualTo(Timing.AllDay(LocalDate.of(1970, 3, 2), LocalDate.of(1970, 3, 2)))

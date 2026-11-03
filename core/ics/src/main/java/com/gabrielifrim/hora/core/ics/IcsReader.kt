@@ -134,6 +134,7 @@ object IcsReader {
             location = c.first("LOCATION")?.text?.trim().orEmpty(),
             notes = c.first("DESCRIPTION")?.text?.trim().orEmpty(),
             colorKey = c.first("X-HORA-COLOR")?.value?.trim(),
+            busy = c.first("TRANSP")?.value?.trim()?.uppercase() != "TRANSPARENT",
             reminders = reminders,
             recurrence = if (recurrenceId == null && rule != null) Recurrence(rule, exceptions) else null,
             recurrenceId = recurrenceId,

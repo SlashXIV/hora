@@ -15,6 +15,9 @@
     <string name="field_color">Couleur</string>
     <string name="field_location">Lieu</string>
     <string name="field_notes">Notes</string>
+    <string name="field_busy">Occupé</string>
+    <string name="field_availability">Disponibilité</string>
+    <string name="availability_free">Libre : ne bloque pas un créneau</string>
     <!-- Lu par TalkBack : « Début, changer : mardi 3 novembre » -->
     <string name="change_value">%1$s, changer : %2$s</string>
     <string name="other_zone">Heure de ce fuseau : %1$s</string>

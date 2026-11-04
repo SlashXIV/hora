@@ -45,6 +45,7 @@ import com.gabrielifrim.hora.core.ui.component.HoraText
 import com.gabrielifrim.hora.core.ui.component.Rule
 import com.gabrielifrim.hora.core.ui.motion.LocalMotionLevel
 import com.gabrielifrim.hora.core.ui.motion.Motion
+import com.gabrielifrim.hora.core.ui.motion.Landing
 import com.gabrielifrim.hora.core.ui.motion.rememberHaptics
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import com.gabrielifrim.hora.feature.calendar.CalendarScreen
@@ -116,7 +117,7 @@ fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
                 QuickEntryScreen(
                     onClose = { nav.popBackStack() },
                     onDetail = { text -> nav.navigate(EditRoute(epochDay = LocalDate.now().toEpochDay(), quick = text)) { popUpTo<QuickRoute> { inclusive = true } } },
-                    onCreated = { id -> nav.navigate(EventRoute(id)) { popUpTo<QuickRoute> { inclusive = true } } },
+                    onCreated = { id -> Landing.mark(id); nav.navigate(EventRoute(id)) { popUpTo<QuickRoute> { inclusive = true } } },
                     onTemplate = { id -> nav.navigate(EditRoute(epochDay = LocalDate.now().toEpochDay(), template = id)) { popUpTo<QuickRoute> { inclusive = true } } },
                 )
             }
@@ -142,6 +143,7 @@ fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
                     template = route.template,
                     onClose = { nav.popBackStack() },
                     onSaved = { savedId ->
+                        Landing.mark(savedId)
                         // Après une création, la fiche remplace l'éditeur ; après une modification, on revient à la fiche.
                         if (route.id == 0L) {
                             nav.navigate(EventRoute(savedId)) { popUpTo<EditRoute> { inclusive = true } }

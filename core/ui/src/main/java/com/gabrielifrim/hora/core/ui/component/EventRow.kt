@@ -1,5 +1,7 @@
 package com.gabrielifrim.hora.core.ui.component
 
+import com.gabrielifrim.hora.core.ui.motion.landing
+import com.gabrielifrim.hora.core.ui.motion.rememberLanding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -59,6 +61,7 @@ fun EventRow(
     }
     Row(
         modifier
+            .landing(rememberLanding(event.id))
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .clickable(onClick = onClick)

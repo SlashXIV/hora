@@ -45,6 +45,7 @@ import com.gabrielifrim.hora.core.ui.component.HoraText
 import com.gabrielifrim.hora.core.ui.component.PageHeader
 import com.gabrielifrim.hora.core.ui.component.Rule
 import com.gabrielifrim.hora.core.ui.component.ToggleRow
+import com.gabrielifrim.hora.core.ui.motion.Landing
 import com.gabrielifrim.hora.core.ui.motion.rememberHaptics
 import com.gabrielifrim.hora.core.ui.text.color
 import com.gabrielifrim.hora.core.ui.text.colorKeyOf
@@ -201,7 +202,7 @@ fun EventDetailScreen(
         DatePickerSheet(
             initial = day,
             formats = formats,
-            onPick = { haptics.confirm(); viewModel.moveTo(it); moving = false },
+            onPick = { haptics.confirm(); Landing.mark(eventId); viewModel.moveTo(it); moving = false },
             onDismiss = { moving = false },
         )
     }

@@ -81,6 +81,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import com.gabrielifrim.hora.core.ui.motion.LocalMotionLevel
 import com.gabrielifrim.hora.core.ui.motion.Motion
 import com.gabrielifrim.hora.core.ui.motion.rememberHaptics
+import com.gabrielifrim.hora.core.ui.motion.landing
+import com.gabrielifrim.hora.core.ui.motion.rememberLanding
 
 /**
  * Grille horaire d'un jour ou d'une semaine : heures gravées dans la marge, une
@@ -283,11 +285,13 @@ private fun Block(event: Event, agendas: Map<Long, Agenda>, zone: ZoneId, format
     val colors = HoraTheme.colors
     val c = colorKeyOf(event, agendas).color()
     val spoken = spokenEvent(event, zone, formats)
+    val landing = rememberLanding(event.id)
     Box(
         modifier
+            .landing(landing)
             .drawBehind {
-                // L'ombre dure du cadran, portée en bas à droite, sous le bloc.
-                drawRoundRect(colors.shadow, topLeft = Offset(2.dp.toPx(), 2.dp.toPx()), size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+                // L'ombre dure du cadran, portée en bas à droite, sous le bloc ; elle se forme quand il se pose.
+                drawRoundRect(colors.shadow.copy(alpha = colors.shadow.alpha * landing.shadow), topLeft = Offset(2.dp.toPx(), 2.dp.toPx()), size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
             }
             .clip(RoundedCornerShape(3.dp))
             .background(c.copy(alpha = 0.16f).compositeOver(colors.background))

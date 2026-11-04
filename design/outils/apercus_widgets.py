@@ -4,6 +4,7 @@ Le sélecteur affichait la mise en page vide (fond blanc, texte blanc) : il mont
 image du vrai widget. Captures du Pixel_10_Pro (1280 px de large, densité 3), en Nocturne.
 
 Usage (Pillow, outil local) :  python design/outils/apercus_widgets.py <capture-aujourdhui.png> <capture-prieres.png>
+Aujourd'hui vient du Pixel_10_Pro, Prières du téléphone (rendu MIUI réel).
 Les rectangles sont ceux des captures du 04/11/2026 (widget entier, coins repeints).
 """
 import pathlib
@@ -40,4 +41,5 @@ def crop(src: str, box: tuple[int, int, int, int], name: str, aspect: float) -> 
 
 
 crop(sys.argv[1], (60, 527, 1220, 1163), "widget_today_preview", 2.16)  # 4 × 2 sous MIUI
-crop(sys.argv[2], (60, 1872, 1220, 2171), "widget_prayers_preview", 4.5)  # 4 × 1
+# Prières : capture du téléphone (Xiaomi 15T Pro, 1280 px, densité 3,25) ; HyperOS le montre dans un cadre 4 × 2.
+crop(sys.argv[2], (86, 1722, 956, 1916), "widget_prayers_preview", 2.16)

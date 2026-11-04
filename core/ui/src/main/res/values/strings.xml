@@ -95,4 +95,19 @@
     <string name="reminder_alarm_hint">Sonne comme un réveil, même téléphone verrouillé, pour ce qui ne doit pas être raté.</string>
     <string name="quick_title">Saisie rapide</string>
     <string name="quick_placeholder">dentiste mardi 14h30 rappel 1h avant…</string>
+    <!-- Mois de l’hégire : carte et widget des prières. -->
+    <string-array name="hijri_months">
+        <item>mouharram</item>
+        <item>safar</item>
+        <item>rabi‘ al-awwal</item>
+        <item>rabi‘ ath-thani</item>
+        <item>joumada al-oula</item>
+        <item>joumada ath-thania</item>
+        <item>rajab</item>
+        <item>cha‘bane</item>
+        <item>ramadan</item>
+        <item>chawwal</item>
+        <item>dhou al-qi‘da</item>
+        <item>dhou al-hijja</item>
+    </string-array>
 </resources>

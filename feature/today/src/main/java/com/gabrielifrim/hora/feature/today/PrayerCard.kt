@@ -1,5 +1,6 @@
 package com.gabrielifrim.hora.feature.today
 
+import com.gabrielifrim.hora.core.ui.R as UiR
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
@@ -41,7 +42,7 @@ import java.time.ZoneId
 internal fun PrayerCard(today: LocalDate, now: Instant, place: Place, settings: PrayerSettings, zone: ZoneId, formats: HoraFormats) {
     val windows = remember(today, place, settings) { Prayers.day(today, place, settings) } ?: return
     val (hDay, hMonth, hYear) = remember(today, settings.hijriAdjust) { Prayers.hijri(today, settings.hijriAdjust) }
-    val months = stringArrayResource(R.array.hijri_months)
+    val months = stringArrayResource(UiR.array.hijri_months)
     fun time(t: Instant) = formats.time(t.atZone(zone).toLocalTime())
     fun spoken(t: Instant) = formats.spoken(t.atZone(zone).toLocalTime())
 

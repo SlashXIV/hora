@@ -30,20 +30,6 @@
     <string name="prayer_spoken_estimated">%1$s à %2$s ; temps préférable jusqu’à %3$s environ</string>
     <string name="prayers_legend">≈ : fin estimée (Isfar, Isfirar), à vérifier au ciel. Avis mashhour de l’école malikite ; l’horaire de votre mosquée fait foi.</string>
     <string name="prayer_necessity">temps de nécessité jusqu’à %1$s</string>
-    <string-array name="hijri_months">
-        <item>mouharram</item>
-        <item>safar</item>
-        <item>rabi‘ al-awwal</item>
-        <item>rabi‘ ath-thani</item>
-        <item>joumada al-oula</item>
-        <item>joumada ath-thania</item>
-        <item>rajab</item>
-        <item>cha‘bane</item>
-        <item>ramadan</item>
-        <item>chawwal</item>
-        <item>dhou al-qi‘da</item>
-        <item>dhou al-hijja</item>
-    </string-array>
     <string name="countdown_label">Compte à rebours</string>
     <string name="since_label">Depuis</string>
     <string name="countdown_figure">J-%1$d</string>

@@ -8,4 +8,11 @@
     <string name="widget_nothing_next">Rien de prévu</string>
     <string name="widget_nothing_left">Rien d’autre aujourd’hui</string>
     <string name="widget_all_day">Journée</string>
+    <string name="widget_prayers_label">Prières</string>
+    <string name="widget_prayers_description">Les cinq temps du jour, celui en cours cerclé.</string>
+    <string name="widget_prayers_eyebrow">Prières · %1$s</string>
+    <string name="widget_prayers_hijri">%1$d %2$s %3$d</string>
+    <string name="widget_prayers_off">Activez la pratique musulmane dans Réglages pour voir les prières.</string>
+    <string name="widget_prayer_current">en cours</string>
+    <string name="widget_prayer_passed">passée</string>
 </resources>

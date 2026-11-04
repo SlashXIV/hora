@@ -30,6 +30,10 @@ import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
 import com.gabrielifrim.hora.core.reminders.ReminderLauncher
+import com.gabrielifrim.hora.core.reminders.PrayerAlarms
+import com.gabrielifrim.hora.core.domain.almanac.Prayers
+import com.gabrielifrim.hora.core.domain.model.UserSettings
+import android.view.View
 import com.gabrielifrim.hora.core.ui.component.drawAgendaShape
 import com.gabrielifrim.hora.core.ui.text.HoraFormats
 import com.gabrielifrim.hora.core.ui.text.colorKeyOf
@@ -53,11 +57,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * Le widget Aujourd'hui : redessiné à chaque changement d'événement ou de réglage (depuis
- * l'application), et à l'instant où son contenu change (une alarme approchée, sans réveil).
+ * Les widgets Aujourd'hui et Prières : redessinés à chaque changement d'événement ou de
+ * réglage (depuis l'application), et à l'instant où leur contenu change (une seule alarme
+ * approchée, sans réveil).
  */
 @Singleton
-class TodayWidgets @Inject constructor(
+class HoraWidgets @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val events: EventRepository,
     private val almanac: AlmanacRepository,
@@ -68,7 +73,8 @@ class TodayWidgets @Inject constructor(
     suspend fun update(now: Instant = Instant.now()) {
         val manager = AppWidgetManager.getInstance(context)
         val ids = manager.getAppWidgetIds(ComponentName(context, TodayWidgetProvider::class.java))
-        if (ids.isEmpty()) return arm(null)
+        val prayerIds = manager.getAppWidgetIds(ComponentName(context, PrayerWidgetProvider::class.java))
+        if (ids.isEmpty() && prayerIds.isEmpty()) return arm(null)
         val zone = ZoneId.systemDefault()
         val today = now.atZone(zone).toLocalDate()
         val user = settings.settings.first()
@@ -94,7 +100,70 @@ class TodayWidgets @Inject constructor(
             }
             manager.updateAppWidget(id, views)
         }
-        arm(content.changesAt)
+        val prayerChange = if (prayerIds.isEmpty()) null else updatePrayers(prayerIds, manager, user, colors, formats, zone, now)
+        arm(listOfNotNull(content.changesAt.takeIf { ids.isNotEmpty() }, prayerChange).minOrNull())
+    }
+
+    /** Les cinq temps du jour ; renvoie l'instant du prochain changement, null s'il n'y a rien à suivre. */
+    private fun updatePrayers(
+        ids: IntArray,
+        manager: AppWidgetManager,
+        user: UserSettings,
+        colors: HoraColors,
+        formats: HoraFormats,
+        zone: ZoneId,
+        now: Instant,
+    ): Instant? {
+        val today = now.atZone(zone).toLocalDate()
+        val ink2 = colors.ink2.toArgb()
+        val views = RemoteViews(context.packageName, R.layout.widget_prayers)
+        views.setInt(R.id.prayers_bg, "setColorFilter", colors.background.toArgb())
+        views.setOnClickPendingIntent(R.id.prayers_root, PendingIntent.getActivity(context, 0, launcher.openApp(context), PendingIntent.FLAG_IMMUTABLE))
+        views.setTextColor(R.id.prayers_eyebrow, ink2)
+        views.setTextColor(R.id.prayers_hijri, ink2)
+        views.setTextViewText(R.id.prayers_eyebrow, context.getString(R.string.widget_prayers_eyebrow, user.place.name))
+        val windows = if (user.prayer.enabled) Prayers.day(today, user.place, user.prayer) else null
+        views.setViewVisibility(R.id.prayers_off, if (windows == null) View.VISIBLE else View.GONE)
+        views.setViewVisibility(R.id.prayers_row, if (windows == null) View.GONE else View.VISIBLE)
+        views.setTextViewText(R.id.prayers_off, context.getString(R.string.widget_prayers_off))
+        views.setTextColor(R.id.prayers_off, ink2)
+        if (windows == null) {
+            views.setTextViewText(R.id.prayers_hijri, "")
+            manager.updateAppWidget(ids, views)
+            return null
+        }
+        val (d, m, y) = Prayers.hijri(today, user.prayer.hijriAdjust)
+        views.setTextViewText(R.id.prayers_hijri, context.getString(R.string.widget_prayers_hijri, d, context.resources.getStringArray(UiR.array.hijri_months)[m - 1], y))
+        val content = PrayerContent.of(windows, now, today, zone)
+        val cells = windows.map { w ->
+            PrayerCell(
+                name = context.getString(PrayerAlarms.prayerName(w.prayer, user.prayer.fajrName)),
+                time = formats.time(w.start.atZone(zone).toLocalTime()),
+                current = w.prayer == content.current,
+                past = w.prayer in content.past,
+            )
+        }
+        val density = context.resources.displayMetrics.density
+        val widthDp = manager.getAppWidgetOptions(ids.first()).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH).takeIf { it > 0 } ?: 280
+        // Les passées s'effacent à moitié, comme sur la planche.
+        val faded = colors.ink2.copy(alpha = 0.6f).toArgb()
+        views.setImageViewBitmap(
+            R.id.prayers_row,
+            prayerRow(context, cells, ((widthDp - 28) * density).toInt(), colors.ink.toArgb(), ink2, faded, colors.rule.toArgb(), colors.accent.toArgb()),
+        )
+        views.setContentDescription(
+            R.id.prayers_row,
+            windows.zip(cells).joinToString(" ; ") { (w, c) ->
+                val state = when {
+                    c.current -> ", " + context.getString(R.string.widget_prayer_current)
+                    c.past -> ", " + context.getString(R.string.widget_prayer_passed)
+                    else -> ""
+                }
+                c.name + ", " + formats.spoken(w.start.atZone(zone).toLocalTime()) + state
+            },
+        )
+        manager.updateAppWidget(ids, views)
+        return content.changesAt
     }
 
     private fun render(
@@ -167,7 +236,7 @@ class TodayWidgets @Inject constructor(
             views.addView(R.id.widget_rows, row)
         }
         val nothingLeft = content.rest.isEmpty() && next != null && !TodayContent.isToday(next, today, zone)
-        views.setViewVisibility(R.id.widget_empty, if (nothingLeft) android.view.View.VISIBLE else android.view.View.GONE)
+        views.setViewVisibility(R.id.widget_empty, if (nothingLeft) View.VISIBLE else View.GONE)
         views.setTextViewText(R.id.widget_empty, context.getString(R.string.widget_nothing_left))
         views.setTextColor(R.id.widget_empty, ink2)
         return views
@@ -208,7 +277,7 @@ internal fun shapeBitmap(shape: AgendaShape, color: Color, px: Int): Bitmap {
     return image.asAndroidBitmap()
 }
 
-private fun BroadcastReceiver.updateAsync(widgets: TodayWidgets) {
+private fun BroadcastReceiver.updateAsync(widgets: HoraWidgets) {
     val pending = goAsync()
     CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
         try {
@@ -221,7 +290,7 @@ private fun BroadcastReceiver.updateAsync(widgets: TodayWidgets) {
 
 @AndroidEntryPoint
 class TodayWidgetProvider : AppWidgetProvider() {
-    @Inject lateinit var widgets: TodayWidgets
+    @Inject lateinit var widgets: HoraWidgets
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) = updateAsync(widgets)
 
@@ -230,8 +299,15 @@ class TodayWidgetProvider : AppWidgetProvider() {
 }
 
 @AndroidEntryPoint
+class PrayerWidgetProvider : AppWidgetProvider() {
+    @Inject lateinit var widgets: HoraWidgets
+
+    override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) = updateAsync(widgets)
+}
+
+@AndroidEntryPoint
 class WidgetTickReceiver : BroadcastReceiver() {
-    @Inject lateinit var widgets: TodayWidgets
+    @Inject lateinit var widgets: HoraWidgets
 
     override fun onReceive(context: Context, intent: Intent) = updateAsync(widgets)
 }

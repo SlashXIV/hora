@@ -9,6 +9,8 @@
     <string name="year_free">Libre</string>
     <string name="year_legend_max">6 h et plus</string>
     <string name="year_busy">%1$s occupées</string>
+    <!-- Moins de deux heures : « 1 h 30 occupée », au singulier. -->
+    <string name="year_busy_one">%1$s occupée</string>
     <string name="year_minutes">%1$d min</string>
     <string name="year_hours">%1$d h</string>
     <string name="year_hours_minutes">%1$d h %2$02d</string>

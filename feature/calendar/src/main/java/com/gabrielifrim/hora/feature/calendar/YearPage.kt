@@ -169,8 +169,10 @@ private fun loadText(load: DayLoad): String {
     val busy = when {
         m == 0 -> stringResource(R.string.year_free)
         m < 60 -> stringResource(R.string.year_busy, stringResource(R.string.year_minutes, m))
-        m % 60 == 0 -> stringResource(R.string.year_busy, stringResource(R.string.year_hours, m / 60))
-        else -> stringResource(R.string.year_busy, stringResource(R.string.year_hours_minutes, m / 60, m % 60))
+        else -> stringResource(
+            if (m < 120) R.string.year_busy_one else R.string.year_busy,
+            if (m % 60 == 0) stringResource(R.string.year_hours, m / 60) else stringResource(R.string.year_hours_minutes, m / 60, m % 60),
+        )
     }
     return if (load.events == 0) busy else busy + " · " + pluralStringResource(R.plurals.event_count, load.events, load.events)
 }

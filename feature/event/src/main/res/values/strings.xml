@@ -110,7 +110,7 @@
     <string name="quick_preview_empty">Un titre, puis le jour, l’heure, la durée, « @ lieu » ou « rappel 1h avant ».</string>
     <string name="quick_examples">D’autres exemples</string>
     <string name="quick_example_1">dentiste jeudi 14h30 rappel 1h avant</string>
-    <string name="quick_example_2">resto vendredi 20h @Chez Eric</string>
+    <string name="quick_example_2">resto vendredi 20h @Chez Éric</string>
     <string name="quick_example_3">courses samedi 10h 30 min</string>
     <string name="quick_detail">Détailler</string>
     <string name="quick_templates">Modèles</string>

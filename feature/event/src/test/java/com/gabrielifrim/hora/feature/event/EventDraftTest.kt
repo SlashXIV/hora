@@ -55,7 +55,7 @@ class EventDraftTest {
         assertThat(rdv.title).isEqualTo("Dentiste")
         assertThat(rdv.start to rdv.end).isEqualTo(LocalDateTime.of(2026, 11, 5, 14, 30) to LocalDateTime.of(2026, 11, 5, 15, 15))
         assertThat(rdv.reminders).containsExactly(Reminder.Before(15), Reminder.Before(60))
-        val anniv = base.withQuick(QuickEntry.parse("Anniversaire Eric samedi", now))
+        val anniv = base.withQuick(QuickEntry.parse("Anniversaire Éric samedi", now))
         assertThat(anniv.allDay).isTrue()
         assertThat(anniv.canSave).isTrue()
         assertThat(anniv.start.toLocalDate()).isEqualTo(LocalDate.of(2026, 11, 7))

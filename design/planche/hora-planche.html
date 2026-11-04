@@ -505,7 +505,7 @@ const today = `
     <div class="rule" style="margin:14px 16px 0"></div>
     <div class="pad scroll">
       <div class="ev" style="opacity:.75"><span class="t">09:00</span><div class="x"><b>${mark('sapin','carre',10)}Taff</b><span class="s">plage · jusqu’à 17:30</span></div></div>
-      <div class="ev"><span class="t">12:30</span><div class="x"><b>${mark('framboise','tribas',10)}Déjeuner avec Eric</b><span class="s">Le Petit Cambodge</span></div></div>
+      <div class="ev"><span class="t">12:30</span><div class="x"><b>${mark('framboise','tribas',10)}Déjeuner avec Éric</b><span class="s">Le Petit Cambodge</span></div></div>
       <div style="height:2px;background:var(--acc);position:relative;margin:2px 0 6px"><span style="position:absolute;right:0;top:-16px;font-family:var(--f-mono);font-size:10px;color:var(--acc)">12:18</span></div>
       <div class="ev"><span class="t">14:30</span><div class="x"><b>${mark('sarcelle','croix',10)}Dentiste</b><span class="s">rappels : 1 h, 10 min</span></div></div>
       <div class="ev"><span class="t">18:30</span><div class="x"><b>${mark('ocre','anneau',10)}Courses</b><span class="s" style="display:flex;align-items:center;gap:4px;color:var(--acc);font-weight:650"><svg width="13" height="13"><use href="#i-cart"/></svg>Ouvrir Popote</span></div></div>
@@ -579,7 +579,7 @@ function weekScreen() {
   for (let i = 0; i < 5; i++) c += `<div class="plage" style="left:${cx(i)}px;width:${colW}px;top:${y(9,h0,px)}px;height:${8.5*px}px">${i===0?'<span>Taff</span>':''}</div>`;
   [1,3].forEach(i => c += `<div class="plage" style="left:${cx(i)}px;width:${colW}px;top:${y(18.5,h0,px)}px;height:${1.5*px}px"></div>`);
   const ev = (d, s, e, col, t) => `<div class="blk" style="--c:var(--a-${col});left:${cx(d)+1}px;width:${colW-3}px;top:${y(s,h0,px)}px;height:${(e-s)*px-2}px"><b>${t}</b></div>`;
-  c += ev(0,12.5,13.5,'framboise','Eric') + ev(0,14.5,15,'sarcelle','Dent.') + ev(0,18.5,19.5,'ocre','Cour.');
+  c += ev(0,12.5,13.5,'framboise','Éric') + ev(0,14.5,15,'sarcelle','Dent.') + ev(0,18.5,19.5,'ocre','Cour.');
   c += ev(1,18.5,20,'brique','Sport') + ev(2,10,11.5,'sapin','Point') + ev(3,18.5,20,'brique','Sport');
   c += ev(4,16,17,'ardoise','Impôts') + ev(5,10,11,'ocre','Marché') + ev(6,12,15,'prune','Maman');
   c += `<div class="now" style="left:${cx(0)}px;width:${colW}px;top:${y(12.3,h0,px)}px"></div>`;
@@ -605,7 +605,7 @@ function dayScreen() {
   c += `<div style="position:absolute;left:44px;top:${y(17.35,h0,px)+3}px;font-family:var(--f-mono);font-size:9.5px;color:var(--ink2)">coucher 17:21</div>`;
   c += `<div class="plage" style="left:38px;right:0;top:${y(9,h0,px)}px;height:${8.5*px}px"><span>Taff · 9:00–17:30</span></div>`;
   const ev = (s, e, col, sh, t, sub, l=48, r=8) => `<div class="blk" style="--c:var(--a-${col});left:${l}px;right:${r}px;top:${y(s,h0,px)}px;height:${(e-s)*px-2}px;font-size:12px;padding:5px 8px"><b style="display:flex;gap:6px;align-items:center">${mark(col,sh,10)}${t}</b><span style="color:var(--ink2)">${sub}</span></div>`;
-  c += ev(12.5, 13.5, 'framboise', 'tribas', 'Déjeuner avec Eric', '12:30–13:30 · Le Petit Cambodge');
+  c += ev(12.5, 13.5, 'framboise', 'tribas', 'Déjeuner avec Éric', '12:30–13:30 · Le Petit Cambodge');
   c += ev(14.5, 15, 'sarcelle', 'croix', 'Dentiste', '14:30–15:00');
   c += ev(18.5, 19.5, 'ocre', 'anneau', 'Courses', '18:30–19:30 · Ouvrir Popote');
   c += `<div class="now" style="left:38px;right:0;top:${y(12.3,h0,px)}px"></div>`;
@@ -622,7 +622,7 @@ const listScreen = `${sb}<div class="body">
   <div class="pad" style="margin-bottom:6px"><div class="seg"><span>Jour</span><span>Semaine</span><span>Mois</span><span class="on">Liste</span></div></div>
   <div class="pad scroll">
     ${[
-      ['Lundi 2', 'aujourd’hui', [['12:30','framboise','tribas','Déjeuner avec Eric',''],['14:30','sarcelle','croix','Dentiste','rappel 1 h avant'],['18:30','ocre','anneau','Courses','']]],
+      ['Lundi 2', 'aujourd’hui', [['12:30','framboise','tribas','Déjeuner avec Éric',''],['14:30','sarcelle','croix','Dentiste','rappel 1 h avant'],['18:30','ocre','anneau','Courses','']]],
       ['Mardi 3', '', [['18:30','brique','triangle','Sport','chaque mardi et jeudi']]],
       ['Mercredi 4', '', [['10:00','sapin','carre','Point d’équipe','visio'],['jour','bleu','rond','Anniversaire de Sami','34 ans']]],
       ['Vendredi 6', '', [['16:00','ardoise','barre','Impôts : acompte','rappel 2 jours avant à 9 h']]],
@@ -692,7 +692,7 @@ const quickScreen = `${sb}<div class="body">
       <span class="s"><b style="color:var(--acc)">titre</b> dentiste · <b style="color:var(--a-sapin)">quand</b> mardi 3 à 14:30, durée 1 h par défaut · <b style="color:var(--a-brique)">rappel</b> la veille à 20:00</span>
     </div>
     <span class="eb">D’autres exemples</span>
-    <div class="chips"><span>resto vendredi 20h avec Eric</span><span>congés du 3 au 14 août</span><span>courses samedi 10h</span></div>
+    <div class="chips"><span>resto vendredi 20h avec Éric</span><span>congés du 3 au 14 août</span><span>courses samedi 10h</span></div>
   </div>
   <div class="pad" style="margin-top:auto;padding-bottom:16px;display:flex;gap:8px"><span class="btn" style="flex:1">Détailler</span><span class="btn fill" style="flex:1">Créer</span></div>
 </div>`;

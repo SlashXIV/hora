@@ -37,8 +37,9 @@ class HoraFormats(val locale: Locale, val clock24: Boolean, val firstDayOfWeek: 
     private val dayMonth = DateTimeFormatter.ofPattern("d MMMM", locale)
     private val weekday = DateTimeFormatter.ofPattern("EEEE", locale)
     // TalkBack lit « 14 h 30 » et « 15 h », pas « 14 deux-points 30 ».
-    private val spokenTime = DateTimeFormatter.ofPattern(if (clock24) "H 'h' mm" else "h 'h' mm a", locale)
-    private val spokenHour = DateTimeFormatter.ofPattern(if (clock24) "H 'h'" else "h 'h' a", locale)
+    // À l'oral, toujours sur 24 h, comme on dit l'heure en français : « 19 h 32 », jamais « 7 h 32 PM ».
+    private val spokenTime = DateTimeFormatter.ofPattern("H 'h' mm", locale)
+    private val spokenHour = DateTimeFormatter.ofPattern("H 'h'", locale)
 
     private val hourOnly = DateTimeFormatter.ofPattern("h a", locale)
 

@@ -31,8 +31,10 @@ def crop(src: str, box: tuple[int, int, int, int], name: str, aspect: float) -> 
     height = max(widget.height, round(widget.width / aspect))
     image = Image.new("RGBA", (width, height), bg)
     image.paste(widget, ((width - widget.width) // 2, (height - widget.height) // 2))
+    # Coins de l'aperçu au rayon du cadre (≈ 4,5 % de sa largeur sous HyperOS) : plus grands, le
+    # blanc du cadre se voyait dans les angles.
     mask = Image.new("L", image.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, image.width - 1, image.height - 1), RADIUS, fill=255)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, image.width - 1, image.height - 1), round(image.width * 0.045), fill=255)
     image.putalpha(mask)
     image = image.resize((image.width // 2, image.height // 2), Image.LANCZOS)
     OUT.mkdir(parents=True, exist_ok=True)

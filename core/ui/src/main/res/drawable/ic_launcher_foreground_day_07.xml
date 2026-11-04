@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icône du jour, le 7 : le chiffre en Fraunces et le filet. Généré par design/outils/icone_du_jour.py, ne pas modifier à la main. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:pathData="M60.55 39.99 61.16 40.44H48.25Q47.74 40.44 47.47 40.64Q47.2 40.83 47.07 41.32L46.33 43.95Q46.25 44.24 46.05 44.4Q45.85 44.57 45.54 44.57Q45.21 44.57 45.03 44.37Q44.85 44.17 44.88 43.79L45.66 36.5Q45.69 36.05 45.97 35.78Q46.25 35.52 46.76 35.52H63.54Q64.04 35.52 64.31 35.74Q64.58 35.97 64.58 36.33Q64.58 36.59 64.42 36.9Q64.27 37.2 63.85 37.75L58.04 46.67Q56.99 48.11 56.28 49.25Q55.56 50.4 55.14 51.34Q54.71 52.28 54.52 53.09Q54.33 53.9 54.33 54.66Q54.33 55.68 54.69 56.47Q55.05 57.25 55.52 57.95Q55.99 58.66 56.35 59.43Q56.71 60.2 56.71 61.21Q56.7 62.59 55.77 63.57Q54.84 64.56 53.09 64.56Q51.33 64.56 50.3 63.39Q49.26 62.23 49.26 60.02Q49.26 58.54 49.7 57.01Q50.14 55.47 51.13 53.7Q52.11 51.94 53.75 49.77Z" android:fillColor="#FFF1ECDF" />
+    <path android:pathData="M39.5,70h29a1,1 0 0 1 0,2h-29a1,1 0 0 1 0,-2z" android:fillColor="#FF8FB8FF" />
+</vector>

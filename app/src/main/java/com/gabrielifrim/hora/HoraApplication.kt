@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import com.gabrielifrim.hora.feature.widget.HoraWidgets
+import com.gabrielifrim.hora.feature.settings.DayIconAlarm
 import kotlinx.coroutines.launch
 
 @HiltAndroidApp
@@ -41,6 +42,8 @@ class HoraApplication : Application() {
         notifier.ensureChannels()
         // L'alarme quotidienne de sauvegarde se perd à l'arrêt forcé : on la réarme à chaque lancement.
         DatabaseBackup.scheduleAuto(this, backup.state.value.auto)
+        // L'icône du jour : chiffre rattrapé si minuit a été manqué, alarme de minuit réarmée.
+        DayIconAlarm.catchUp(this)
         // Toute écriture d'événement ou de report réarme la prochaine échéance, sans
         // qu'aucun écran n'ait à y penser. Le premier passage arme au lancement.
         scope.launch { store.changes.debounce(500).collect { engine.run() } }

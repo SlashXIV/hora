@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icône du jour, le 9, monochrome (icônes à thème) : l'ombre à mi-opacité. Généré par design/outils/icone_du_jour.py, ne pas modifier à la main. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:pathData="M61,46L96,64L96,73L61,52z" android:fillColor="#FF000000" android:fillAlpha="0.5" />
+    <path android:pathData="M52.42 64.53Q49.62 64.53 47.69 63.72Q45.76 62.9 44.78 61.55Q43.8 60.2 43.8 58.6Q43.8 57.05 44.63 56.2Q45.46 55.34 46.91 55.34Q48.34 55.34 49.16 56.18Q49.98 57.01 49.98 58.58V60.48Q49.98 61.8 50.73 62.63Q51.48 63.46 52.97 63.46Q54.57 63.46 55.88 62.01Q57.2 60.56 57.99 57.26Q58.78 53.95 58.78 48.38Q58.78 43.69 58.09 41Q57.41 38.31 56.24 37.18Q55.07 36.04 53.61 36.04Q51.49 36.04 50.22 37.91Q48.95 39.78 48.95 43.63Q48.95 47.18 50.35 49.02Q51.75 50.86 53.96 50.86Q55.33 50.86 56.49 50.22Q57.66 49.59 58.4 48.44Q59.14 47.3 59.2 45.8L59.97 46.03Q59.92 47.87 58.87 49.36Q57.81 50.84 55.97 51.71Q54.13 52.59 51.73 52.59Q49.14 52.59 47.23 51.62Q45.31 50.64 44.26 48.79Q43.2 46.94 43.2 44.3Q43.2 41.56 44.51 39.46Q45.82 37.36 48.17 36.17Q50.52 34.98 53.65 34.98Q57.03 34.98 59.53 36.58Q62.03 38.17 63.4 41.23Q64.78 44.28 64.78 48.68Q64.78 53.91 63.21 57.43Q61.63 60.96 58.85 62.75Q56.06 64.53 52.42 64.53Z" android:fillColor="#FF000000" />
+    <path android:pathData="M39.5,70h29a1,1 0 0 1 0,2h-29a1,1 0 0 1 0,-2z" android:fillColor="#FF000000" />
+</vector>

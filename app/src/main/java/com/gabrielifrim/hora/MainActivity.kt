@@ -25,6 +25,7 @@ import com.gabrielifrim.hora.core.ui.text.LocalUserSettings
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import com.gabrielifrim.hora.core.ui.theme.paletteFor
 import com.gabrielifrim.hora.feature.settings.AppIconSwitcher
+import com.gabrielifrim.hora.feature.settings.DayIconAlarm
 import com.gabrielifrim.hora.reminders.AppReminderLauncher
 import kotlinx.coroutines.flow.MutableStateFlow
 import dagger.hilt.android.AndroidEntryPoint
@@ -94,6 +95,9 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         // Pas pendant une rotation : l'activité revient aussitôt, l'arrêter serait visible.
-        if (!isChangingConfigurations) AppIconSwitcher.applyPending(applicationContext)
+        if (!isChangingConfigurations) {
+            AppIconSwitcher.applyPending(applicationContext)
+            DayIconAlarm.arm(applicationContext)
+        }
     }
 }

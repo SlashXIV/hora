@@ -17,6 +17,7 @@
     <string name="icon_ombre">Ombre</string>
     <string name="icon_semaine">Semaine</string>
     <string name="icon_midi">Midi</string>
+    <string name="icon_day">Du jour</string>
     <string name="icon_hint">L’icône change quand tu quittes Hora. Il faudra parfois replacer le raccourci de l’écran d’accueil.</string>
 
     <string name="settings_week">Semaine et heures</string>

@@ -248,7 +248,7 @@ private fun Choice(
     }
 }
 
-/** Les quatre icônes dessinées en vignette ronde, comme dans le tiroir d'applications. */
+/** Les icônes dessinées en vignette ronde, comme dans le tiroir d'applications. */
 @Composable
 private fun IconPicker(onPicked: () -> Unit) {
     val context = LocalContext.current
@@ -283,7 +283,7 @@ private fun IconPicker(onPicked: () -> Unit) {
                         // de 108/72 : le lanceur ne montre que le centre du canevas.
                         val launcherCrop = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.5f; scaleY = 1.5f }
                         Image(painterResource(icon.background), contentDescription = null, modifier = launcherCrop)
-                        Image(painterResource(icon.foreground), contentDescription = null, modifier = launcherCrop)
+                        Image(painterResource(icon.foregroundOn(java.time.LocalDate.now())), contentDescription = null, modifier = launcherCrop)
                     }
                     HoraText(
                         stringResource(icon.label),

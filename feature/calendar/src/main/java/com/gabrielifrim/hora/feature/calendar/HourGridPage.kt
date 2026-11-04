@@ -68,7 +68,19 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.TextStyle
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.graphicsLayer
+import com.gabrielifrim.hora.core.ui.motion.LocalMotionLevel
+import com.gabrielifrim.hora.core.ui.motion.Motion
+import com.gabrielifrim.hora.core.ui.motion.rememberHaptics
 
 /**
  * Grille horaire d'un jour ou d'une semaine : heures gravées dans la marge, une
@@ -127,7 +139,7 @@ internal fun HourGridPage(
                         else -> null
                     }
                 }
-                DayColumn(day, events, agendas, zone, formats, isToday = day == today, bands, onOpenEvent, onCreate, Modifier.weight(1f))
+                DayColumn(day, events, agendas, zone, formats, isToday = day == today, opens = days.size == 1, bands, onOpenEvent, onCreate, Modifier.weight(1f))
             }
         }
     }
@@ -173,6 +185,7 @@ private fun DayColumn(
     zone: ZoneId,
     formats: HoraFormats,
     isToday: Boolean,
+    opens: Boolean,
     bands: List<Pair<Plage, String?>>,
     onOpenEvent: (Long, Long?) -> Unit,
     onCreate: (LocalDate, Int?) -> Unit,
@@ -180,6 +193,7 @@ private fun DayColumn(
 ) {
     val colors = HoraTheme.colors
     val placed = remember(events, day, zone) { DayLayout.place(DayLayout.timedSlices(events, day, zone)) }
+    val opening = rememberDayOpening(isToday && opens)
     BoxWithConstraints(
         modifier
             .height(HOUR * 24)
@@ -194,6 +208,10 @@ private fun DayColumn(
                     val minute = ((offset.y / size.height * 24 * 60) / 15).toInt() * 15
                     onCreate(day, minute)
                 }
+            }
+            .pointerInput(opening) {
+                // Un appui, quel qu'il soit, termine le moment sans rien consommer.
+                awaitEachGesture { awaitFirstDown(requireUnconsumed = false); opening.finish() }
             },
     ) {
         val width = maxWidth
@@ -216,7 +234,7 @@ private fun DayColumn(
                 Modifier.offset(x = colWidth * p.column, y = top).width(colWidth).height(height).padding(1.dp),
             )
         }
-        if (isToday) NowLine(width)
+        if (isToday) NowLine(width, opening)
     }
 }
 
@@ -294,7 +312,7 @@ private fun Block(event: Event, agendas: Map<Long, Agenda>, zone: ZoneId, format
  * minute, sans animation continue.
  */
 @Composable
-private fun NowLine(width: Dp) {
+private fun NowLine(width: Dp, opening: DayOpening) {
     val colors = HoraTheme.colors
     var now by remember { mutableStateOf(LocalTime.now()) }
     LaunchedEffect(Unit) {
@@ -303,8 +321,16 @@ private fun NowLine(width: Dp) {
             now = LocalTime.now()
         }
     }
-    val y = HOUR * (now.toSecondOfDay() / 3600f)
-    Canvas(Modifier.offset(y = y - 1.dp).width(width).height(18.dp)) {
+    val target = HOUR * (now.toSecondOfDay() / 3600f)
+    // Le jour qui s'ouvre : la ligne descend depuis une heure plus tôt, l'ombre balaie derrière elle.
+    val from = (target - HOUR).coerceAtLeast(0.dp)
+    val y = from + (target - from) * opening.travel.value
+    if (opening.sweep.value > 0f) {
+        Canvas(Modifier.offset(y = from).width(width).height(y - from)) {
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, colors.band.copy(alpha = colors.band.alpha * 4 * opening.sweep.value))))
+        }
+    }
+    Canvas(Modifier.offset(y = y - 1.dp).width(width).height(18.dp).graphicsLayer { alpha = opening.alpha.value }) {
         val line = 2.dp.toPx()
         val shadow = Path().apply {
             moveTo(0f, line); lineTo(size.width, line); lineTo(size.width + 14.dp.toPx(), size.height); lineTo(14.dp.toPx(), size.height); close()
@@ -313,6 +339,37 @@ private fun NowLine(width: Dp) {
         drawRect(colors.accent, size = androidx.compose.ui.geometry.Size(size.width, line))
         drawCircle(colors.accent, radius = 4.dp.toPx(), center = Offset(0f, line / 2))
     }
+}
+
+/** « Le jour qui s'ouvre » : trajet de la ligne, ombre qui balaie, fondu en Sobre. */
+@Stable
+private class DayOpening(val travel: Animatable<Float, *>, val sweep: Animatable<Float, *>, val alpha: Animatable<Float, *>, private val scope: CoroutineScope) {
+    fun finish() {
+        if (travel.value < 1f || sweep.value > 0f || alpha.value < 1f) scope.launch { travel.snapTo(1f); sweep.snapTo(0f); alpha.snapTo(1f) }
+    }
+}
+
+/** Joué à l'ouverture de la vue jour sur aujourd'hui ; ailleurs, l'état final d'emblée. */
+@Composable
+private fun rememberDayOpening(plays: Boolean): DayOpening {
+    val level = LocalMotionLevel.current
+    val haptics = rememberHaptics()
+    val scope = rememberCoroutineScope()
+    val full = plays && level.decorative
+    val opening = remember {
+        DayOpening(Animatable(if (full) 0f else 1f), Animatable(if (full) 1f else 0f), Animatable(if (plays && level.animates) 0f else 1f), scope)
+    }
+    LaunchedEffect(Unit) {
+        if (full) {
+            launch { opening.alpha.animateTo(1f, tween(Motion.CALM_MS)) }
+            opening.travel.animateTo(1f, tween(Motion.DRAW_MS, easing = Motion.Enter))
+            if (opening.sweep.value > 0f) haptics.tick() // arrivé sans avoir été interrompu
+            opening.sweep.animateTo(0f, tween(Motion.ENTER_MS))
+        } else {
+            opening.alpha.animateTo(1f, tween(Motion.CALM_MS))
+        }
+    }
+    return opening
 }
 
 private val HOUR = 56.dp

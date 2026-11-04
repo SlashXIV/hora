@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Styles des TextView du widget. Un lanceur ne charge pas les polices de l'app : ces textes
+     prennent la police système ; Fraunces et Spline Mono sont dessinées en images (WidgetText). -->
+<resources>
+    <style name="HoraWidget.Eyebrow" parent="">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="HoraWidget.Body" parent="">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="HoraWidget.Clock" parent="">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textSize">11.5sp</item>
+        <item name="android:maxLines">1</item>
+    </style>
+</resources>

@@ -64,6 +64,7 @@ dependencies {
     implementation(projects.feature.calendar)
     implementation(projects.feature.event)
     implementation(projects.feature.settings)
+    implementation(projects.feature.widget)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

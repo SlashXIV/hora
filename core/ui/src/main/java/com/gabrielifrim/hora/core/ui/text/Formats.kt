@@ -74,13 +74,17 @@ fun rememberFormats(): HoraFormats {
     val settings = LocalUserSettings.current
     val locale = rememberAppLocale()
     val context = LocalContext.current
+    return remember(locale, settings, context) { formatsFor(settings, locale, DateFormat.is24HourFormat(context)) }
+}
+
+/** Les mêmes formats hors Compose (widgets) ; [systemClock24] : réglage 24 h du téléphone. */
+fun formatsFor(settings: UserSettings, locale: Locale, systemClock24: Boolean): HoraFormats {
     val clock24 = when (settings.clockFormat) {
         ClockFormat.H24 -> true
         ClockFormat.H12 -> false
-        ClockFormat.SYSTEM -> DateFormat.is24HourFormat(context)
+        ClockFormat.SYSTEM -> systemClock24
     }
-    val firstDay = settings.firstDayOfWeek ?: WeekFields.of(locale).firstDayOfWeek
-    return remember(locale, clock24, firstDay, settings.showWeekNumbers) { HoraFormats(locale, clock24, firstDay, settings.showWeekNumbers) }
+    return HoraFormats(locale, clock24, settings.firstDayOfWeek ?: WeekFields.of(locale).firstDayOfWeek, settings.showWeekNumbers)
 }
 
 /** Couleur d'un événement : la sienne, sinon celle de son agenda ; une clé inconnue retombe sur le bleu. */

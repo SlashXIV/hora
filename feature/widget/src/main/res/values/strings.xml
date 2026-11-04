@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_today_label">Aujourd’hui</string>
+    <string name="widget_today_description">La date, le prochain rendez-vous et ce qui reste du jour.</string>
+    <string name="widget_eyebrow">%1$s · semaine %2$d</string>
+    <string name="widget_next">Prochain</string>
+    <string name="widget_next_at">Prochain · %1$s</string>
+    <string name="widget_nothing_next">Rien de prévu</string>
+    <string name="widget_nothing_left">Rien d’autre aujourd’hui</string>
+    <string name="widget_all_day">Journée</string>
+</resources>

@@ -18,6 +18,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import com.gabrielifrim.hora.feature.widget.TodayWidgets
 import kotlinx.coroutines.launch
 
 @HiltAndroidApp
@@ -29,6 +31,7 @@ class HoraApplication : Application() {
     @Inject lateinit var prayers: PrayerAlarms
     @Inject lateinit var settings: SettingsRepository
     @Inject lateinit var digest: DigestAlarms
+    @Inject lateinit var widgets: TodayWidgets
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -45,5 +48,7 @@ class HoraApplication : Application() {
         scope.launch { settings.settings.map { it.place to it.prayer }.distinctUntilChanged().debounce(500).collect { prayers.run() } }
         // Le résumé du lendemain suit son heure ; armé aussi au lancement.
         scope.launch { settings.settings.map { it.digest }.distinctUntilChanged().collect { digest.run() } }
+        // Le widget suit les événements et les réglages (palette, format des heures) ; redessiné aussi au lancement.
+        scope.launch { merge(store.changes, settings.settings.map { }).debounce(500).collect { widgets.update() } }
     }
 }

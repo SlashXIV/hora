@@ -36,7 +36,7 @@ class QuickEntryTest {
     fun `plages horaires - de 14h à 16h, 9h-12h30, midi`() {
         parse("Atelier de 14h à 16h").let { assertThat(listOf(it.title, it.start, it.end)).containsExactly("Atelier", LocalTime.of(14, 0), LocalTime.of(16, 0)).inOrder() }
         parse("Formation 9h-12h30").let { assertThat(listOf(it.start, it.end)).containsExactly(LocalTime.of(9, 0), LocalTime.of(12, 30)).inOrder() }
-        assertThat(parse("Déjeuner avec Léa midi").start).isEqualTo(LocalTime.NOON)
+        assertThat(parse("Déjeuner avec Eric midi").start).isEqualTo(LocalTime.NOON)
         assertThat(parse("Appel 14:45 pendant 30 min").let { it.start to it.duration }).isEqualTo(LocalTime.of(14, 45) to Duration.ofMinutes(30))
     }
 
@@ -76,12 +76,12 @@ class QuickEntryTest {
 
     @Test
     fun `parties - chaque mot coloré selon ce qu'il est devenu`() {
-        val text = "Dîner de famille  demain à 20h @Chez Léa rappel 1h avant"
+        val text = "Dîner de famille  demain à 20h @Chez Eric rappel 1h avant"
         val parts = QuickEntry.parts(text, now).map { (range, part) -> text.substring(range) to part }
         assertThat(parts).containsExactly(
             "Dîner" to QuickEntry.Part.TITLE, "de" to QuickEntry.Part.TITLE, "famille" to QuickEntry.Part.TITLE,
             "demain" to QuickEntry.Part.WHEN, "à" to QuickEntry.Part.WHEN, "20h" to QuickEntry.Part.WHEN,
-            "@Chez" to QuickEntry.Part.PLACE, "Léa" to QuickEntry.Part.PLACE,
+            "@Chez" to QuickEntry.Part.PLACE, "Eric" to QuickEntry.Part.PLACE,
             "rappel" to QuickEntry.Part.REMINDER, "1h" to QuickEntry.Part.REMINDER, "avant" to QuickEntry.Part.REMINDER,
         ).inOrder()
     }

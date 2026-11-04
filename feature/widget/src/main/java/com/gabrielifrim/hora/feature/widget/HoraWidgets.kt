@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Build
+import androidx.annotation.RequiresApi
 import android.util.SizeF
 import android.text.format.DateFormat
 import android.widget.RemoteViews
@@ -88,17 +89,7 @@ class HoraWidgets @Inject constructor(
         val list = combine(events.eventsBetween(today, today.plusDays(31), zone), almanac.eventsBetween(today, today, zone)) { a, b -> a + b }.first()
         val content = TodayContent.of(list, now, zone)
         for (id in ids) {
-            // En portrait, la largeur est la plus petite annoncée et la hauteur la plus grande.
-            val options = manager.getAppWidgetOptions(id)
-            val widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH).takeIf { it > 0 } ?: 280
-            val views = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                // Une variante par nombre de lignes : le lanceur prend la plus haute qui tient dans sa vraie taille.
-                RemoteViews((0..TodayContent.MAX_ROWS).associate { rows -> SizeF(widthDp.toFloat(), heightFor(rows)) to render(content, agendas, colors, formats, zone, now, widthDp, rows) })
-            } else {
-                val heightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT).takeIf { it > 0 } ?: 140
-                render(content, agendas, colors, formats, zone, now, widthDp, rowsFor(heightDp))
-            }
-            manager.updateAppWidget(id, views)
+            manager.updateAppWidget(id, responsive(manager, id) { w, h -> render(content, agendas, colors, formats, zone, now, w.toInt(), rowsFor(h.toInt())) })
         }
         val prayerChange = if (prayerIds.isEmpty()) null else updatePrayers(prayerIds, manager, user, colors, formats, zone, now)
         arm(listOfNotNull(content.changesAt.takeIf { ids.isNotEmpty() }, prayerChange).minOrNull())
@@ -116,25 +107,43 @@ class HoraWidgets @Inject constructor(
     ): Instant? {
         val today = now.atZone(zone).toLocalDate()
         val ink2 = colors.ink2.toArgb()
+        val windows = if (user.prayer.enabled) Prayers.day(today, user.place, user.prayer) else null
+        val content = windows?.let { PrayerContent.of(it, now, today, zone) }
+        for (id in ids) {
+            manager.updateAppWidget(id, responsive(manager, id) { w, h -> prayerViews(user, colors, formats, zone, today, windows, content, w, h) })
+        }
+        return content?.changesAt
+    }
+
+    /** Le widget Prières pour une taille donnée (dp) : les cases remplissent la place laissée sous l'en-tête. */
+    private fun prayerViews(
+        user: UserSettings,
+        colors: HoraColors,
+        formats: HoraFormats,
+        zone: ZoneId,
+        today: java.time.LocalDate,
+        windows: List<com.gabrielifrim.hora.core.domain.almanac.PrayerWindow>?,
+        content: PrayerContent?,
+        widthDp: Float,
+        heightDp: Float,
+    ): RemoteViews {
+        val ink2 = colors.ink2.toArgb()
         val views = RemoteViews(context.packageName, R.layout.widget_prayers)
         views.setInt(R.id.prayers_bg, "setColorFilter", colors.background.toArgb())
         views.setOnClickPendingIntent(R.id.prayers_root, PendingIntent.getActivity(context, 0, launcher.openApp(context), PendingIntent.FLAG_IMMUTABLE))
         views.setTextColor(R.id.prayers_eyebrow, ink2)
         views.setTextColor(R.id.prayers_hijri, ink2)
         views.setTextViewText(R.id.prayers_eyebrow, context.getString(R.string.widget_prayers_eyebrow, user.place.name))
-        val windows = if (user.prayer.enabled) Prayers.day(today, user.place, user.prayer) else null
         views.setViewVisibility(R.id.prayers_off, if (windows == null) View.VISIBLE else View.GONE)
         views.setViewVisibility(R.id.prayers_row, if (windows == null) View.GONE else View.VISIBLE)
         views.setTextViewText(R.id.prayers_off, context.getString(R.string.widget_prayers_off))
         views.setTextColor(R.id.prayers_off, ink2)
-        if (windows == null) {
+        if (windows == null || content == null) {
             views.setTextViewText(R.id.prayers_hijri, "")
-            manager.updateAppWidget(ids, views)
-            return null
+            return views
         }
         val (d, m, y) = Prayers.hijri(today, user.prayer.hijriAdjust)
         views.setTextViewText(R.id.prayers_hijri, context.getString(R.string.widget_prayers_hijri, d, context.resources.getStringArray(UiR.array.hijri_months)[m - 1], y))
-        val content = PrayerContent.of(windows, now, today, zone)
         val cells = windows.map { w ->
             PrayerCell(
                 name = context.getString(PrayerAlarms.prayerName(w.prayer, user.prayer.fajrName)),
@@ -144,12 +153,13 @@ class HoraWidgets @Inject constructor(
             )
         }
         val density = context.resources.displayMetrics.density
-        val widthDp = manager.getAppWidgetOptions(ids.first()).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH).takeIf { it > 0 } ?: 280
+        // Sous l'en-tête (marges 20 dp, ligne d'étiquette, écart 6 dp), le reste revient aux cases.
+        val rowHeightDp = heightDp - 26 - 18 * context.resources.configuration.fontScale
         // Les passées s'effacent à moitié, comme sur la planche.
         val faded = colors.ink2.copy(alpha = 0.6f).toArgb()
         views.setImageViewBitmap(
             R.id.prayers_row,
-            prayerRow(context, cells, ((widthDp - 28) * density).toInt(), colors.ink.toArgb(), ink2, faded, colors.rule.toArgb(), colors.accent.toArgb()),
+            prayerRow(context, cells, ((widthDp - 28) * density).toInt(), (rowHeightDp * density).toInt(), colors.ink.toArgb(), ink2, faded, colors.rule.toArgb(), colors.accent.toArgb()),
         )
         views.setContentDescription(
             R.id.prayers_row,
@@ -162,9 +172,29 @@ class HoraWidgets @Inject constructor(
                 c.name + ", " + formats.spoken(w.start.atZone(zone).toLocalTime()) + state
             },
         )
-        manager.updateAppWidget(ids, views)
-        return content.changesAt
+        return views
     }
+
+    /**
+     * Une vue par taille réelle du widget : depuis Android 12, le lanceur annonce chacune
+     * (portrait, paysage, plié) et choisit la bonne. Avant, la largeur la plus petite et la
+     * hauteur la plus grande annoncées, celles du portrait.
+     */
+    private fun responsive(manager: AppWidgetManager, id: Int, build: (Float, Float) -> RemoteViews): RemoteViews {
+        val options = manager.getAppWidgetOptions(id)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val sizes = sizesOf(options)
+            if (sizes.isNotEmpty()) return RemoteViews(sizes.associateWith { build(it.width, it.height) })
+        }
+        val width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH).takeIf { it > 0 } ?: 280
+        val height = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT).takeIf { it > 0 } ?: 140
+        return build(width.toFloat(), height.toFloat())
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    @Suppress("DEPRECATION") // getParcelableArrayList typé : API 33 ; les tailles existent dès l'API 31.
+    private fun sizesOf(options: android.os.Bundle): List<SizeF> =
+        options.getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES).orEmpty().distinct()
 
     private fun render(
         content: TodayContent,

@@ -2,6 +2,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_prayers_description"
     android:initialLayout="@layout/widget_prayers"
+    android:previewImage="@drawable/widget_prayers_preview"
     android:minWidth="250dp"
     android:minHeight="80dp"
     android:resizeMode="horizontal"

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12+ : aperçu réel et taille en cases. -->
+<!-- Android 12+ : taille en cases. L'aperçu est une image du vrai widget (design/outils/apercus_widgets.py). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_prayers_description"
     android:initialLayout="@layout/widget_prayers"
+    android:previewImage="@drawable/widget_prayers_preview"
     android:minWidth="250dp"
     android:minHeight="80dp"
-    android:previewLayout="@layout/widget_prayers"
     android:resizeMode="horizontal"
     android:targetCellWidth="4"
     android:targetCellHeight="1"

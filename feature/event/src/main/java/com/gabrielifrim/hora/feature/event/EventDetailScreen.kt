@@ -54,6 +54,9 @@ import com.gabrielifrim.hora.core.ui.text.timeRange
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 import java.time.ZoneId
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import java.time.Duration
+import java.time.Instant
 
 /** La fiche d'un événement : quand, où, notes, et ce qu'on peut en faire. */
 @Composable
@@ -116,8 +119,25 @@ fun EventDetailScreen(
                 if (e.reminders.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Eyebrow(pluralStringResource(UiR.plurals.reminders_count, e.reminders.size, e.reminders.size))
-                        e.reminders.forEach { r ->
-                            HoraText(reminderText(r, formats) + if (r.alarm) " · " + stringResource(UiR.string.reminder_alarm) else "", style = HoraTheme.type.body)
+                        // Chaque rappel à son heure réelle ; la fiche se met à jour quand le prochain passe.
+                        val triggers = e.reminders.map { it to it.triggerAt(e.timing, zone) }
+                        var now by remember { mutableStateOf(Instant.now()) }
+                        LaunchedEffect(triggers, now) {
+                            val next = triggers.map { it.second }.filter { it.isAfter(now) }.minOrNull() ?: return@LaunchedEffect
+                            delay(Duration.between(Instant.now(), next).toMillis().coerceAtLeast(0) + 50)
+                            now = Instant.now()
+                        }
+                        triggers.forEach { (r, at) ->
+                            val local = at.atZone(zone)
+                            val time = if (local.toLocalDate() == day) formats.time(local.toLocalTime()) else formats.dayShort(local.toLocalDate()) + " " + formats.time(local.toLocalTime())
+                            val spokenTime = if (local.toLocalDate() == day) formats.spoken(local.toLocalTime()) else formats.daySpoken(local.toLocalDate()) + " " + formats.spoken(local.toLocalTime())
+                            ReminderLine(
+                                key = "${e.id}|${e.occurrence}|$r",
+                                text = reminderText(r, formats) + if (r.alarm) " · " + stringResource(UiR.string.reminder_alarm) else "",
+                                time = time,
+                                spokenTime = spokenTime,
+                                passed = !at.isAfter(now),
+                            )
                         }
                     }
                 }

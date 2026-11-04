@@ -127,4 +127,5 @@
     <string name="action_save_template">Enregistrer comme modèle</string>
     <string name="template_saved">Modèle enregistré</string>
     <string name="quick_create">Créer</string>
+    <string name="reminder_passed">passé</string>
 </resources>

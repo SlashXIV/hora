@@ -73,6 +73,21 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.isActive
+import kotlin.coroutines.cancellation.CancellationException
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import com.gabrielifrim.hora.core.ui.motion.LocalMotionLevel
+import com.gabrielifrim.hora.core.ui.motion.Motion
 
 @HiltViewModel
 class QuickEntryViewModel @Inject constructor(
@@ -126,7 +141,37 @@ fun QuickEntryScreen(
     LaunchedEffect(Unit) { focus.requestFocus() }
     val d = draft
     val canCreate = d != null && d.canSave
-    val create = { if (canCreate) { haptics.confirm(); viewModel.create(onCreated) } }
+    // La saisie devient un événement : enregistré tout de suite, la fiche s'ouvre une fois le moment joué.
+    val full = LocalMotionLevel.current.decorative
+    var created by remember { mutableStateOf<Long?>(null) }
+    val moment = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    val create = {
+        if (canCreate && created == null) {
+            haptics.confirm()
+            viewModel.create { id -> if (full) created = id else onCreated(id) }
+        }
+    }
+    LaunchedEffect(created) {
+        val id = created ?: return@LaunchedEffect
+        try {
+            moment.animateTo(1f, tween(QUICK_MOMENT_MS, easing = LinearEasing))
+        } catch (_: CancellationException) {
+            // Interrompu d'un appui : on file à la fiche, sauf si l'écran est déjà parti.
+        }
+        if (isActive) onCreated(id)
+    }
+    val p = moment.value
+    val liftPx = with(LocalDensity.current) { 24.dp.toPx() }
+    val risePx = with(LocalDensity.current) { 12.dp.toPx() }
+    // Les mots glissent vers l'aperçu (0 à 45 %), l'aperçu s'efface puis se pose (55 à 100 %).
+    val slide = Motion.Transition.transform((p / 0.45f).coerceIn(0f, 1f))
+    val land = Motion.Release.transform(((p - 0.55f) / 0.45f).coerceIn(0f, 1f))
+    val previewAlpha = when {
+        p == 0f -> 1f
+        p < 0.25f -> 1f - p / 0.25f
+        else -> land.coerceIn(0f, 1f)
+    }
     // Les mots compris prennent la couleur de ce qu'ils sont devenus, comme sur la planche.
     val partColors = mapOf(
         QuickEntry.Part.TITLE to HoraTheme.colors.accent,
@@ -144,7 +189,10 @@ fun QuickEntryScreen(
         TransformedText(styled, OffsetMapping.Identity)
     }
 
-    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))) {
+    Column(
+        Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
+            .pointerInput(Unit) { awaitEachGesture { awaitFirstDown(requireUnconsumed = false); if (created != null) scope.launch { moment.snapTo(1f) } } },
+    ) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             PageHeader(stringResource(R.string.quick_screen_title), onBack = onClose, backLabel = stringResource(R.string.back))
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -155,7 +203,7 @@ fun QuickEntryScreen(
                     label = stringResource(R.string.quick_label),
                     singleLine = false,
                     placeholder = stringResource(R.string.quick_example_1),
-                    modifier = Modifier.focusRequester(focus),
+                    modifier = Modifier.focusRequester(focus).graphicsLayer { translationY = slide * liftPx; alpha = 1f - slide },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { create() }),
                     visualTransformation = highlight,
@@ -165,8 +213,10 @@ fun QuickEntryScreen(
                     // Le jour d'abord : c'est ce que la phrase a le plus de chances de mal dire.
                     val event = d.toEvent()
                     val subtitle = listOf(formats.dayLong(d.start.toLocalDate()), event.location).filter { it.isNotBlank() }.joinToString(" · ")
-                    EventRow(event, agendas, d.zone, formats, onClick = { onDetail(text) }, subtitle = subtitle)
-                    d.reminders.forEach { r -> HoraText(reminderText(r, formats), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2) }
+                    Column(Modifier.graphicsLayer { alpha = previewAlpha; translationY = if (p == 0f) 0f else (1f - land) * risePx }) {
+                        EventRow(event, agendas, d.zone, formats, onClick = { onDetail(text) }, subtitle = subtitle)
+                        d.reminders.forEach { r -> HoraText(reminderText(r, formats), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2) }
+                    }
                 } else {
                     HoraText(stringResource(R.string.quick_preview_empty), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                 }
@@ -201,3 +251,6 @@ fun QuickEntryScreen(
         }
     }
 }
+
+/** Durée de « la saisie devient un événement » : 500 ms de glissement, puis la pose. */
+private const val QUICK_MOMENT_MS = 1_100

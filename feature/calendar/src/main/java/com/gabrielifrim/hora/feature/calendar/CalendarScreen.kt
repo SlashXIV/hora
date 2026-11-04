@@ -87,7 +87,7 @@ fun CalendarScreen(
             )
             Row(Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp)) {
                 SegmentedChoice(
-                    options = listOf(R.string.mode_day, R.string.mode_three_days, R.string.mode_week, R.string.mode_month, R.string.mode_list).map { stringResource(it) },
+                    options = listOf(R.string.mode_day, R.string.mode_three_days, R.string.mode_week, R.string.mode_month, R.string.mode_year, R.string.mode_list).map { stringResource(it) },
                     columns = 3,
                     selectedIndex = mode.ordinal,
                     onSelect = { i ->
@@ -109,6 +109,11 @@ fun CalendarScreen(
                     when (mode) {
                         CalendarMode.MONTH -> MonthPage(
                             viewModel, YearMonth.from(date), agendas, zone, formats,
+                            onDay = { d -> haptics.tick(); viewModel.anchor.value = d; viewModel.mode.value = CalendarMode.DAY },
+                        )
+                        CalendarMode.YEAR -> YearPage(
+                            viewModel, date.year, zone, formats,
+                            onMonth = { d -> haptics.tick(); viewModel.anchor.value = d; viewModel.mode.value = CalendarMode.MONTH },
                             onDay = { d -> haptics.tick(); viewModel.anchor.value = d; viewModel.mode.value = CalendarMode.DAY },
                         )
                         CalendarMode.THREE_DAYS -> HourGridPage(
@@ -145,6 +150,7 @@ private fun Header(
         CalendarMode.WEEK -> stringResource(R.string.week_number_year, formats.week(shown), shown.year) to
             stringResource(R.string.week_span, formats.dayShort(shown), formats.dayShort(shown.plusDays(6)))
         CalendarMode.MONTH, CalendarMode.LIST -> shown.year.toString() to formats.month(shown)
+        CalendarMode.YEAR -> stringResource(R.string.mode_year) to shown.year.toString()
     }
     // Titre sur toute la largeur, commandes en dessous : à 200 %, côte à côte, le
     // titre n'avait plus qu'une lettre par ligne.
@@ -171,6 +177,7 @@ internal fun contains(mode: CalendarMode, first: LocalDate, day: LocalDate): Boo
     CalendarMode.THREE_DAYS -> !day.isBefore(first) && day.isBefore(first.plusDays(3))
     CalendarMode.WEEK -> !day.isBefore(first) && day.isBefore(first.plusDays(7))
     CalendarMode.MONTH -> YearMonth.from(first) == YearMonth.from(day)
+    CalendarMode.YEAR -> first.year == day.year
 }
 
 /** Premier jour de la page [offset] (0 = celle du jour de référence) pour la vue [mode]. */
@@ -179,6 +186,7 @@ internal fun dateOfPage(mode: CalendarMode, anchor: LocalDate, offset: Int, form
     CalendarMode.THREE_DAYS -> anchor.plusDays(3L * offset)
     CalendarMode.WEEK -> formats.weekStart(anchor).plus(offset.toLong(), ChronoUnit.WEEKS)
     CalendarMode.MONTH -> YearMonth.from(anchor).plusMonths(offset.toLong()).atDay(1)
+    CalendarMode.YEAR -> LocalDate.of(anchor.year + offset, 1, 1)
 }
 
 // Assez de pages pour des années dans les deux sens, sans liste infinie.

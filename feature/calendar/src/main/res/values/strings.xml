@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="mode_day">Jour</string>
-    <string name="mode_three_days">3 jours</string>
+    <string name="mode_three_days">3 jours</string>
     <string name="mode_week">Semaine</string>
     <string name="mode_month">Mois</string>
+    <string name="mode_year">Année</string>
     <string name="mode_list">Liste</string>
+    <string name="year_free">Libre</string>
+    <string name="year_legend_max">6 h et plus</string>
+    <string name="year_busy">%1$s occupées</string>
+    <string name="year_minutes">%1$d min</string>
+    <string name="year_hours">%1$d h</string>
+    <string name="year_hours_minutes">%1$d h %2$02d</string>
+    <string name="year_open">Ouvrir</string>
 
     <string name="today">Aujourd’hui</string>
     <string name="today_label">aujourd’hui</string>

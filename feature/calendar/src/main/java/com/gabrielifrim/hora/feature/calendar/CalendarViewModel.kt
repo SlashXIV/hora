@@ -19,10 +19,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
+import com.gabrielifrim.hora.core.domain.calendar.DayLoad
 import kotlinx.coroutines.flow.stateIn
 
 /** Dans l'ordre de la barre des vues. */
-enum class CalendarMode { DAY, THREE_DAYS, WEEK, MONTH, LIST }
+enum class CalendarMode { DAY, THREE_DAYS, WEEK, MONTH, YEAR, LIST }
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
@@ -46,6 +49,13 @@ class CalendarViewModel @Inject constructor(
     /** Les événements et les agendas calculés visibles (fériés, fêtes…). */
     fun events(first: LocalDate, last: LocalDate, zone: ZoneId): Flow<List<Event>> =
         combine(eventRepository.eventsBetween(first, last, zone), almanac.eventsBetween(first, last, zone)) { a, b -> a + b }
+
+    /** La charge de chaque jour de [year] : les agendas calculés (fériés, fêtes) n'occupent personne. */
+    fun yearLoad(year: Int, zone: ZoneId): Flow<Map<LocalDate, DayLoad>> {
+        val first = LocalDate.of(year, 1, 1)
+        val last = LocalDate.of(year, 12, 31)
+        return eventRepository.eventsBetween(first, last, zone).map { DayLoad.days(it, first, last, zone) }.flowOn(Dispatchers.Default)
+    }
 
     fun search(query: String): Flow<List<Event>> = eventRepository.search(query)
 }

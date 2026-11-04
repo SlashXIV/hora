@@ -5,7 +5,7 @@
     android:initialLayout="@layout/widget_prayers"
     android:previewImage="@drawable/widget_prayers_preview"
     android:minWidth="250dp"
-    android:minHeight="80dp"
+    android:minHeight="40dp"
     android:resizeMode="horizontal"
     android:targetCellWidth="4"
     android:targetCellHeight="1"

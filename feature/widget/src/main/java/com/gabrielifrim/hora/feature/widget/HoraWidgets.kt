@@ -153,8 +153,8 @@ class HoraWidgets @Inject constructor(
             )
         }
         val density = context.resources.displayMetrics.density
-        // Sous l'en-tête (marges 20 dp, ligne d'étiquette, écart 6 dp), le reste revient aux cases.
-        val rowHeightDp = heightDp - 26 - 18 * context.resources.configuration.fontScale
+        // Sous l'en-tête (marges 16 dp, ligne d'étiquette, écart 4 dp), le reste revient aux cases.
+        val rowHeightDp = heightDp - 20 - 16 * context.resources.configuration.fontScale
         // Les passées s'effacent à moitié, comme sur la planche.
         val faded = colors.ink2.copy(alpha = 0.6f).toArgb()
         views.setImageViewBitmap(

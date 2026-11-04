@@ -16,15 +16,16 @@ internal data class PrayerCell(val name: String, val time: String, val current: 
 /**
  * Les cinq cases dessinées d'un seul tenant, comme sur la planche : un lanceur ne sait ni
  * charger les polices de l'app ni teinter un simple filet. L'heure rapetisse plutôt que de
- * déborder de sa case (« 11:50 AM » à 200 %). Plus haut que nécessaire, tout grandit (jusqu'à
- * 1,6 fois) pour remplir [maxHeightPx] plutôt que de laisser du vide.
+ * déborder de sa case (« 11:50 AM » à 200 %). Tout suit [maxHeightPx] : plus bas, les cases
+ * se resserrent un peu (4 × 1 sous MIUI) ; plus haut, elles grandissent jusqu'à 2,2 fois plutôt
+ * que de laisser du vide (4 × 2).
  */
 internal fun prayerRow(context: Context, cells: List<PrayerCell>, widthPx: Int, maxHeightPx: Int, ink: Int, ink2: Int, faded: Int, rule: Int, accent: Int): Bitmap {
     val d = context.resources.displayMetrics.density
     val fontScale = context.resources.configuration.fontScale
     // Hauteur naturelle (à l'échelle 1) : 6 + nom + 2 + heure + 6 dp, environ.
     val natural = (14 + 10.5f * 1.3f + 13.5f * 1.3f) * d * fontScale
-    val grow = (maxHeightPx / natural).coerceIn(1f, 1.6f)
+    val grow = (maxHeightPx / natural).coerceIn(0.7f, 2.2f)
     val scale = fontScale * grow
     val gap = 4 * d
     val cellW = (widthPx - gap * (cells.size - 1)) / cells.size

@@ -32,11 +32,13 @@ class DayLoadTest {
     }
 
     @Test
-    fun `une journée entière occupée est au dernier palier, une nuit se partage`() {
-        val leave = Event(uid = "c", agendaId = 1, title = "Congés", timing = Timing.AllDay(day, day.plusDays(1)))
+    fun `toute la journée n'occupe pas d'heures, une nuit se partage`() {
+        // L'import Fossify marque les anniversaires « Occupé » : ils ne doivent pas noircir l'année.
+        val birthday = Event(uid = "c", agendaId = 1, title = "Anniversaire", timing = Timing.AllDay(day, day))
         val night = timed("Garde", "2026-11-12T22:00", "2026-11-13T02:00")
-        val loads = DayLoad.days(listOf(leave, night), day, day.plusDays(3), paris)
-        assertThat(loads.getValue(day).level).isEqualTo(4)
+        val loads = DayLoad.days(listOf(birthday, night), day, day.plusDays(3), paris)
+        assertThat(loads.getValue(day).busyMinutes).isEqualTo(0)
+        assertThat(loads.getValue(day).events).isEqualTo(1)
         assertThat(loads.getValue(day.plusDays(2)).busyMinutes).isEqualTo(120)
         assertThat(loads.getValue(day.plusDays(3)).busyMinutes).isEqualTo(120)
         assertThat(loads.getValue(day.plusDays(3)).level).isEqualTo(2)

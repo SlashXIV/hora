@@ -6,8 +6,10 @@ import java.time.ZoneId
 
 /**
  * La charge d'un jour, pour la vue année : les minutes occupées (réunion des événements
- * « Occupé », sans compter deux fois un chevauchement ; toute la journée = la journée
- * entière) et le nombre d'événements du jour, libres compris.
+ * « Occupé » à heure fixe, sans compter deux fois un chevauchement) et le nombre
+ * d'événements du jour, libres et toute la journée compris. Un événement de toute la
+ * journée n'occupe pas d'heures : c'est un repère (anniversaire, férié, congés), comme
+ * dans les autres agendas ; l'import Fossify les marque pourtant « Occupé ».
  */
 data class DayLoad(val busyMinutes: Int, val events: Int) {
     /** Palier de 0 (libre) à 4 (6 h et plus), celui de la teinte. */
@@ -20,8 +22,6 @@ data class DayLoad(val busyMinutes: Int, val events: Int) {
     }
 
     companion object {
-        private const val DAY_MINUTES = 24 * 60
-
         /** Charge de chaque jour de [first] à [last] ; [events] : occurrences déjà développées. */
         fun days(events: List<Event>, first: LocalDate, last: LocalDate, zone: ZoneId): Map<LocalDate, DayLoad> {
             val result = LinkedHashMap<LocalDate, DayLoad>()
@@ -35,7 +35,6 @@ data class DayLoad(val busyMinutes: Int, val events: Int) {
         }
 
         private fun busyMinutes(busy: List<Event>, day: LocalDate, zone: ZoneId): Int {
-            if (DayLayout.allDayOn(busy, day).isNotEmpty()) return DAY_MINUTES
             var total = 0
             var end = 0
             for (s in DayLayout.timedSlices(busy, day, zone)) { // triés par début

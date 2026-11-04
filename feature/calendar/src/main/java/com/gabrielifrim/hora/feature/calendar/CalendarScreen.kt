@@ -87,7 +87,8 @@ fun CalendarScreen(
             )
             Row(Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp)) {
                 SegmentedChoice(
-                    options = listOf(R.string.mode_day, R.string.mode_week, R.string.mode_month, R.string.mode_list).map { stringResource(it) },
+                    options = listOf(R.string.mode_day, R.string.mode_three_days, R.string.mode_week, R.string.mode_month, R.string.mode_list).map { stringResource(it) },
+                    columns = 3,
                     selectedIndex = mode.ordinal,
                     onSelect = { i ->
                         haptics.tick()
@@ -108,6 +109,10 @@ fun CalendarScreen(
                     when (mode) {
                         CalendarMode.MONTH -> MonthPage(
                             viewModel, YearMonth.from(date), agendas, zone, formats,
+                            onDay = { d -> haptics.tick(); viewModel.anchor.value = d; viewModel.mode.value = CalendarMode.DAY },
+                        )
+                        CalendarMode.THREE_DAYS -> HourGridPage(
+                            viewModel, days = (0L until 3L).map { date.plusDays(it) }, agendas, zone, formats, onOpenEvent, onCreate,
                             onDay = { d -> haptics.tick(); viewModel.anchor.value = d; viewModel.mode.value = CalendarMode.DAY },
                         )
                         CalendarMode.WEEK -> HourGridPage(
@@ -135,6 +140,8 @@ private fun Header(
 ) {
     val (eyebrow, title) = when (mode) {
         CalendarMode.DAY -> stringResource(R.string.week_number, formats.week(shown)) to formats.dayLong(shown)
+        CalendarMode.THREE_DAYS -> stringResource(R.string.week_number, formats.week(shown)) to
+            stringResource(R.string.week_span, formats.dayShort(shown), formats.dayShort(shown.plusDays(2)))
         CalendarMode.WEEK -> stringResource(R.string.week_number_year, formats.week(shown), shown.year) to
             stringResource(R.string.week_span, formats.dayShort(shown), formats.dayShort(shown.plusDays(6)))
         CalendarMode.MONTH, CalendarMode.LIST -> shown.year.toString() to formats.month(shown)
@@ -161,6 +168,7 @@ private fun Header(
 
 internal fun contains(mode: CalendarMode, first: LocalDate, day: LocalDate): Boolean = when (mode) {
     CalendarMode.DAY, CalendarMode.LIST -> first == day
+    CalendarMode.THREE_DAYS -> !day.isBefore(first) && day.isBefore(first.plusDays(3))
     CalendarMode.WEEK -> !day.isBefore(first) && day.isBefore(first.plusDays(7))
     CalendarMode.MONTH -> YearMonth.from(first) == YearMonth.from(day)
 }
@@ -168,6 +176,7 @@ internal fun contains(mode: CalendarMode, first: LocalDate, day: LocalDate): Boo
 /** Premier jour de la page [offset] (0 = celle du jour de référence) pour la vue [mode]. */
 internal fun dateOfPage(mode: CalendarMode, anchor: LocalDate, offset: Int, formats: HoraFormats): LocalDate = when (mode) {
     CalendarMode.DAY, CalendarMode.LIST -> anchor.plusDays(offset.toLong())
+    CalendarMode.THREE_DAYS -> anchor.plusDays(3L * offset)
     CalendarMode.WEEK -> formats.weekStart(anchor).plus(offset.toLong(), ChronoUnit.WEEKS)
     CalendarMode.MONTH -> YearMonth.from(anchor).plusMonths(offset.toLong()).atDay(1)
 }

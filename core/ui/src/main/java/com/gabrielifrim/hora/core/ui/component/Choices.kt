@@ -79,40 +79,49 @@ fun Tag(
     }
 }
 
-/** Choix exclusif entre quelques options : une pilule, l'option choisie à l'encre. */
+/**
+ * Choix exclusif entre quelques options : une pilule, l'option choisie à l'encre.
+ * Au-delà de [columns] options, elles passent sur plusieurs lignes plutôt que de rapetisser.
+ */
 @Composable
 fun SegmentedChoice(
     options: List<String>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    columns: Int = options.size,
 ) {
     val colors = HoraTheme.colors
-    Row(
+    val shape = if (columns < options.size) RoundedCornerShape(24.dp) else Pill
+    Column(
         modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .clip(Pill)
-            .border(1.dp, colors.rule, Pill)
+            .clip(shape)
+            .border(1.dp, colors.rule, shape)
             .padding(3.dp)
             .selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        options.forEachIndexed { i, option ->
-            val selected = i == selectedIndex
-            Box(
-                Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = 42.dp)
-                    .fillMaxHeight()
-                    .clip(Pill)
-                    .then(if (selected) Modifier.background(colors.ink) else Modifier)
-                    .selectable(selected = selected, onClick = { onSelect(i) }, role = Role.RadioButton)
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                // Une ligne qui rétrécit plutôt qu'un mot coupé (« Semai/ne ») à 200 %.
-                FitText(option, style = HoraTheme.type.bodySmall, color = if (selected) colors.onInk else colors.ink2, minFontSize = 8.sp)
+        options.chunked(columns).forEachIndexed { r, row ->
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                row.forEachIndexed { c, option ->
+                    val i = r * columns + c
+                    val selected = i == selectedIndex
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 42.dp)
+                            .fillMaxHeight()
+                            .clip(Pill)
+                            .then(if (selected) Modifier.background(colors.ink) else Modifier)
+                            .selectable(selected = selected, onClick = { onSelect(i) }, role = Role.RadioButton)
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        // Une ligne qui rétrécit plutôt qu'un mot coupé (« Semai/ne ») à 200 %.
+                        FitText(option, style = HoraTheme.type.bodySmall, color = if (selected) colors.onInk else colors.ink2, minFontSize = 8.sp)
+                    }
+                }
             }
         }
     }

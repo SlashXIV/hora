@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-enum class CalendarMode { DAY, WEEK, MONTH, LIST }
+/** Dans l'ordre de la barre des vues. */
+enum class CalendarMode { DAY, THREE_DAYS, WEEK, MONTH, LIST }
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(

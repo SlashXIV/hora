@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="mode_day">Jour</string>
+    <string name="mode_three_days">3 jours</string>
     <string name="mode_week">Semaine</string>
     <string name="mode_month">Mois</string>
     <string name="mode_list">Liste</string>

@@ -59,6 +59,11 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.input.pointer.pointerInput
 
 /**
  * L'écran d'ouverture : la date, le prochain rendez-vous et le fil du jour. Les
@@ -133,7 +138,7 @@ fun TodayScreen(
             }
             if (countdowns.isNotEmpty()) {
                 Rule()
-                countdowns.forEach { (e, days) -> CountdownRow(e.title, days) { onOpenEvent(e.id, null) } }
+                countdowns.forEach { (e, days) -> CountdownRow(e.id, e.title, days) { onOpenEvent(e.id, null) } }
             }
         }
     }
@@ -144,17 +149,20 @@ fun TodayScreen(
 
 /** « Compte à rebours · Week-end à Lyon · J-12 », comme sur la planche ; « Depuis … J+40 » une fois passé. */
 @Composable
-private fun CountdownRow(title: String, days: Long, onClick: () -> Unit) {
+private fun CountdownRow(eventId: Long, title: String, days: Long, onClick: () -> Unit) {
     val n = kotlin.math.abs(days).toInt()
     val (label, figure, spoken) = when {
         days > 0 -> Triple(stringResource(R.string.countdown_label), stringResource(R.string.countdown_figure, n), pluralStringResource(R.plurals.countdown_spoken, n, n))
         days < 0 -> Triple(stringResource(R.string.since_label), stringResource(R.string.since_figure, n), pluralStringResource(R.plurals.since_spoken, n, n))
         else -> Triple(stringResource(R.string.countdown_label), stringResource(R.string.countdown_today_figure), stringResource(R.string.countdown_today_spoken))
     }
+    val zero = rememberZeroMoment(eventId, days)
+    val scope = rememberCoroutineScope()
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
+            .pointerInput(zero) { awaitEachGesture { awaitFirstDown(requireUnconsumed = false); zero?.let { scope.launch { it.second.snapTo(1f) } } } }
             .clickable(onClick = onClick)
             .clearAndSetSemantics { contentDescription = "$title, $spoken"; role = Role.Button }
             .padding(vertical = 6.dp),
@@ -165,7 +173,7 @@ private fun CountdownRow(title: String, days: Long, onClick: () -> Unit) {
             Eyebrow(label)
             HoraText(title, style = HoraTheme.type.body)
         }
-        HoraText(figure, style = HoraTheme.type.figure)
+        if (zero != null) RollingFigure(figure, zero.first, zero.second.value) else HoraText(figure, style = HoraTheme.type.figure)
     }
 }
 

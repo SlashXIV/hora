@@ -33,6 +33,8 @@ import com.gabrielifrim.hora.core.ui.component.HoraIcons
 import com.gabrielifrim.hora.core.ui.component.HoraText
 import com.gabrielifrim.hora.core.ui.component.IconAction
 import com.gabrielifrim.hora.core.ui.component.SegmentedChoice
+import com.gabrielifrim.hora.core.ui.motion.gnomonShadow
+import com.gabrielifrim.hora.core.ui.motion.monthShadowAngle
 import com.gabrielifrim.hora.core.ui.motion.rememberHaptics
 import com.gabrielifrim.hora.core.ui.text.HoraFormats
 import com.gabrielifrim.hora.core.ui.text.rememberFormats
@@ -99,7 +101,9 @@ fun CalendarScreen(
             if (mode == CalendarMode.LIST) {
                 AgendaList(viewModel, start = anchor, agendas = agendas, zone = zone, formats = formats, onOpenEvent = onOpenEvent)
             } else {
-                HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 1, key = { it }) { page ->
+                // Le mois qui tourne : l'ombre du style avance d'un cran à chaque mois.
+                val shadow = if (mode == CalendarMode.MONTH) Modifier.gnomonShadow(monthShadowAngle(shown.monthValue)) else Modifier
+                HorizontalPager(pager, Modifier.fillMaxSize().then(shadow), beyondViewportPageCount = 1, key = { it }) { page ->
                     val date = dateOfPage(mode, anchor, page - CENTER, formats)
                     when (mode) {
                         CalendarMode.MONTH -> MonthPage(

@@ -38,6 +38,7 @@ import com.gabrielifrim.hora.core.ui.theme.HoraTheme
 @Composable
 internal fun PlaceSheet(current: Place, onPick: (Place) -> Unit, onDismiss: () -> Unit) {
     val custom = Places.FRANCE.none { it == current }
+    var name by remember { mutableStateOf(if (custom) current.name else "") }
     var latitude by remember { mutableStateOf(if (custom) current.latitude.toString() else "") }
     var longitude by remember { mutableStateOf(if (custom) current.longitude.toString() else "") }
     val lat = latitude.replace(',', '.').toDoubleOrNull()?.takeIf { it in -90.0..90.0 }
@@ -61,6 +62,7 @@ internal fun PlaceSheet(current: Place, onPick: (Place) -> Unit, onDismiss: () -
         }
         Rule()
         HoraText(stringResource(R.string.place_coordinates_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+        HoraTextField(name, { name = it.take(40) }, label = stringResource(R.string.place_name), placeholder = customName, modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val decimal = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             HoraTextField(latitude, { latitude = it }, label = stringResource(R.string.place_latitude), modifier = Modifier.weight(1f), keyboardOptions = decimal)
@@ -68,7 +70,7 @@ internal fun PlaceSheet(current: Place, onPick: (Place) -> Unit, onDismiss: () -
         }
         HoraButton(
             stringResource(R.string.place_use_coordinates),
-            onClick = { onPick(Place(customName, lat!!, lon!!)) },
+            onClick = { onPick(Place(name.trim().ifEmpty { customName }, lat!!, lon!!)) },
             enabled = lat != null && lon != null,
             style = ButtonStyle.Line,
             modifier = Modifier.fillMaxWidth(),

@@ -36,7 +36,7 @@ import java.time.ZoneId
 
 /** Réglages → Pratique musulmane. Désactivée par défaut ; tout le reste n'apparaît qu'activée. */
 @Composable
-internal fun PrayerSection(p: PrayerSettings, place: Place, update: ((PrayerSettings) -> PrayerSettings) -> Unit) {
+internal fun PrayerSection(p: PrayerSettings, place: Place, onPickPlace: () -> Unit, update: ((PrayerSettings) -> PrayerSettings) -> Unit) {
     var calibrating by remember { mutableStateOf(false) }
     var tuning by remember { mutableStateOf(false) }
     ToggleRow(
@@ -46,6 +46,10 @@ internal fun PrayerSection(p: PrayerSettings, place: Place, update: ((PrayerSett
         onCheckedChange = { on -> update { it.copy(enabled = on) } },
     )
     if (!p.enabled) return
+    Column(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onPickPlace).padding(vertical = 4.dp)) {
+        HoraText(stringResource(R.string.place), style = HoraTheme.type.body)
+        HoraText(stringResource(R.string.prayer_place_hint, place.name), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+    }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         HoraText(stringResource(R.string.prayer_dawn_name), style = HoraTheme.type.body)
         SegmentedChoice(

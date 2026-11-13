@@ -76,6 +76,11 @@ private fun SettingsContent(
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
+    // Un seul Lieu (soleil et prières), ouvert depuis l'Almanach comme depuis les Prières.
+    var picking by remember { mutableStateOf(false) }
+    if (picking) {
+        PlaceSheet(settings.place, onPick = { place -> haptics.tick(); update { it.copy(place = place) }; picking = false }, onDismiss = { picking = false })
+    }
     LazyColumn(modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
         item { PageHeader(stringResource(R.string.settings_title), modifier = Modifier.bleed(16.dp)) }
 
@@ -124,11 +129,7 @@ private fun SettingsContent(
 
         item {
             Section(stringResource(R.string.settings_almanac)) {
-                var picking by remember { mutableStateOf(false) }
                 LinkRow(stringResource(R.string.place), stringResource(R.string.place_hint, settings.place.name)) { picking = true }
-                if (picking) {
-                    PlaceSheet(settings.place, onPick = { place -> haptics.tick(); update { it.copy(place = place) }; picking = false }, onDismiss = { picking = false })
-                }
                 ToggleRow(
                     title = stringResource(R.string.almanac_bridges),
                     hint = stringResource(R.string.almanac_bridges_hint),
@@ -153,7 +154,7 @@ private fun SettingsContent(
 
         item {
             Section(stringResource(R.string.settings_prayer)) {
-                PrayerSection(settings.prayer, settings.place) { transform -> update { it.copy(prayer = transform(it.prayer)) } }
+                PrayerSection(settings.prayer, settings.place, onPickPlace = { picking = true }) { transform -> update { it.copy(prayer = transform(it.prayer)) } }
             }
         }
 

@@ -11,6 +11,7 @@ import com.gabrielifrim.hora.core.data.database.SettingsDao
 import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.gabrielifrim.hora.core.data.repository.AgendaRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.AlmanacRepositoryImpl
+import com.gabrielifrim.hora.core.data.repository.DeviceCalendarRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.EventRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.ReminderSetRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.TemplateRepositoryImpl
@@ -20,6 +21,7 @@ import com.gabrielifrim.hora.core.data.repository.SettingsRepositoryImpl
 import com.gabrielifrim.hora.core.data.repository.TransferRepositoryImpl
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
+import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
 import com.gabrielifrim.hora.core.domain.repository.BackupRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
@@ -92,4 +94,7 @@ internal abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun almanac(impl: AlmanacRepositoryImpl): AlmanacRepository
+
+    @Binds
+    abstract fun device(impl: DeviceCalendarRepositoryImpl): DeviceCalendarRepository
 }

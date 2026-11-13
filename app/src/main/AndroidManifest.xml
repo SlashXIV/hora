@@ -6,6 +6,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Pont système (J9) : lire les agendas d'Android, demandé seulement depuis Réglages › Agendas. -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+
     <!--
         Sauvegarde Android : rien vers le cloud (aucun service Google), transfert
         d'appareil à appareil autorisé. La sauvegarde de Hora se fait en local (J4).

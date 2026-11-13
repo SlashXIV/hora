@@ -170,6 +170,10 @@ interface EventDao {
     @Query("SELECT * FROM event WHERE uid = :uid")
     suspend fun byUid(uid: String): EventEntity?
 
+    /** Les UID d'Hora : un événement d'Android qui en porte un est un doublon. */
+    @Query("SELECT uid FROM event")
+    fun observeUids(): Flow<List<String>>
+
     @Query("SELECT * FROM event WHERE agenda_id IN (:agendaIds) ORDER BY parent_id IS NOT NULL, start")
     suspend fun inAgendas(agendaIds: List<Long>): List<EventEntity>
 

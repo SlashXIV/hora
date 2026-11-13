@@ -16,6 +16,8 @@ data class Agenda(
     val hidden: Boolean = false,
     val sortOrder: Int = 0,
     val defaultReminders: List<Reminder> = emptyList(),
+    /** Agenda d'Android : le compte qui le porte (« Sur l'appareil », un compte DAVx5…) ; null pour Hora. */
+    val account: String? = null,
 )
 
 /** Quand a lieu un événement. */

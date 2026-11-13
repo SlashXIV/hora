@@ -27,6 +27,7 @@ import com.gabrielifrim.hora.core.ui.theme.paletteFor
 import com.gabrielifrim.hora.feature.settings.AppIconSwitcher
 import com.gabrielifrim.hora.feature.settings.DayIconAlarm
 import com.gabrielifrim.hora.reminders.AppReminderLauncher
+import com.gabrielifrim.hora.core.domain.repository.deviceEventOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -89,7 +90,7 @@ class MainActivity : ComponentActivity() {
 
     private fun readOpening(intent: Intent) {
         val id = intent.getLongExtra(AppReminderLauncher.EXTRA_EVENT, -1)
-        if (id > 0) opening.value = id to intent.getLongExtra(AppReminderLauncher.EXTRA_OCCURRENCE, -1)
+        if (id > 0 || deviceEventOf(id) != null) opening.value = id to intent.getLongExtra(AppReminderLauncher.EXTRA_OCCURRENCE, -1)
     }
 
     override fun onStop() {

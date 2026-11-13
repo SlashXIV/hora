@@ -28,6 +28,11 @@
     <string name="action_edit">Modifier</string>
     <string name="action_delete">Supprimer</string>
     <string name="action_duplicate">Dupliquer</string>
+    <!-- Événement d’un agenda d’Android (J9), en lecture seule. -->
+    <string name="device_event_read_only">Agenda du téléphone · lecture seule</string>
+    <string name="device_reminders">Rappels de l’app d’origine : Hora ne les fait pas sonner.</string>
+    <string name="device_open">Ouvrir dans l’app d’origine</string>
+    <string name="device_copy">Copier dans Hora</string>
     <string name="action_move">Déplacer</string>
     <string name="action_share">Partager le fichier .ics</string>
     <string name="share_title">Partager l’événement</string>

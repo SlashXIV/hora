@@ -6,6 +6,7 @@ import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.model.Event
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
+import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
 import com.gabrielifrim.hora.core.domain.model.Plage
@@ -32,13 +33,14 @@ class CalendarViewModel @Inject constructor(
     agendaRepository: AgendaRepository,
     private val eventRepository: EventRepository,
     private val almanac: AlmanacRepository,
+    private val device: DeviceCalendarRepository,
     settings: SettingsRepository,
 ) : ViewModel() {
 
     val plages: StateFlow<List<Plage>> = settings.settings.map { it.plages }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val agendas: StateFlow<Map<Long, Agenda>> = combine(agendaRepository.agendas, almanac.agendas) { a, b -> a + b }
+    val agendas: StateFlow<Map<Long, Agenda>> = combine(agendaRepository.agendas, almanac.agendas, device.agendas) { a, b, c -> a + b + c }
         .map { list -> list.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
@@ -46,16 +48,16 @@ class CalendarViewModel @Inject constructor(
     val mode = MutableStateFlow(CalendarMode.MONTH)
     val anchor = MutableStateFlow(LocalDate.now())
 
-    /** Les événements et les agendas calculés visibles (fériés, fêtes…). */
+    /** Les événements, les agendas calculés visibles (fériés, fêtes…) et ceux d'Android. */
     fun events(first: LocalDate, last: LocalDate, zone: ZoneId): Flow<List<Event>> =
-        combine(eventRepository.eventsBetween(first, last, zone), almanac.eventsBetween(first, last, zone)) { a, b -> a + b }
+        combine(eventRepository.eventsBetween(first, last, zone), almanac.eventsBetween(first, last, zone), device.eventsBetween(first, last, zone)) { a, b, c -> a + b + c }
 
-    /** La charge de chaque jour de [year] : les agendas calculés (fériés, fêtes) n'occupent personne. */
+    /** La charge de chaque jour de [year], agendas d'Android compris : les agendas calculés (fériés, fêtes) n'occupent personne. */
     fun yearLoad(year: Int, zone: ZoneId): Flow<Map<LocalDate, DayLoad>> {
         val first = LocalDate.of(year, 1, 1)
         val last = LocalDate.of(year, 12, 31)
-        return eventRepository.eventsBetween(first, last, zone).map { DayLoad.days(it, first, last, zone) }.flowOn(Dispatchers.Default)
+        return combine(eventRepository.eventsBetween(first, last, zone), device.eventsBetween(first, last, zone)) { a, b -> DayLoad.days(a + b, first, last, zone) }.flowOn(Dispatchers.Default)
     }
 
-    fun search(query: String): Flow<List<Event>> = eventRepository.search(query)
+    fun search(query: String): Flow<List<Event>> = combine(eventRepository.search(query), device.search(query)) { a, b -> a + b }
 }

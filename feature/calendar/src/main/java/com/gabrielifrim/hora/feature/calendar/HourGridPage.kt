@@ -56,6 +56,7 @@ import com.gabrielifrim.hora.core.domain.model.Plage
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import com.gabrielifrim.hora.core.ui.component.HoraText
 import com.gabrielifrim.hora.core.ui.component.Rule
@@ -83,6 +84,8 @@ import com.gabrielifrim.hora.core.ui.motion.Motion
 import com.gabrielifrim.hora.core.ui.motion.rememberHaptics
 import com.gabrielifrim.hora.core.ui.motion.landing
 import com.gabrielifrim.hora.core.ui.motion.rememberLanding
+import com.gabrielifrim.hora.core.domain.repository.deviceEventOf
+import com.gabrielifrim.hora.core.ui.component.AgendaMark
 
 /**
  * Grille horaire d'un jour ou d'une semaine : heures gravées dans la marge, une
@@ -283,25 +286,37 @@ private fun PlageBand(plage: Plage, label: String?) {
 @Composable
 private fun Block(event: Event, agendas: Map<Long, Agenda>, zone: ZoneId, formats: HoraFormats, onOpenEvent: (Long, Long?) -> Unit, compact: Boolean, modifier: Modifier) {
     val colors = HoraTheme.colors
-    val c = colorKeyOf(event, agendas).color()
+    val key = colorKeyOf(event, agendas)
+    val c = key.color()
     val spoken = spokenEvent(event, zone, formats)
     val landing = rememberLanding(event.id)
+    // Un événement d'Android : contour tireté, sans aplat ni ombre, sa forme devant le titre.
+    val device = deviceEventOf(event.id) != null
     Box(
         modifier
             .landing(landing)
             .drawBehind {
                 // L'ombre dure du cadran, portée en bas à droite, sous le bloc ; elle se forme quand il se pose.
-                drawRoundRect(colors.shadow.copy(alpha = colors.shadow.alpha * landing.shadow), topLeft = Offset(2.dp.toPx(), 2.dp.toPx()), size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+                if (!device) drawRoundRect(colors.shadow.copy(alpha = colors.shadow.alpha * landing.shadow), topLeft = Offset(2.dp.toPx(), 2.dp.toPx()), size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
             }
             .clip(RoundedCornerShape(3.dp))
-            .background(c.copy(alpha = 0.16f).compositeOver(colors.background))
-            .drawBehind { drawRect(c, size = androidx.compose.ui.geometry.Size(3.dp.toPx(), size.height)) }
+            .background(if (device) colors.background else c.copy(alpha = 0.16f).compositeOver(colors.background))
+            .drawBehind {
+                if (device) {
+                    val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
+                    val w = 1.dp.toPx()
+                    drawRoundRect(c, topLeft = Offset(w / 2, w / 2), size = androidx.compose.ui.geometry.Size(size.width - w, size.height - w), cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()), style = Stroke(w, pathEffect = dash))
+                }
+                drawRect(c, size = androidx.compose.ui.geometry.Size(3.dp.toPx(), size.height))
+            }
             .clickable { onOpenEvent(event.id, event.occurrence) }
             .clearAndSetSemantics { contentDescription = spoken; role = Role.Button }
             .padding(start = 6.dp, end = 3.dp, top = 2.dp, bottom = 2.dp),
     ) {
+        if (device) AgendaMark(key.shape, c, size = 8.dp, modifier = Modifier.padding(top = 3.dp))
         HoraText(
             event.title,
+            modifier = if (device) Modifier.padding(start = 11.dp) else Modifier,
             // Colonne de semaine : un mot trop long se coupe avec un tiret, pas au hasard (« Anniver-saire »).
             style = if (compact) HoraTheme.type.label.copy(letterSpacing = HoraTheme.type.bodySmall.letterSpacing, hyphens = Hyphens.Auto) else HoraTheme.type.bodySmall,
             maxLines = if (compact) 3 else 2,

@@ -3,6 +3,7 @@ package com.gabrielifrim.hora.feature.widget
 import com.gabrielifrim.hora.core.domain.calendar.DayLayout
 import com.gabrielifrim.hora.core.domain.model.Event
 import com.gabrielifrim.hora.core.domain.model.Timing
+import com.gabrielifrim.hora.core.domain.repository.almanacEntryOf
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -18,7 +19,8 @@ internal data class TodayContent(val next: Event?, val rest: List<Event>, val ch
 
         fun of(events: List<Event>, now: Instant, zone: ZoneId): TodayContent {
             val today = now.atZone(zone).toLocalDate()
-            val next = events.filter { it.id > 0 }
+            // Un vrai rendez-vous (Hora ou Android) : pas une pleine lune ni un changement d'heure.
+            val next = events.filter { almanacEntryOf(it.id) == null }
                 .mapNotNull { e -> (e.timing as? Timing.Timed)?.takeIf { it.start.isAfter(now) }?.let { e to it.start } }
                 .minByOrNull { it.second }?.first
             val rest = events

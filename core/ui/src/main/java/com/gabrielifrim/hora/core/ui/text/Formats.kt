@@ -16,6 +16,7 @@ import com.gabrielifrim.hora.core.domain.model.UserSettings
 import com.gabrielifrim.hora.core.ui.R
 import com.gabrielifrim.hora.core.ui.theme.AgendaColorKey
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
+import com.gabrielifrim.hora.core.domain.repository.deviceEventOf
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
@@ -156,5 +157,7 @@ fun spokenEvent(event: Event, zone: ZoneId, formats: HoraFormats): String {
     // Les hachures du trajet ne se voient pas à l'oreille : l'heure de départ les remplace.
     val leave = (event.timing as? Timing.Timed)?.takeIf { event.travelMinutes > 0 }
         ?.let { stringResource(R.string.spoken_leave, formats.spoken(it.start.minusSeconds(event.travelMinutes * 60L).atZone(zone).toLocalTime())) }.orEmpty()
-    return listOf(event.title, `when`, leave, event.location).filter { it.isNotBlank() }.joinToString(", ")
+    // Le contour tireté d'un événement d'Android ne s'entend pas : on le dit.
+    val device = if (deviceEventOf(event.id) != null) stringResource(R.string.spoken_device) else ""
+    return listOf(event.title, `when`, leave, event.location, device).filter { it.isNotBlank() }.joinToString(", ")
 }

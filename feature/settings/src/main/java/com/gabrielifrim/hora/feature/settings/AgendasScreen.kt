@@ -28,6 +28,7 @@ import androidx.lifecycle.viewModelScope
 import com.gabrielifrim.hora.core.domain.model.Agenda
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
+import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
 import com.gabrielifrim.hora.core.domain.repository.almanacGroupOf
 import com.gabrielifrim.hora.core.ui.component.Eyebrow
 import com.gabrielifrim.hora.core.ui.component.AddReminderSheet
@@ -63,6 +64,7 @@ import kotlinx.coroutines.launch
 class AgendasViewModel @Inject constructor(
     private val repository: AgendaRepository,
     private val almanac: AlmanacRepository,
+    private val device: DeviceCalendarRepository,
 ) : ViewModel() {
     val agendas: StateFlow<List<Agenda>> = repository.agendas.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -72,6 +74,23 @@ class AgendasViewModel @Inject constructor(
     fun setComputedVisible(agenda: Agenda, visible: Boolean) {
         val group = almanacGroupOf(agenda.id) ?: return
         viewModelScope.launch { almanac.setHidden(group, !visible) }
+    }
+
+    /** Agendas d'Android : lus sur demande, visibles ou masqués, couleur au choix. */
+    val deviceEnabled: StateFlow<Boolean> = device.enabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    val deviceAgendas: StateFlow<List<Agenda>> = device.agendas.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val duplicates: StateFlow<Int> = device.duplicates.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    fun setDeviceEnabled(on: Boolean) {
+        viewModelScope.launch { device.setEnabled(on) }
+    }
+
+    fun setDeviceVisible(agenda: Agenda, visible: Boolean) {
+        viewModelScope.launch { device.setHidden(agenda.id, !visible) }
+    }
+
+    fun setDeviceColor(agenda: Agenda, colorKey: String) {
+        viewModelScope.launch { device.setColor(agenda.id, colorKey) }
     }
 
     fun save(agenda: Agenda) {
@@ -88,6 +107,9 @@ class AgendasViewModel @Inject constructor(
 fun AgendasScreen(onBack: () -> Unit, viewModel: AgendasViewModel = hiltViewModel()) {
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
     val computed by viewModel.computed.collectAsStateWithLifecycle()
+    val deviceEnabled by viewModel.deviceEnabled.collectAsStateWithLifecycle()
+    val deviceAgendas by viewModel.deviceAgendas.collectAsStateWithLifecycle()
+    val duplicates by viewModel.duplicates.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Agenda?>(null) }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
@@ -128,6 +150,11 @@ fun AgendasScreen(onBack: () -> Unit, viewModel: AgendasViewModel = hiltViewMode
                 ToggleSwitch(checked = !agenda.hidden, onCheckedChange = { viewModel.setComputedVisible(agenda, it) }, label = stringResource(R.string.agenda_visible, agenda.name))
             }
             Rule()
+        }
+        item {
+            Column {
+                DeviceCalendarsSection(deviceEnabled, deviceAgendas, duplicates, viewModel::setDeviceEnabled, viewModel::setDeviceVisible, viewModel::setDeviceColor)
+            }
         }
     }
 

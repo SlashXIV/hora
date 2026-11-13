@@ -2,8 +2,10 @@ package com.gabrielifrim.hora.feature.event
 
 import android.content.ActivityNotFoundException
 import android.content.ClipData
+import android.content.ContentUris
 import android.content.Intent
 import android.net.Uri
+import android.provider.CalendarContract
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,6 +54,7 @@ import com.gabrielifrim.hora.core.ui.text.colorKeyOf
 import com.gabrielifrim.hora.core.ui.text.rememberFormats
 import com.gabrielifrim.hora.core.ui.text.timeRange
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
+import com.gabrielifrim.hora.core.domain.repository.deviceEventOf
 import java.time.ZoneId
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -86,6 +89,8 @@ fun EventDetailScreen(
 
     val e = event ?: return
     val editable = e.id > 0
+    // Un événement d'Android se lit, s'ouvre dans son app, se copie dans Hora ; il ne se modifie pas ici.
+    val device = deviceEventOf(e.id)
     val key = colorKeyOf(e, agendas)
     val day = when (val t = e.timing) {
         is Timing.Timed -> t.start.atZone(zone).toLocalDate()
@@ -102,8 +107,9 @@ fun EventDetailScreen(
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     AgendaMark(key.shape, key.color(), size = 12.dp)
-                    Eyebrow(agendas[e.agendaId]?.name.orEmpty())
+                    Eyebrow(listOfNotNull(agendas[e.agendaId]?.name, agendas[e.agendaId]?.account).joinToString(" · "))
                 }
+                if (device != null) HoraText(stringResource(R.string.device_event_read_only), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     HoraText(formats.dayLong(day), style = HoraTheme.type.body)
                     HoraText(timeRange(e, zone, formats), style = HoraTheme.type.hour.copy(fontSize = HoraTheme.type.body.fontSize))
@@ -127,6 +133,7 @@ fun EventDetailScreen(
                             delay(Duration.between(Instant.now(), next).toMillis().coerceAtLeast(0) + 50)
                             now = Instant.now()
                         }
+                        if (device != null) HoraText(stringResource(R.string.device_reminders), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                         triggers.forEach { (r, at) ->
                             val local = at.atZone(zone)
                             val time = if (local.toLocalDate() == day) formats.time(local.toLocalTime()) else formats.dayShort(local.toLocalDate()) + " " + formats.time(local.toLocalTime())
@@ -168,11 +175,26 @@ fun EventDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                if (editable) {
+                if (editable || device != null) {
                     Rule()
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        HoraButton(stringResource(R.string.action_duplicate), onClick = { onDuplicate(e.id, e.occurrence) }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
-                        HoraButton(stringResource(R.string.action_move), onClick = { moving = true }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
+                    if (editable) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            HoraButton(stringResource(R.string.action_duplicate), onClick = { onDuplicate(e.id, e.occurrence) }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
+                            HoraButton(stringResource(R.string.action_move), onClick = { moving = true }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
+                        }
+                    }
+                    if (device != null) {
+                        HoraButton(
+                            stringResource(R.string.device_open),
+                            onClick = {
+                                val t = e.timing
+                                val open = Intent(Intent.ACTION_VIEW, ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, device))
+                                if (t is Timing.Timed) open.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, t.start.toEpochMilli()).putExtra(CalendarContract.EXTRA_EVENT_END_TIME, t.end.toEpochMilli())
+                                try { context.startActivity(open) } catch (_: ActivityNotFoundException) { /* aucune app d'agenda : rien à ouvrir */ }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        HoraButton(stringResource(R.string.device_copy), onClick = { onDuplicate(e.id, e.occurrence) }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth())
                     }
                     HoraButton(
                         stringResource(R.string.action_share),
@@ -200,13 +222,15 @@ fun EventDetailScreen(
                         style = ButtonStyle.Line,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    HoraButton(
-                        stringResource(if (templateSaved) R.string.template_saved else R.string.action_save_template),
-                        onClick = { haptics.confirm(); viewModel.saveAsTemplate() },
-                        enabled = !templateSaved,
-                        style = ButtonStyle.Line,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    if (editable) {
+                        HoraButton(
+                            stringResource(if (templateSaved) R.string.template_saved else R.string.action_save_template),
+                            onClick = { haptics.confirm(); viewModel.saveAsTemplate() },
+                            enabled = !templateSaved,
+                            style = ButtonStyle.Line,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
         }

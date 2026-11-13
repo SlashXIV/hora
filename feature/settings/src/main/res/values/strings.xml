@@ -45,6 +45,23 @@
     <string name="agenda_edit_hint">Toucher pour renommer ou changer de couleur</string>
     <string name="agenda_visible">Afficher %1$s</string>
     <string name="agenda_delete">Supprimer l’agenda</string>
+    <!-- Pont système (J9) : agendas d’Android en lecture seule. -->
+    <string name="device_title">Agendas du téléphone</string>
+    <string name="device_explain">Montrer dans Hora les agendas d’Android : ceux de DAVx5, d’un compte ou de l’appareil. Lecture seule ; Hora n’y écrit rien et n’envoie rien. Leurs rappels sonnent par l’app d’origine.</string>
+    <string name="device_enable">Lire les agendas du téléphone</string>
+    <string name="device_refused">Lecture refusée. Pour l’autoriser : Paramètres d’Android › Applications › Hora › Autorisations.</string>
+    <string name="device_open_settings">Ouvrir les paramètres d’Android</string>
+    <string name="device_none">Aucun agenda sur ce téléphone.</string>
+    <string name="device_agenda_hint">Lecture seule · toucher pour changer de couleur</string>
+    <string name="device_color">Changer de couleur</string>
+    <string name="device_color_hint">Dans Hora seulement : Android garde la sienne.</string>
+    <string name="device_disable">Arrêter la lecture</string>
+    <string name="device_disable_hint">Retire ces agendas d’Hora. La permission se retire dans les paramètres d’Android.</string>
+    <plurals name="device_duplicates">
+        <item quantity="one">%d événement déjà dans Hora est masqué.</item>
+        <item quantity="many">%d événements déjà dans Hora sont masqués.</item>
+        <item quantity="other">%d événements déjà dans Hora sont masqués.</item>
+    </plurals>
     <string name="agenda_delete_title">Supprimer l’agenda ?</string>
     <string name="agenda_delete_message">« %1$s » et tous ses événements seront supprimés. On ne peut pas revenir en arrière.</string>
 

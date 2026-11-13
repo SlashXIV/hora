@@ -9,6 +9,7 @@ import com.gabrielifrim.hora.core.domain.almanac.Places
 import com.gabrielifrim.hora.core.domain.almanac.PrayerSettings
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
+import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,9 +28,10 @@ class TodayViewModel @Inject constructor(
     agendaRepository: AgendaRepository,
     private val eventRepository: EventRepository,
     private val almanac: AlmanacRepository,
+    private val device: DeviceCalendarRepository,
     settings: SettingsRepository,
 ) : ViewModel() {
-    val agendas: StateFlow<Map<Long, Agenda>> = combine(agendaRepository.agendas, almanac.agendas) { a, b -> a + b }
+    val agendas: StateFlow<Map<Long, Agenda>> = combine(agendaRepository.agendas, almanac.agendas, device.agendas) { a, b, c -> a + b + c }
         .map { l -> l.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
@@ -48,7 +50,7 @@ class TodayViewModel @Inject constructor(
     /** Aujourd'hui et le mois qui suit : de quoi trouver le prochain rendez-vous ; fériés et fêtes du fil compris. */
     fun upcoming(today: LocalDate, zone: ZoneId): Flow<List<Event>> {
         val last = today.plusDays(UPCOMING_DAYS)
-        return combine(eventRepository.eventsBetween(today, last, zone), almanac.eventsBetween(today, last, zone)) { a, b -> a + b }
+        return combine(eventRepository.eventsBetween(today, last, zone), almanac.eventsBetween(today, last, zone), device.eventsBetween(today, last, zone)) { a, b, c -> a + b + c }
     }
 
     private companion object {

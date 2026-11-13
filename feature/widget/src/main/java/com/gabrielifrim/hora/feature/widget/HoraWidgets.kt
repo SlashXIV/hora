@@ -28,6 +28,7 @@ import com.gabrielifrim.hora.core.domain.model.Event
 import com.gabrielifrim.hora.core.domain.model.Timing
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
+import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
 import com.gabrielifrim.hora.core.reminders.ReminderLauncher
@@ -49,6 +50,7 @@ import java.time.ZoneId
 import java.util.Locale
 import javax.inject.Inject
 import com.gabrielifrim.hora.core.ui.R as UiR
+import com.gabrielifrim.hora.core.domain.repository.almanacEntryOf
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -67,6 +69,7 @@ class HoraWidgets @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val events: EventRepository,
     private val almanac: AlmanacRepository,
+    private val device: DeviceCalendarRepository,
     private val agendaRepository: AgendaRepository,
     private val settings: SettingsRepository,
     private val launcher: ReminderLauncher,
@@ -85,8 +88,8 @@ class HoraWidgets @Inject constructor(
         val night = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
         // shortcut: en « Système », la palette est lue au redessin ; passer en sombre ne redessine qu'au prochain changement. Couleurs « night » des ressources si ça gêne.
         val colors = paletteFor(user.theme, night)
-        val agendas = combine(agendaRepository.agendas, almanac.agendas) { a, b -> (a + b).associateBy { it.id } }.first()
-        val list = combine(events.eventsBetween(today, today.plusDays(31), zone), almanac.eventsBetween(today, today, zone)) { a, b -> a + b }.first()
+        val agendas = combine(agendaRepository.agendas, almanac.agendas, device.agendas) { a, b, c -> (a + b + c).associateBy { it.id } }.first()
+        val list = combine(events.eventsBetween(today, today.plusDays(31), zone), almanac.eventsBetween(today, today, zone), device.eventsBetween(today, today.plusDays(31), zone)) { a, b, c -> a + b + c }.first()
         val content = TodayContent.of(list, now, zone)
         for (id in ids) {
             manager.updateAppWidget(id, responsive(manager, id) { w, h -> render(content, agendas, colors, formats, zone, now, w.toInt(), rowsFor(h.toInt())) })
@@ -262,7 +265,7 @@ class HoraWidgets @Inject constructor(
             row.setTextColor(R.id.row_title, ink)
             row.setImageViewBitmap(R.id.row_mark, mark(e, agendas, colors))
             row.setContentDescription(R.id.row_root, "$spokenTime, ${e.title}")
-            if (e.id > 0) row.setOnClickPendingIntent(R.id.row_root, openEvent(e))
+            if (almanacEntryOf(e.id) == null) row.setOnClickPendingIntent(R.id.row_root, openEvent(e))
             views.addView(R.id.widget_rows, row)
         }
         val nothingLeft = content.rest.isEmpty() && next != null && !TodayContent.isToday(next, today, zone)

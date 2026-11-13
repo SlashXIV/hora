@@ -6,6 +6,8 @@
     <string name="agenda_family">Famille</string>
     <!-- Agendas calculés (almanach) : jamais stockés ni exportés. -->
     <string name="almanac_holidays">Jours fériés</string>
+    <!-- Agendas d’Android : le compte « local » n’a pas de nom. -->
+    <string name="device_local">Sur l’appareil</string>
     <string name="almanac_feasts">Fêtes</string>
     <string name="almanac_moon">Lune</string>
     <string name="almanac_clock">Changements d’heure</string>

@@ -13,6 +13,8 @@ import com.gabrielifrim.hora.core.domain.recurrence.Recurrences
 import com.gabrielifrim.hora.core.domain.recurrence.SeriesEdits
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
+import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
+import com.gabrielifrim.hora.core.domain.repository.deviceEventOf
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderSet
 import com.gabrielifrim.hora.core.domain.repository.ReminderSetRepository
@@ -67,6 +69,7 @@ class EventDetailViewModel @AssistedInject constructor(
     agendas: AgendaRepository,
     @param:ApplicationContext private val context: Context,
     almanac: AlmanacRepository,
+    device: DeviceCalendarRepository,
     private val templates: TemplateRepository,
     settings: SettingsRepository,
 ) : ViewModel() {
@@ -78,10 +81,14 @@ class EventDetailViewModel @AssistedInject constructor(
     private val zone = ZoneId.systemDefault()
 
     /** Ce qu'on affiche : l'occurrence demandée, avec son horaire. */
-    /** Un id négatif est une entrée d'un agenda calculé (férié, fête…), en lecture seule. */
-    val event: StateFlow<Event?> = (if (eventId < 0) almanac.event(eventId) else events.event(eventId)).map { it?.let { s -> occurrenceOf(s, occurrence, zone) } }
+    /** Un id négatif est une entrée d'un agenda calculé (férié, fête…) ou d'Android, en lecture seule. */
+    val event: StateFlow<Event?> = when {
+        deviceEventOf(eventId) != null -> device.event(eventId, occurrence.takeIf { it >= 0 })
+        eventId < 0 -> almanac.event(eventId)
+        else -> events.event(eventId)
+    }.map { it?.let { s -> occurrenceOf(s, occurrence, zone) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-    val agendas: StateFlow<Map<Long, Agenda>> = combine(agendas.agendas, almanac.agendas) { a, b -> a + b }.map { l -> l.associateBy { it.id } }
+    val agendas: StateFlow<Map<Long, Agenda>> = combine(agendas.agendas, almanac.agendas, device.agendas) { a, b, c -> a + b + c }.map { l -> l.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /** L'agenda relié à Popote (Réglages), null s'il n'y en a pas. */
@@ -125,8 +132,10 @@ class EventDetailViewModel @AssistedInject constructor(
     suspend fun shareFile(): Uri? {
         val shown = event.value ?: return null
         val rootId = shown.parentId ?: eventId
-        val root = events.event(rootId).first() ?: return null
-        val text = IcsWriter.write(listOf(root) + events.children(rootId), agendas.value.filterKeys { it == root.agendaId })
+        // Un événement d'Android part seul, à la date affichée : sa série reste chez son app.
+        val device = deviceEventOf(eventId) != null
+        val root = if (device) shown.copy(occurrence = null) else events.event(rootId).first() ?: return null
+        val text = IcsWriter.write(listOf(root) + if (device) emptyList() else events.children(rootId), agendas.value.filterKeys { it == root.agendaId })
         return withContext(Dispatchers.IO) {
             val dir = File(context.cacheDir, "partage").apply { deleteRecursively(); mkdirs() }
             val name = root.title.replace(Regex("""[^\p{L}\p{N} _-]"""), "_").trim().take(60).ifEmpty { "evenement" } // texte-technique : nom de fichier
@@ -172,6 +181,7 @@ class EventEditorViewModel @AssistedInject constructor(
     /** Modèle de départ (> 0), sinon 0. */
     @Assisted("template") private val template: Long,
     private val events: EventRepository,
+    private val device: DeviceCalendarRepository,
     private val templates: TemplateRepository,
     private val agendaRepository: AgendaRepository,
     private val setRepository: ReminderSetRepository,
@@ -201,7 +211,8 @@ class EventEditorViewModel @AssistedInject constructor(
     suspend fun freeSlots(plage: Plage?): List<LocalDateTime> {
         val d = draft.value ?: return emptyList()
         val from = maxOf(LocalDateTime.now(), d.start.toLocalDate().atStartOfDay())
-        val others = events.eventsBetween(from.toLocalDate(), from.toLocalDate().plusDays(14), d.zone).first()
+        val first = from.toLocalDate()
+        val others = combine(events.eventsBetween(first, first.plusDays(14), d.zone), device.eventsBetween(first, first.plusDays(14), d.zone)) { a, b -> a + b }.first()
             .filter { d.id == 0L || it.id != d.id } // l'événement qu'on déplace ne se bloque pas lui-même
         return FreeSlots.find(others, from, Duration.between(d.start, d.end), plage, d.zone)
     }
@@ -225,6 +236,11 @@ class EventEditorViewModel @AssistedInject constructor(
                     EventDraft.of(if (s.parentId != null) shown.copy(recurrence = series?.recurrence) else shown, zone)
                 }
                 duplicateOf > 0 -> events.event(duplicateOf).firstOrNull()?.let { EventDraft.duplicate(occurrenceOf(it, occurrence, zone), zone) }
+                // « Copier dans Hora » : un événement d'Android devient un événement d'Hora, dans le premier agenda visible.
+                deviceEventOf(duplicateOf) != null -> device.event(duplicateOf, occurrence.takeIf { it >= 0 }).firstOrNull()?.let { e ->
+                    val list = agendaRepository.agendas.first { it.isNotEmpty() }
+                    EventDraft.duplicate(e.copy(agendaId = (list.firstOrNull { !it.hidden } ?: list.first()).id, reminders = emptyList()), zone)
+                }
                 else -> null
             } ?: run {
                 val list = agendaRepository.agendas.first { it.isNotEmpty() }

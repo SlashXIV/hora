@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import com.gabrielifrim.hora.feature.widget.HoraWidgets
 import com.gabrielifrim.hora.feature.settings.DayIconAlarm
+import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
 import kotlinx.coroutines.launch
 
 @HiltAndroidApp
@@ -33,6 +34,7 @@ class HoraApplication : Application() {
     @Inject lateinit var settings: SettingsRepository
     @Inject lateinit var digest: DigestAlarms
     @Inject lateinit var widgets: HoraWidgets
+    @Inject lateinit var device: DeviceCalendarRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -51,7 +53,7 @@ class HoraApplication : Application() {
         scope.launch { settings.settings.map { it.place to it.prayer }.distinctUntilChanged().debounce(500).collect { prayers.run() } }
         // Le résumé du lendemain suit son heure ; armé aussi au lancement.
         scope.launch { settings.settings.map { it.digest }.distinctUntilChanged().collect { digest.run() } }
-        // Les widgets suivent les événements et les réglages (palette, format des heures) ; redessiné aussi au lancement.
-        scope.launch { merge(store.changes, settings.settings.map { }).debounce(500).collect { widgets.update() } }
+        // Les widgets suivent les événements (d'Hora et d'Android) et les réglages (palette, format des heures) ; redessiné aussi au lancement.
+        scope.launch { merge(store.changes, settings.settings.map { }, device.agendas.map { }).debounce(500).collect { widgets.update() } }
     }
 }

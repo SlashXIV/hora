@@ -53,6 +53,7 @@ import com.gabrielifrim.hora.core.ui.text.rememberFormats
 import com.gabrielifrim.hora.core.ui.text.spokenEvent
 import com.gabrielifrim.hora.core.ui.text.timeRange
 import com.gabrielifrim.hora.core.ui.theme.HoraTheme
+import com.gabrielifrim.hora.core.domain.repository.almanacEntryOf
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -106,7 +107,7 @@ fun TodayScreen(
     }
     // Le prochain rendez-vous est un vrai événement : pas une pleine lune ni un changement d'heure.
     val next = remember(events, now) {
-        events.filter { it.id > 0 }.mapNotNull { e -> (e.timing as? Timing.Timed)?.takeIf { it.start.isAfter(now) }?.let { e to it.start } }.minByOrNull { it.second }
+        events.filter { almanacEntryOf(it.id) == null }.mapNotNull { e -> (e.timing as? Timing.Timed)?.takeIf { it.start.isAfter(now) }?.let { e to it.start } }.minByOrNull { it.second }
     }
 
     Column(modifier.fillMaxSize()) {

@@ -71,7 +71,7 @@ import kotlinx.serialization.Serializable
 @Serializable private data class EventRoute(val id: Long, val occurrence: Long = -1)
 
 /**
- * Éditeur : id > 0 modifie, duplicateOf > 0 copie, sinon crée au jour epochDay (minute < 0 : heure par défaut),
+ * Éditeur : id > 0 modifie, duplicateOf copie (un événement d'Android aussi, id négatif), sinon crée au jour epochDay (minute < 0 : heure par défaut),
  * pré-rempli par la phrase [quick] de la saisie rapide si elle n'est pas vide, ou par le modèle [template] (> 0).
  */
 @Serializable private data class EditRoute(val id: Long = 0, val occurrence: Long = -1, val duplicateOf: Long = 0, val epochDay: Long = 0, val minute: Int = -1, val quick: String = "", val template: Long = 0)

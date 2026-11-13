@@ -13,6 +13,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.gabrielifrim.hora.core.domain.calendar.TomorrowDigest
 import com.gabrielifrim.hora.core.domain.model.Timing
 import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
+import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.SettingsRepository
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,6 +41,7 @@ class DigestAlarms @Inject constructor(
     private val settings: SettingsRepository,
     private val events: EventRepository,
     private val almanac: AlmanacRepository,
+    private val device: DeviceCalendarRepository,
     private val notifier: ReminderNotifier,
 ) {
     suspend fun run(now: Instant = Instant.now()) = arm(settings.settings.first().digest?.let { TomorrowDigest.nextAt(it, now, ZoneId.systemDefault()) })
@@ -59,7 +61,7 @@ class DigestAlarms @Inject constructor(
     internal suspend fun show(now: Instant = Instant.now()) {
         val zone = ZoneId.systemDefault()
         val day = now.atZone(zone).toLocalDate().plusDays(1)
-        val all = combine(events.eventsBetween(day, day, zone), almanac.eventsBetween(day, day, zone)) { a, b -> a + b }.first()
+        val all = combine(events.eventsBetween(day, day, zone), almanac.eventsBetween(day, day, zone), device.eventsBetween(day, day, zone)) { a, b, c -> a + b + c }.first()
         val list = TomorrowDigest.events(all, day, zone)
         if (list.isEmpty()) return
         val system = context.getSystemService(NotificationManager::class.java) ?: return

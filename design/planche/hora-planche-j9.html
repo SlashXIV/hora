@@ -1,0 +1,457 @@
+<title>Planche Hora J9</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..800&family=Atkinson+Hyperlegible+Next:wght@300..700&family=Spline+Sans+Mono:wght@400..600&display=swap">
+<style>
+/* Mise en page : une planche de travail, colonne de lecture étroite + rangées de paires de téléphones (clair | sombre) qui passent en une colonne au format téléphone. */
+:root{
+  /* Palette Midi (claire) — identique à HoraPalettes.Midi */
+  --bg:#F3F5F7; --surf:#E7EBF0; --ink:#18202B; --ink2:#4A5568; --rule:#C9D1DB;
+  --acc:#2448A8; --onacc:#FFFFFF; --shadow:rgba(24,32,43,.16); --band:rgba(24,32,43,.055); --night:rgba(24,32,43,.07);
+  --a-bleu:#0F6EC1; --a-brique:#761C06; --a-sapin:#499953; --a-prune:#5E2284;
+  --a-ocre:#7A5E05; --a-sarcelle:#3494A5; --a-framboise:#5A0A3F; --a-ardoise:#57616E;
+  --ok:#1E7A4C; --warn:#8A5A00;
+  /* Polices */
+  --f-poster:"Fraunces", "Iowan Old Style", Georgia, serif;
+  --f-text:"Atkinson Hyperlegible Next", "Atkinson Hyperlegible", "Segoe UI", Roboto, system-ui, sans-serif;
+  --f-mono:"Spline Sans Mono", "JetBrains Mono", Consolas, ui-monospace, monospace;
+  /* Formes et espacements */
+  --r-s:3px; --r-m:6px; --r-l:14px; --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:40px;
+  --enter:cubic-bezier(.2,.7,.2,1); --trans:cubic-bezier(.65,0,.35,1); --release:cubic-bezier(.2,.9,.2,1.2);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1530; --surf:#18203F; --ink:#EEE9DC; --ink2:#A9B1CC; --rule:#2B355E;
+    --acc:#8FB8FF; --onacc:#0F1530; --shadow:rgba(3,6,18,.55); --band:rgba(238,233,220,.05); --night:rgba(3,6,18,.35);
+    --a-bleu:#6276FC; --a-brique:#DB572B; --a-sapin:#64C07E; --a-prune:#C992FB;
+    --a-ocre:#FDD25B; --a-sarcelle:#A2FBF3; --a-framboise:#CF5794; --a-ardoise:#B7C4D4;
+    --ok:#6FD39C; --warn:#F2C46B;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1530; --surf:#18203F; --ink:#EEE9DC; --ink2:#A9B1CC; --rule:#2B355E;
+  --acc:#8FB8FF; --onacc:#0F1530; --shadow:rgba(3,6,18,.55); --band:rgba(238,233,220,.05); --night:rgba(3,6,18,.35);
+  --a-bleu:#6276FC; --a-brique:#DB572B; --a-sapin:#64C07E; --a-prune:#C992FB;
+  --a-ocre:#FDD25B; --a-sarcelle:#A2FBF3; --a-framboise:#CF5794; --a-ardoise:#B7C4D4;
+  --ok:#6FD39C; --warn:#F2C46B;
+}
+/* Les téléphones portent leur propre palette, quel que soit le thème de la page */
+.midi{
+  --bg:#F3F5F7; --surf:#E7EBF0; --ink:#18202B; --ink2:#4A5568; --rule:#C9D1DB;
+  --acc:#2448A8; --onacc:#FFFFFF; --shadow:rgba(24,32,43,.16); --band:rgba(24,32,43,.055); --night:rgba(24,32,43,.07);
+  --a-bleu:#0F6EC1; --a-brique:#761C06; --a-sapin:#499953; --a-prune:#5E2284;
+  --a-ocre:#7A5E05; --a-sarcelle:#3494A5; --a-framboise:#5A0A3F; --a-ardoise:#57616E;
+  --ok:#1E7A4C; --warn:#8A5A00; color-scheme:light;
+}
+.noct{
+  --bg:#0F1530; --surf:#18203F; --ink:#EEE9DC; --ink2:#A9B1CC; --rule:#2B355E;
+  --acc:#8FB8FF; --onacc:#0F1530; --shadow:rgba(3,6,18,.55); --band:rgba(238,233,220,.05); --night:rgba(3,6,18,.35);
+  --a-bleu:#6276FC; --a-brique:#DB572B; --a-sapin:#64C07E; --a-prune:#C992FB;
+  --a-ocre:#FDD25B; --a-sarcelle:#A2FBF3; --a-framboise:#CF5794; --a-ardoise:#B7C4D4;
+  --ok:#6FD39C; --warn:#F2C46B; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-text);font-size:15px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto}
+.read{max-width:66ch}
+h1,h2,h3{font-family:var(--f-poster);font-weight:560;text-wrap:balance;margin:0;line-height:1.1}
+h2{font-size:clamp(28px,4vw,40px);font-variation-settings:"opsz" 96}
+h3{font-size:20px;font-variation-settings:"opsz" 24}
+p{margin:0}
+.eyebrow{font-family:var(--f-text);font-size:12px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+section.block{display:flex;flex-direction:column;gap:var(--s5);padding-block:56px;border-top:1px solid var(--rule)}
+a{color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* En-tête de la planche */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:var(--s6);align-items:center;padding-block:56px 48px}
+.hero svg{width:148px;height:148px;border-radius:34px;box-shadow:0 18px 40px -18px var(--shadow)}
+.hero h1{font-size:clamp(48px,9vw,96px);font-weight:600;font-variation-settings:"opsz" 144;letter-spacing:-.02em}
+.hero .lede{font-size:18px;color:var(--ink2);max-width:60ch;margin-top:var(--s3)}
+.hero .meta{display:flex;gap:var(--s4);flex-wrap:wrap;margin-top:var(--s4)}
+@media (max-width:640px){.hero{grid-template-columns:1fr;gap:var(--s4)} .hero svg{width:104px;height:104px;border-radius:24px}}
+
+/* Grille de cadran : filets d'heures */
+.dialrule{height:10px;background:repeating-linear-gradient(90deg,var(--rule) 0 1px,transparent 1px calc(100%/24));border-bottom:1px solid var(--rule)}
+
+/* Métaphore */
+.three{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--s5)}
+.three > div{display:flex;flex-direction:column;gap:var(--s2);padding-top:var(--s3);border-top:2px solid var(--ink)}
+
+/* Jetons */
+.palettes{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--s5)}
+.pal{border-radius:var(--r-l);padding:var(--s5);background:var(--bg);color:var(--ink);border:1px solid var(--rule);display:flex;flex-direction:column;gap:var(--s4)}
+.pal h3{display:flex;justify-content:space-between;align-items:baseline}
+.sw{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s2)}
+.sw div{display:flex;flex-direction:column;gap:2px;font-size:11px}
+.sw i{display:block;height:44px;border-radius:var(--r-s);border:1px solid var(--rule)}
+.sw b{font-weight:650;font-size:12px}
+.agenda{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s3) var(--s2)}
+.agenda div{display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}
+.agenda svg{flex:none}
+.ratio{font-family:var(--f-mono);font-size:11px;color:var(--ink2)}
+.tokens{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--s5)}
+.tok{display:flex;flex-direction:column;gap:var(--s2)}
+.tok .row{display:flex;gap:var(--s3);align-items:flex-end;flex-wrap:wrap}
+.tok .row span{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--ink2)}
+
+/* Typographie */
+.type{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--s5)}
+.face{display:flex;flex-direction:column;gap:var(--s2);padding-top:var(--s3);border-top:1px solid var(--rule)}
+.face .big{font-size:56px;line-height:1}
+.styles{display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+.styles > div{display:grid;grid-template-columns:120px 1fr;gap:var(--s4);align-items:baseline;padding-block:var(--s3);border-bottom:1px solid var(--rule)}
+.styles code{font-family:var(--f-mono);font-size:12px;color:var(--acc)}
+@media (max-width:520px){.styles > div{grid-template-columns:1fr;gap:4px}}
+
+/* Logos */
+.logos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--s5)}
+.logo{display:flex;flex-direction:column;gap:var(--s3)}
+.logo svg{width:100%;max-width:200px;height:auto;aspect-ratio:1}
+.logo .sq{border-radius:28%}
+.logo.pick{position:relative}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:99px;border:1px solid var(--acc);color:var(--acc);font-size:12px;font-weight:650;width:fit-content}
+.mini-icons{display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap}
+.mini-icons svg{width:48px;height:48px;border-radius:50%}
+
+/* Téléphones */
+.screens{display:flex;flex-direction:column;gap:56px}
+.screen{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:var(--s5);align-items:start}
+.screen .note{display:flex;flex-direction:column;gap:var(--s2);position:sticky;top:calc(env(safe-area-inset-top, 0px) + 16px)}
+.screen .note ul{margin:0;padding-left:18px;color:var(--ink2);font-size:14px;display:flex;flex-direction:column;gap:4px}
+.pair{display:flex;gap:var(--s5);flex-wrap:wrap}
+@media (max-width:900px){.screen{grid-template-columns:1fr} .screen .note{position:static}}
+.ph{width:300px;max-width:100%;height:640px;border-radius:30px;background:var(--bg);color:var(--ink);overflow:hidden;position:relative;
+  border:1px solid var(--rule);box-shadow:0 24px 48px -28px rgba(10,14,30,.5);display:flex;flex-direction:column;font-size:13px;line-height:1.35}
+.ph .sb{height:26px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-family:var(--f-mono);font-size:11px;color:var(--ink2)}
+.ph .body{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.ph .pad{padding:0 16px}
+.ph .eb{font-size:10.5px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.ph .poster{font-family:var(--f-poster);font-variation-settings:"opsz" 120;font-weight:560;font-size:40px;line-height:1;letter-spacing:-.015em}
+.ph .h{font-family:var(--f-poster);font-variation-settings:"opsz" 30;font-weight:600;font-size:19px;line-height:1.15}
+.ph .hr{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--ink2)}
+.ph .s{color:var(--ink2);font-size:12px}
+.ph .rule{height:1px;background:var(--rule);flex:none}
+.ph .tabs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);padding:6px 0 12px}
+.ph .tabs div{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--ink2);min-height:44px;justify-content:center}
+.ph .tabs div.on{color:var(--ink);font-weight:650}
+.ph .tabs div.on svg{color:var(--acc)}
+.ph .tabs div.on::after{content:"";width:18px;height:2px;background:var(--acc);border-radius:2px}
+.ph .quick{flex:none;margin:0 12px 8px;min-height:44px;border-radius:22px;border:1px solid var(--rule);background:var(--surf);display:flex;align-items:center;gap:8px;padding:0 6px 0 14px;color:var(--ink2)}
+.ph .quick .go{margin-left:auto;width:34px;height:34px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center}
+.ph .header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px 10px}
+.ph .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--ink);font-weight:650;font-size:12.5px;color:var(--ink)}
+.ph .btn.fill{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.ph .btn.ghost{border-color:var(--rule)}
+.ph .ico{width:36px;height:36px;display:grid;place-items:center;color:var(--ink)}
+.ph .seg{display:flex;border:1px solid var(--rule);border-radius:18px;padding:2px;gap:2px}
+.ph .seg span{flex:1;text-align:center;padding:5px 8px;border-radius:15px;font-size:12px;color:var(--ink2);white-space:nowrap}
+.ph .seg span.on{background:var(--ink);color:var(--bg);font-weight:650}
+.ph .tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:2px 9px;border-radius:99px;border:1px solid var(--rule);white-space:nowrap}
+.ph .ev{display:flex;gap:8px;align-items:flex-start;padding:8px 0}
+.ph .ev .t{font-family:var(--f-mono);font-size:11.5px;width:42px;flex:none;color:var(--ink2);padding-top:1px}
+.ph .ev .x{flex:1;min-width:0}
+.ph .ev .x b{font-weight:650;display:flex;align-items:center;gap:6px}
+.ph .toggle{width:36px;height:22px;border-radius:11px;background:var(--rule);position:relative;flex:none}
+.ph .toggle::after{content:"";position:absolute;width:16px;height:16px;border-radius:50%;background:var(--bg);top:3px;left:3px;box-shadow:0 1px 2px var(--shadow)}
+.ph .toggle.on{background:var(--acc)}
+.ph .toggle.on::after{left:17px}
+.ph .set{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 0}
+.ph .set > div{flex:1;min-width:0}
+.ph .scroll{overflow:hidden;flex:1;min-height:0}
+
+/* L'ombre « maintenant » : un filet d'accent et l'ombre oblique qu'il porte */
+.now{position:absolute;left:0;right:0;height:2px;background:var(--acc);z-index:3}
+.now::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--acc)}
+.now::after{content:"";position:absolute;left:0;right:0;top:2px;height:16px;background:linear-gradient(to bottom,var(--shadow),transparent);transform:skewX(-40deg);transform-origin:top left}
+/* Grilles horaires */
+.grid{position:relative;flex:1;min-height:0;overflow:hidden}
+.hourlines{position:absolute;inset:0}
+.hourlines div{position:absolute;left:38px;right:0;border-top:1px solid var(--rule)}
+.hourlines span{position:absolute;left:-36px;top:-7px;width:30px;text-align:right;font-family:var(--f-mono);font-size:10px;color:var(--ink2)}
+.blk{position:absolute;border-radius:var(--r-s);padding:3px 5px;font-size:10.5px;line-height:1.2;overflow:hidden;color:var(--ink);
+  background:color-mix(in srgb,var(--c) 16%,var(--bg));border-left:3px solid var(--c);box-shadow:2px 3px 0 -1px var(--shadow)}
+.blk b{font-weight:650;display:block}
+.plage{position:absolute;background:var(--band);border-top:1px dashed var(--rule);border-bottom:1px dashed var(--rule)}
+.plage span{position:absolute;top:2px;left:4px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:650}
+.nightband{position:absolute;left:38px;right:0;background:var(--night)}
+/* Mois */
+.month{display:grid;grid-template-columns:22px repeat(7,1fr);padding:0 10px}
+.month .wd{font-size:10px;font-weight:650;letter-spacing:.08em;color:var(--ink2);text-align:center;padding:4px 0}
+.month .wn{font-family:var(--f-mono);font-size:9.5px;color:var(--ink2);display:flex;align-items:flex-start;padding-top:6px;justify-content:center;opacity:.8}
+.month .d{min-height:66px;border-top:1px solid var(--rule);padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.month .d .n{font-family:var(--f-mono);font-size:12px;width:24px;height:24px;display:grid;place-items:center;border-radius:50%}
+.month .d.out .n{color:var(--ink2);opacity:.55}
+.month .d.today .n{background:var(--ink);color:var(--bg);font-weight:600;box-shadow:3px 3px 0 0 var(--shadow)}
+.month .d.hol .n{color:var(--acc);font-weight:650;text-decoration:underline;text-underline-offset:2px}
+.month .d .mk{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.month .d .lbl{font-size:8.5px;color:var(--ink2);text-align:center;line-height:1.1}
+.month .d .pont{font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);border:1px dashed var(--acc);border-radius:3px;padding:0 2px}
+/* Feuille */
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--rule);border-radius:18px 18px 0 0;padding:10px 16px 16px;box-shadow:0 -18px 40px -20px var(--shadow);display:flex;flex-direction:column;gap:10px;z-index:5}
+.sheet .grab{width:36px;height:4px;border-radius:2px;background:var(--rule);margin:0 auto}
+.scrim{position:absolute;inset:0;background:rgba(5,8,20,.35);z-index:4}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{min-height:32px;display:inline-flex;align-items:center;padding:0 11px;border-radius:16px;border:1px solid var(--rule);font-size:12px}
+.chips span.on{border-color:var(--acc);color:var(--acc);font-weight:650;background:color-mix(in srgb,var(--acc) 10%,var(--bg))}
+.field{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.field.focus{border-bottom:2px solid var(--acc)}
+.field label{font-size:10.5px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.rem{display:flex;align-items:center;gap:10px;min-height:44px;border-bottom:1px solid var(--rule)}
+.rem .k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);font-weight:650;width:58px;flex:none}
+.rem .done{color:var(--ink2);text-decoration:line-through}
+.mark{width:18px;height:18px;flex:none}
+.tok-parse{display:inline;padding:1px 3px;border-radius:3px;border-bottom:2px solid var(--c);background:color-mix(in srgb,var(--c) 12%,transparent)}
+/* Écran verrouillé */
+.lock{position:absolute;inset:0;background:linear-gradient(160deg,#1D2B5C,#0A1028);color:#EEE9DC;display:flex;flex-direction:column;padding:40px 14px 14px;gap:10px}
+.lock .clock{font-family:var(--f-poster);font-variation-settings:"opsz" 144;font-weight:400;font-size:72px;line-height:1;text-align:center}
+.notif{background:var(--bg);color:var(--ink);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 24px -10px rgba(0,0,0,.5)}
+.notif .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.notif .acts span{min-height:32px;display:inline-flex;align-items:center;padding:0 10px;border-radius:16px;background:var(--surf);font-size:11.5px;font-weight:650;color:var(--acc)}
+
+/* Moments */
+.mctl{display:flex;gap:var(--s4);align-items:center;flex-wrap:wrap}
+.segp{display:inline-flex;border:1px solid var(--rule);border-radius:20px;padding:3px;gap:3px}
+.segp button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--ink2);padding:6px 14px;border-radius:16px;cursor:pointer;min-height:36px}
+.segp button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:650}
+.moments{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s5)}
+.moment{display:flex;flex-direction:column;gap:var(--s3)}
+.stage{height:220px;border-radius:var(--r-l);border:1px solid var(--rule);background:var(--bg);position:relative;overflow:hidden;cursor:pointer}
+.moment button.replay{font:inherit;font-size:13px;font-weight:650;align-self:flex-start;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:18px;padding:6px 14px;min-height:36px;cursor:pointer}
+.moment p{font-size:14px;color:var(--ink2)}
+
+/* Système */
+.sys{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s5)}
+.sys ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+footer{padding-block:40px;border-top:1px solid var(--rule);color:var(--ink2);font-size:13px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- Repères de forme des agendas : la couleur n'est jamais seule -->
+  <symbol id="sh-rond" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.6" fill="currentColor"/></symbol>
+  <symbol id="sh-carre" viewBox="0 0 12 12"><rect x="1.8" y="1.8" width="8.4" height="8.4" fill="currentColor"/></symbol>
+  <symbol id="sh-losange" viewBox="0 0 12 12"><path d="M6 .8 11.2 6 6 11.2.8 6Z" fill="currentColor"/></symbol>
+  <symbol id="sh-triangle" viewBox="0 0 12 12"><path d="M6 1.2 11.2 10.6H.8Z" fill="currentColor"/></symbol>
+  <symbol id="sh-anneau" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="sh-croix" viewBox="0 0 12 12"><path d="M4.4 1h3.2v3.4H11v3.2H7.6V11H4.4V7.6H1V4.4h3.4Z" fill="currentColor"/></symbol>
+  <symbol id="sh-tribas" viewBox="0 0 12 12"><path d="M6 10.8 .8 1.4h10.4Z" fill="currentColor"/></symbol>
+  <symbol id="sh-barre" viewBox="0 0 12 12"><rect x=".8" y="3.8" width="10.4" height="4.4" rx="1" fill="currentColor"/></symbol>
+  <!-- Icônes au trait (24, trait 1,7) -->
+  <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 17h16"/><path d="M12 17V8l7 9"/><path d="M6 13l-1.5-1M7.5 9.5 6.5 8M12 5V3.5"/></g></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M9.3 10v10M14.6 10v10M8 3v4M16 3v4"/></g></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></g></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></g></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z"/><path d="M10 20.5h4"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11Z"/><circle cx="12" cy="10" r="2.2"/></g></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V9a3 3 0 0 1 3-3h10l-3-3M19 13v2a3 3 0 0 1-3 3H6l3 3"/></g></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6"/></g></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></g></symbol>
+  <symbol id="i-move" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M16 8l4 4-4 4M8 8l-4 4 4 4"/></g></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.5l2 11h10l2-8H7"/><circle cx="9.5" cy="19" r="1.3"/><circle cx="16.5" cy="19" r="1.3"/></g></symbol>
+</svg>
+<style>
+/* Complément J9 : mêmes jetons que la planche J0 ; ajouts propres au pont avec les agendas d’Android. */
+.seg2{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--rule);border-radius:16px;padding:2px;gap:2px}
+.seg2 span{text-align:center;padding:5px 4px;border-radius:13px;font-size:12px;color:var(--ink2);white-space:nowrap}
+.seg2 span.on{background:var(--ink);color:var(--bg);font-weight:650}
+.year{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px;padding:0 12px}
+.ym{display:flex;flex-direction:column;gap:3px}
+.ym .mn{font-family:var(--f-poster);font-variation-settings:"opsz" 24;font-weight:600;font-size:12.5px}
+.ym.cur .mn{color:var(--acc)}
+.ym .g{display:grid;grid-template-columns:repeat(7,1fr);gap:1.5px}
+.ym .g i{aspect-ratio:1;border-radius:2px;display:block;background:color-mix(in srgb,var(--acc) calc(var(--l) * 1%),var(--bg));outline:1px solid color-mix(in srgb,var(--rule) 60%,transparent);outline-offset:-1px}
+.ym .g i.e{background:transparent;outline:0}
+.ym .g i.t{outline:2px solid var(--ink);outline-offset:-1px}
+.ym .g i.sel{outline:2px solid var(--acc);outline-offset:0}
+.legend{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--ink2);flex-wrap:wrap}
+.legend i{width:12px;height:12px;border-radius:2px;display:inline-block;background:color-mix(in srgb,var(--acc) calc(var(--l) * 1%),var(--bg));outline:1px solid var(--rule);outline-offset:-1px}
+.home{position:relative;height:100%;background:radial-gradient(120% 80% at 20% 0%,#5B6E8F,#27324A 60%,#151B2B);display:flex;flex-direction:column;gap:12px;padding:34px 12px 14px}
+.home .apps{margin-top:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;justify-items:center}
+.home .apps span{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.16)}
+.wg{background:var(--bg);color:var(--ink);border-radius:22px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 24px -14px rgba(0,0,0,.6)}
+.wg .wrow{display:flex;gap:8px;align-items:center;font-size:12.5px}
+.wg .wrow .t{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--ink2);width:40px;flex:none}
+.pray{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.pray div{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;border-radius:8px;border:1px solid var(--rule)}
+.pray div.cur{border-color:var(--acc)}
+.pray div.past{opacity:.6}
+.pray .eb{letter-spacing:.04em;font-size:9.5px}
+.dayicons{display:flex;gap:var(--s5);flex-wrap:wrap;align-items:flex-end}
+.dayicons figure{margin:0;display:flex;flex-direction:column;gap:6px;align-items:center;font-size:12px;color:var(--ink2)}
+.dayicons svg{border-radius:50%}
+.risk{border-left:3px solid var(--warn);padding:4px 0 4px 12px;color:var(--ink2);font-size:14px}
+</style>
+<style>
+/* Pont : un événement venu d'Android garde la couleur et la forme, mais en contour tireté, sans aplat */
+.blk.ext{background:var(--bg);border:1px dashed var(--c);border-left:3px solid var(--c);box-shadow:none}
+.blk.ext b{display:flex;align-items:center;gap:3px}
+.grp{display:flex;flex-direction:column;gap:0}
+.grp .src{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-top:10px}
+.agrow{display:flex;align-items:center;gap:10px;min-height:44px;border-bottom:1px solid var(--rule)}
+.agrow > span.n{flex:1;min-width:0}
+.ro{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--ink2);border:1px dashed var(--rule);border-radius:99px;padding:1px 8px;white-space:nowrap}
+.bridge{border:1px dashed var(--rule);border-radius:var(--r-l);padding:12px;display:flex;flex-direction:column;gap:8px;margin-top:8px}
+/* Le dialogue est celui d'Android : il ne prend pas les jetons d'Hora */
+.sysdlg{position:absolute;left:22px;right:22px;top:150px;z-index:6;background:#F1F3F8;color:#1B1C20;border-radius:26px;padding:22px 20px 14px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;font-family:Roboto,system-ui,sans-serif;box-shadow:0 18px 40px -12px rgba(0,0,0,.5)}
+.sysdlg .q{font-size:16px;line-height:1.3}
+.sysdlg .opt{width:100%;display:flex;flex-direction:column;gap:6px}
+.sysdlg .opt span{display:block;padding:11px;border-radius:20px;background:#DCE2F9;color:#141B2C;font-size:13px;font-weight:500}
+.decide{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s5)}
+.decide > div{display:flex;flex-direction:column;gap:var(--s2);padding-top:var(--s3);border-top:2px solid var(--ink)}
+.decide p{color:var(--ink2);font-size:14px}
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></g></symbol>
+  <symbol id="i-open" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/></g></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M8 3v4M16 3v4"/></g></symbol>
+</svg>
+
+<div class="wrap">
+<header class="hero" style="grid-template-columns:1fr;padding-block:48px 32px">
+  <div>
+    <p class="eyebrow">Complément de planche · J9 · v0.9.0</p>
+    <h1 style="font-size:clamp(40px,7vw,72px)">Hora, J9</h1>
+    <p class="lede">Le pont vers les agendas d’Android : ceux que synchronise DAVx5, ceux d’un compte ou de l’appareil. Hora les lit et les montre parmi les siens, en lecture seule ; l’écriture viendra plus tard. Même palette, mêmes polices, mêmes formes que la planche J0. Chaque écran est montré en Midi puis en Nocturne.</p>
+    <div class="meta"><span class="chip">cadrage du 13 novembre 2026</span><span class="chip">à valider avant le code</span></div>
+  </div>
+</header>
+
+<section class="block">
+  <div class="read"><p class="eyebrow">Activer</p><h2>Sur demande, une seule permission</h2>
+  <p style="margin-top:var(--s3);color:var(--ink2)">Rien ne change tant qu’on ne demande rien : Hora ne lit pas les agendas d’Android au premier lancement. Dans Réglages › Agendas, un encadré tireté propose le pont. Le bouton déclenche la demande d’Android, <span class="mono">READ_CALENDAR</span>, et rien d’autre : pas d’écriture, pas de réseau.</p></div>
+  <div class="screens" id="s1"></div>
+</section>
+
+<section class="block">
+  <div class="read"><p class="eyebrow">Lire</p><h2>Leurs événements parmi les vôtres</h2>
+  <p style="margin-top:var(--s3);color:var(--ink2)">Un événement venu d’Android se dessine comme ceux d’Hora, couleur et forme comprises, mais en contour tireté, sans aplat : on voit qu’il vient d’ailleurs avant même de le toucher. Il apparaît dans toutes les vues, sur Aujourd’hui, dans la recherche et les widgets.</p></div>
+  <div class="screens" id="s2"></div>
+</section>
+
+<section class="block">
+  <div class="read"><p class="eyebrow">À valider</p><h2>Quatre règles</h2></div>
+  <div class="decide">
+    <div><h3>Couleurs</h3><p>La couleur d’Android est arbitraire. Hora la ramène à la plus proche de ses huit couleurs, avec sa forme, pour garder le contraste et la lecture sans couleur. On peut la changer dans Hora ; Android n’en sait rien.</p></div>
+    <div><h3>Rappels</h3><p>Hora ne fait pas sonner les rappels d’un événement d’Android : l’app d’origine s’en charge. La fiche les cite, pour mémoire.</p></div>
+    <div><h3>Doublons</h3><p>Un événement d’Android dont l’UID existe déjà dans Hora (les 33 importés de Fossify, par exemple) est masqué : celui d’Hora l’emporte. Réglages › Agendas dit combien sont masqués.</p></div>
+    <div><h3>Ce qui reste à Hora</h3><p>La charge de l’année et le créneau libre comptent les événements « occupé » d’Android. L’export .ics et la sauvegarde n’en contiennent aucun : ils appartiennent à leur compte.</p></div>
+  </div>
+  <p class="risk read">À vérifier sur le téléphone : Fossify Agenda est encore installé. S’il range ses événements dans un agenda local d’Android, ils apparaîtront aussi ; la règle des doublons doit les masquer.</p>
+</section>
+
+<section class="block">
+  <div class="read"><p class="eyebrow">Mouvement</p><h2>Pas de nouveau moment</h2>
+  <p style="margin-top:var(--s3);color:var(--ink2)">Les événements d’Android se posent comme les autres, avec le moment « l’événement qui se pose » quand ils arrivent pendant qu’Hora est ouvert. Rien d’autre n’anime le pont.</p></div>
+</section>
+
+<footer>Hora · complément de planche J9 · jetons, polices et formes de la planche J0 validée le 2 novembre 2026.</footer>
+</div>
+
+<script>
+const mark = (c, s, size = 12) => `<svg class="mark" width="${size}" height="${size}" style="color:var(--a-${c});width:${size}px;height:${size}px" aria-hidden="true"><use href="#sh-${s}"/></svg>`;
+const ic = (i, s = 14) => `<svg width="${s}" height="${s}" aria-hidden="true" style="flex:none"><use href="#i-${i}"/></svg>`;
+const sb = `<div class="sb"><span>12:18</span><span>5G ▮▮▮ 82 %</span></div>`;
+const tabs = on => `<div class="tabs">${[['sun','Aujourd’hui'],['grid','Agenda'],['search','Chercher'],['sliders','Réglages']].map(([i, l], k) => `<div class="${k===on?'on':''}"><svg width="22" height="22"><use href="#i-${i}"/></svg>${l}</div>`).join('')}</div>`;
+const seg = on => `<div class="seg2">${['Jour','3 jours','Semaine','Mois','Année','Liste'].map(l => `<span class="${l===on?'on':''}">${l}</span>`).join('')}</div>`;
+const pair = (id, items) => { document.getElementById(id).innerHTML = items.map(([t, s, pts, html]) => `
+  <div class="screen">
+    <div class="note"><h3>${t}</h3><p style="color:var(--ink2)">${s}</p><ul>${pts.map(p => `<li>${p}</li>`).join('')}</ul></div>
+    <div class="pair"><div class="ph midi" role="img" aria-label="${t}, palette Midi">${html}</div><div class="ph noct" role="img" aria-label="${t}, palette Nocturne">${html}</div></div>
+  </div>`).join(''); };
+
+// ---------- Réglages › Agendas ----------
+const head = t => `<div class="header"><div style="display:flex;align-items:center;gap:4px"><span class="ico" style="margin-left:-10px"><svg width="22" height="22"><use href="#i-left"/></svg></span><span class="h" style="font-size:22px">${t}</span></div></div>`;
+const row = (c, s, n, extra = '') => `<div class="agrow">${mark(c, s)}<span class="n">${n}</span>${extra}</div>`;
+const horaAgendas = `<span class="eb" style="padding-top:4px">Dans Hora</span>
+  ${row('bleu','rond','Personnel','<span class="toggle on"></span>')}
+  ${row('sapin','carre','Travail','<span class="toggle on"></span>')}
+  ${row('ardoise','barre','Fériés <span class="s">· calculés</span>','<span class="toggle on"></span>')}`;
+const bridgeBox = dlg => `${sb}<div class="body">${head('Agendas')}<div class="pad scroll" style="display:flex;flex-direction:column">
+  ${horaAgendas}
+  <div class="bridge">
+    <div style="display:flex;align-items:center;gap:8px">${ic('phone',18)}<b>Agendas du téléphone</b></div>
+    <p class="s">Montrer dans Hora les agendas d’Android : ceux de DAVx5, d’un compte ou de l’appareil. Lecture seule ; Hora n’y écrit rien et n’envoie rien.</p>
+    <span class="btn fill" style="align-self:flex-start">Lire les agendas du téléphone</span>
+  </div>
+</div>${dlg ? `<div class="scrim"></div><div class="sysdlg">${ic('cal',24)}<p class="q">Autoriser <b>Hora</b> à accéder à votre agenda ?</p><div class="opt"><span>Autoriser</span><span>Ne pas autoriser</span></div></div>` : ''}</div>${tabs(3)}`;
+const after = `${sb}<div class="body">${head('Agendas')}<div class="pad scroll" style="display:flex;flex-direction:column">
+  ${horaAgendas}
+  <div class="grp">
+    <div class="src"><span class="eb">Nextcloud · DAVx5</span><span class="ro">${ic('phone',11)}lecture seule</span></div>
+    ${row('prune','losange','Famille','<span class="toggle on"></span>')}
+    ${row('ocre','triangle','Club d’escalade','<span class="toggle on"></span>')}
+    <div class="src"><span class="eb">Sur l’appareil</span></div>
+    ${row('framboise','anneau','Anniversaires des contacts','<span class="toggle"></span>')}
+    <p class="s" style="padding-top:8px">3 événements déjà dans Hora sont masqués.</p>
+    <span class="btn ghost" style="align-self:flex-start;margin-top:8px">Arrêter la lecture</span>
+  </div>
+</div></div>${tabs(3)}`;
+pair('s1', [
+  ['Avant', 'Réglages › Agendas, tant que le pont n’est pas demandé.', [
+    'L’encadré tireté annonce ce qui vient d’ailleurs', 'Le bouton dit ce qu’il fait : lire, pas écrire', 'Rien n’est lu avant ce geste'], bridgeBox(false)],
+  ['La demande d’Android', 'Le dialogue est celui du système ; Hora ne l’habille pas.', [
+    'Autoriser : la liste des agendas apparaît aussitôt', 'Ne pas autoriser : l’encadré reste, avec « Lecture refusée. Pour l’autoriser : Paramètres d’Android › Applications › Hora › Autorisations. » et un bouton « Ouvrir les paramètres d’Android »', 'Aucune nouvelle demande sans un nouveau geste'], bridgeBox(true)],
+  ['Après', 'Les agendas d’Android, rangés par compte, sous ceux d’Hora.', [
+    'Chacun se montre ou se masque, comme un agenda d’Hora', 'Couleur et forme modifiables dans Hora (appui sur la pastille)', '« Arrêter la lecture » retire tout d’Hora ; la permission se retire dans Android', 'Les doublons masqués sont comptés'], after],
+]);
+
+// ---------- 3 jours mêlés ----------
+function threeDays() {
+  const h0 = 8, h1 = 21, px = 28, left = 38, colW = (300 - left - 8) / 3;
+  let lines = '';
+  for (let h = h0; h <= h1; h++) lines += `<div style="top:${(h-h0)*px+6}px"><span>${String(h).padStart(2,'0')}</span></div>`;
+  const top = h => (h - h0) * px + 6;
+  const blk = (col, a, b, c, s, t, sub, ext) => `<div class="blk${ext?' ext':''}" style="--c:var(--a-${c});left:${left + col*colW + 2}px;width:${colW - 4}px;top:${top(a)}px;height:${(b-a)*px - 2}px"><b>${ext?mark(c,s,9):''}${t}</b>${sub ? `<span style="color:var(--ink2)">${sub}</span>` : ''}</div>`;
+  const content = blk(0, 10, 11.5, 'sapin', 'carre', 'Point projet', 'salle 3')
+    + blk(0, 14.5, 15, 'sarcelle', 'croix', 'Dentiste', '')
+    + blk(0, 18.5, 20.5, 'ocre', 'triangle', 'Bloc', 'Club d’escalade', true)
+    + blk(1, 12.5, 13.5, 'framboise', 'anneau', 'Déjeuner avec Éric', '')
+    + blk(1, 19.5, 21, 'prune', 'losange', 'Dîner chez Mamie', 'Famille', true)
+    + blk(2, 9, 12, 'prune', 'losange', 'Marché', 'Famille', true)
+    + blk(2, 18, 19, 'ocre', 'anneau', 'Courses', '')
+    + `<div class="now" style="top:${top(12.3)}px;left:${left}px;right:auto;width:${colW}px"></div>`;
+  const hd = [['Mer.','4',1],['Jeu.','5',0],['Ven.','6',0]];
+  return `${sb}<div class="body">
+    <div class="header"><div style="display:flex;flex-direction:column"><span class="eb">Semaine 45</span><span class="h" style="font-size:22px">4 – 6 novembre</span></div>
+      <div style="display:flex;align-items:center;gap:2px"><span class="ico"><svg width="22" height="22"><use href="#i-left"/></svg></span><span class="ico"><svg width="22" height="22"><use href="#i-right"/></svg></span></div></div>
+    <div class="pad" style="margin-bottom:8px">${seg('3 jours')}</div>
+    <div style="display:grid;grid-template-columns:38px repeat(3,1fr);padding-right:8px;text-align:center;padding-bottom:4px">
+      <div></div>${hd.map(([d, n, t]) => `<div style="display:flex;flex-direction:column;line-height:1.15;${t?'color:var(--acc);font-weight:700':'color:var(--ink2)'}"><span style="font-size:10.5px">${d}</span><span class="mono" style="font-size:15px;${t?'':'color:var(--ink)'}">${n}</span></div>`).join('')}</div>
+    <div class="grid"><div class="hourlines">${lines}</div>${content}</div>
+  </div>${tabs(1)}`;
+}
+const detail = `${sb}<div class="body">
+  <div class="header"><span class="ico" style="margin-left:-10px"><svg width="22" height="22"><use href="#i-close"/></svg></span><span class="ico">${ic('share',22)}</span></div>
+  <div class="pad" style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;gap:6px">${mark('prune','losange')}<span class="eb">Famille · Nextcloud (DAVx5)</span></div>
+    <span class="poster" style="font-size:34px">Dîner chez Mamie</span>
+    <span class="ro" style="align-self:flex-start">${ic('phone',11)}agenda du téléphone · lecture seule</span>
+    <div class="rule"></div>
+    <div class="set"><span class="ico" style="width:22px">${ic('cal',18)}</span><div><div>Jeudi 5 novembre</div><div class="hr">19:30 – 21:00 · 1 h 30</div></div></div>
+    <div class="set"><span class="ico" style="width:22px">${ic('pin',18)}</span><div>Villenave-d’Ornon</div></div>
+    <div class="set"><span class="ico" style="width:22px">${ic('bell',18)}</span><div><div>1 h avant</div><div class="s">Sonne par l’app d’origine, pas par Hora.</div></div></div>
+    <div class="rule"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="btn fill">${ic('open',15)}Ouvrir dans l’app d’origine</span>
+      <span class="btn ghost">${ic('copy',15)}Copier dans Hora</span>
+    </div>
+  </div>
+</div>${tabs(1)}`;
+pair('s2', [
+  ['3 jours, mêlés', 'Hora et Android côte à côte, distincts au premier regard.', [
+    'Hora : aplat teinté et ombre portée, comme avant', 'Android : contour tireté, forme de l’agenda devant le titre', 'Toucher une heure libre crée toujours un événement d’Hora', 'TalkBack ajoute « agenda du téléphone » à la phrase'], threeDays()],
+  ['Fiche en lecture seule', 'Tout ce qu’Android sait, rien qu’on ne puisse modifier.', [
+    'Ni Modifier, ni Déplacer, ni Supprimer', '« Ouvrir dans l’app d’origine » : l’agenda du téléphone qui le gère', '« Copier dans Hora » : un événement d’Hora, modifiable, qui ne suit plus l’original', 'Le partage en .ics reste possible'], detail],
+]);
+</script>

@@ -172,12 +172,15 @@ interface EventDao {
     @Query("SELECT * FROM event WHERE uid = :uid")
     suspend fun byUid(uid: String): EventEntity?
 
-    /** Les UID d'Hora : un événement d'Android qui en porte un est un doublon. */
-    @Query("SELECT uid FROM event")
+    /**
+     * Les UID des agendas affichés : un événement d'Android qui en porte un est un doublon.
+     * Un agenda masqué n'en compte pas, sinon l'événement disparaîtrait des deux côtés.
+     */
+    @Query("SELECT e.uid FROM event e JOIN agenda a ON a.id = e.agenda_id WHERE a.hidden = 0")
     fun observeUids(): Flow<List<String>>
 
-    /** De quoi reconnaître une copie sans UID commun (`copyKey`). */
-    @Query("SELECT all_day, start, title FROM event")
+    /** De quoi reconnaître une copie sans UID commun (`copyKey`), agendas affichés seulement. */
+    @Query("SELECT e.all_day, e.start, e.title FROM event e JOIN agenda a ON a.id = e.agenda_id WHERE a.hidden = 0")
     fun observeCopies(): Flow<List<EventCopy>>
 
     @Query("SELECT * FROM event WHERE agenda_id IN (:agendaIds) ORDER BY parent_id IS NOT NULL, start")

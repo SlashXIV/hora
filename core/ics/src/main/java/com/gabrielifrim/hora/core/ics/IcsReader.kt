@@ -82,11 +82,18 @@ object IcsReader {
             }
             unknownZones += zones.unknown
 
+            // RECURRENCE-ID est du type de la série (son DTSTART), pas forcément de l'occurrence : la clé se calcule sur la série.
+            val seriesTiming = read.filter { it.parentUid == null }.associate { it.event.uid to it.event.timing }
+            val rekeyed = read.map { p ->
+                val series = p.parentUid?.let(seriesTiming::get)
+                val raw = p.recurrenceWhen
+                if (series == null || raw == null) p else keyOf(raw, series).let { k -> p.copy(event = p.event.copy(uid = "${p.parentUid}#$k", recurrenceId = k)) }
+            }
             // Une occurrence annulée devient une exception de sa série ; un événement annulé n'entre pas.
-            val cancelled = read.filter { it.cancelled }
+            val cancelled = rekeyed.filter { it.cancelled }
             skipped += cancelled.count { it.parentUid == null }
             val exceptionsBySeries = cancelled.filter { it.parentUid != null }.groupBy({ it.parentUid!! }, { it.event.recurrenceId!! })
-            val kept = read.filterNot { it.cancelled }.map { p ->
+            val kept = rekeyed.filterNot { it.cancelled }.map { p ->
                 val extra = exceptionsBySeries[p.event.uid].orEmpty()
                 val recurrence = p.event.recurrence
                 if (extra.isEmpty() || recurrence == null) p else p.copy(event = p.event.copy(recurrence = recurrence.copy(exceptions = recurrence.exceptions + extra)))
@@ -107,6 +114,8 @@ object IcsReader {
         /** Occurrences en plus (RDATE), rattachées à la série. */
         val extraDates: List<Event> = emptyList(),
         val agenda: SourceAgenda = SourceAgenda(null),
+        /** RECURRENCE-ID brut : sa clé dépend de la série, lue plus tard. */
+        val recurrenceWhen: IcsWhen? = null,
     )
 
     private fun parse(c: IcsComponent, zones: ZoneResolver, deviceZone: ZoneId): Parsed {
@@ -117,7 +126,8 @@ object IcsReader {
         val uid = c.first("UID")?.value?.trim()?.ifEmpty { null }
             ?: UUID.nameUUIDFromBytes((c.first("SUMMARY")?.value + "|" + c.first("DTSTART")?.value).toByteArray()).toString()
 
-        val recurrenceId = c.first("RECURRENCE-ID")?.let { p -> zones.read(p.value, p.params)?.let { keyOf(it, timing) } }
+        val recurrenceWhen = c.first("RECURRENCE-ID")?.let { p -> zones.read(p.value, p.params) }
+        val recurrenceId = recurrenceWhen?.let { keyOf(it, timing) }
         val exceptions = c.all("EXDATE").flatMap(zones::readList).map { keyOf(it, timing) }.toSet()
         val rule = c.first("RRULE")?.value?.trim()?.removePrefix("RRULE:")?.ifEmpty { null }
 
@@ -151,6 +161,7 @@ object IcsReader {
             cancelled = c.first("STATUS")?.value?.trim()?.uppercase() == "CANCELLED",
             shiftedReminders = shifted,
             extraDates = extra,
+            recurrenceWhen = recurrenceWhen,
         )
     }
 

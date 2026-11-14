@@ -74,4 +74,13 @@ class IcsWriterTest {
         assertThat(lines).contains("RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=SU;BYMONTHDAY=25,26,27,28,29,30,31")
         assertThat(lines).containsAtLeast("TZOFFSETFROM:+0100", "TZOFFSETTO:+0200")
     }
+
+    @Test
+    fun `occurrence passee en journee entiere - export et reimport sans perte`() {
+        val key = at(6 + 7, 9).toEpochMilli()
+        val allDayChild = moved.copy(timing = Timing.AllDay(LocalDate.of(2026, 3, 30), LocalDate.of(2026, 3, 30)), recurrenceId = key)
+        val text = IcsWriter.write(listOf(series, allDayChild), mapOf(3L to agenda))
+        val child = IcsReader.read(text.toByteArray(), paris).entries.single { it.item.parentUid == "serie-1" }.item.event
+        assertThat(child.recurrenceId).isEqualTo(key)
+    }
 }

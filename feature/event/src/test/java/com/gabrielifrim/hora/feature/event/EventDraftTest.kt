@@ -76,4 +76,23 @@ class EventDraftTest {
         // Un modèle dont l'agenda a été supprimé garde celui du brouillon.
         assertThat(base.withTemplate(dentist.copy(agendaId = null)).agendaId).isEqualTo(1L)
     }
+
+    @Test
+    fun `la regle d'origine reste telle quelle si l'on ne touche pas la repetition`() {
+        // Le dernier lundi du mois, ouvert sur le 27 avril 2026 (un 4e lundi) : il reste le dernier lundi.
+        val start = LocalDateTime.of(2026, 4, 27, 9, 0)
+        val event = EventDraft(agendaId = 1, title = "Bilan", start = start, end = start.plusHours(1), zone = paris).toEvent()
+            .copy(recurrence = com.gabrielifrim.hora.core.domain.model.Recurrence("FREQ=MONTHLY;BYDAY=-1MO"))
+        val draft = EventDraft.of(event, paris).copy(title = "Bilan du mois")
+        assertThat(draft.toEvent().recurrence!!.rule).isEqualTo("FREQ=MONTHLY;BYDAY=-1MO")
+    }
+
+    @Test
+    fun `chaque mardi deplace au mercredi devient chaque mercredi`() {
+        val start = LocalDateTime.of(2026, 11, 10, 18, 30)
+        val event = EventDraft(agendaId = 1, title = "Sport", start = start, end = start.plusHours(1), zone = paris).toEvent()
+            .copy(recurrence = com.gabrielifrim.hora.core.domain.model.Recurrence("FREQ=WEEKLY;BYDAY=TU"))
+        val moved = EventDraft.of(event, paris).withStart(start.plusDays(1))
+        assertThat(moved.toEvent().recurrence!!.rule).isEqualTo("FREQ=WEEKLY;BYDAY=WE")
+    }
 }

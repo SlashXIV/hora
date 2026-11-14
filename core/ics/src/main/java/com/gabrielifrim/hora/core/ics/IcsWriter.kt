@@ -26,12 +26,13 @@ object IcsWriter {
         agendas.values.singleOrNull()?.let { lines += "X-WR-CALNAME:" + IcsSyntax.escape(it.name) }
         events.mapNotNull { (it.timing as? Timing.Timed)?.zone }.filter { it.isRegion() }.distinct().forEach { lines += vtimezone(it) }
         val uidById = events.associate { it.id to it.uid }
-        for (event in events) lines += vevent(event, agendas[event.agendaId], uidById, now)
+        val timingById = events.associate { it.id to it.timing }
+        for (event in events) lines += vevent(event, agendas[event.agendaId], uidById, timingById, now)
         lines += "END:VCALENDAR"
         return lines.joinToString("") { IcsSyntax.fold(it) }
     }
 
-    private fun vevent(e: Event, agenda: Agenda?, uidById: Map<Long, String>, now: Instant): List<String> {
+    private fun vevent(e: Event, agenda: Agenda?, uidById: Map<Long, String>, timingById: Map<Long, Timing>, now: Instant): List<String> {
         val out = mutableListOf("BEGIN:VEVENT")
         val parentUid = e.parentId?.let { uidById[it] } ?: e.uid.substringBefore('#').takeIf { e.recurrenceId != null }
         out += "UID:" + (if (e.recurrenceId != null) parentUid ?: e.uid else e.uid)
@@ -61,7 +62,8 @@ object IcsWriter {
             out += "RRULE:" + r.rule.removePrefix("RRULE:")
             r.exceptions.sorted().forEach { key -> out += "EXDATE" + keyValue(key, e.timing) }
         }
-        e.recurrenceId?.let { key -> out += "RECURRENCE-ID" + keyValue(key, e.timing) }
+        // RECURRENCE-ID est du type de la série : une occurrence passée en journée garde une clé à l'heure.
+        e.recurrenceId?.let { key -> out += "RECURRENCE-ID" + keyValue(key, e.parentId?.let(timingById::get) ?: e.timing) }
         e.reminders.forEach { r -> out += valarm(r, e) }
         out += "END:VEVENT"
         return out
@@ -99,7 +101,8 @@ object IcsWriter {
 
     /** Valeur d'une clé d'occurrence (EXDATE, RECURRENCE-ID), du même type que DTSTART. */
     private fun keyValue(key: Long, timing: Timing): String = when (timing) {
-        is Timing.AllDay -> ";VALUE=DATE:" + day(LocalDate.ofEpochDay(key))
+        // Une clé en millisecondes (série absente de l'export) se ramène à son jour plutôt que de faire échouer l'export.
+        is Timing.AllDay -> ";VALUE=DATE:" + day(if (key > MAX_EPOCH_DAY) Instant.ofEpochMilli(key).atZone(ZoneOffset.UTC).toLocalDate() else LocalDate.ofEpochDay(key))
         is Timing.Timed -> dateTime(Instant.ofEpochMilli(key), timing.zone)
     }
 
@@ -113,3 +116,6 @@ object IcsWriter {
 
     private fun day(d: LocalDate): String = BASIC_DATE.format(d)
 }
+
+/** Au-delà, une clé d'occurrence ne peut être qu'en millisecondes (jour 100 000 : l'an 2243). */
+private const val MAX_EPOCH_DAY = 100_000L

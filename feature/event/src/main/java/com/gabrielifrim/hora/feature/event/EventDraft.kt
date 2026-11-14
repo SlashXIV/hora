@@ -42,13 +42,21 @@ data class EventDraft(
     /** Règle importée que l'éditeur ne sait pas montrer : gardée telle quelle tant qu'on ne choisit pas autre chose. */
     val customRule: String? = null,
     val exceptions: Set<Long> = emptySet(),
+    /** La règle relue et ce qui l'a produite : réécrite seulement si l'un change (« dernier lundi » reste le dernier). */
+    val origin: RuleOrigin? = null,
 ) {
+    data class RuleOrigin(val rule: String, val repeat: RepeatSpec?, val day: LocalDate, val allDay: Boolean)
+
     // Toute la journée, on compare des jours : sinon « jeudi 00:00 » serait avant « jeudi 09:00 ».
     val canSave: Boolean get() = title.isNotBlank() &&
         if (allDay) !end.toLocalDate().isBefore(start.toLocalDate()) else !end.isBefore(start)
 
     /** Change le début en gardant la durée : déplacer un rendez-vous ne le raccourcit pas. */
-    fun withStart(newStart: LocalDateTime): EventDraft = copy(start = newStart, end = newStart.plus(Duration.between(start, end)))
+    fun withStart(newStart: LocalDateTime): EventDraft = copy(
+        start = newStart, end = newStart.plus(Duration.between(start, end)),
+        // « Chaque mardi » déplacé au mercredi devient « chaque mercredi ».
+        repeat = repeat?.takeIf { it.weekdays == setOf(start.dayOfWeek) }?.copy(weekdays = setOf(newStart.dayOfWeek)) ?: repeat,
+    )
 
     /** Toute la journée, la fin est un jour ; à heure fixe, un instant. */
     fun withEnd(newEnd: LocalDateTime): EventDraft = copy(end = if (newEnd.isBefore(start)) start else newEnd)
@@ -97,7 +105,10 @@ data class EventDraft(
         pinned = pinned,
         travelMinutes = if (allDay) 0 else travelMinutes,
         reminders = reminders,
-        recurrence = (repeat?.toRule(start.toLocalDate(), if (allDay) null else zone) ?: customRule)?.let { Recurrence(it, exceptions) },
+        recurrence = (
+            origin?.takeIf { it.repeat == repeat && it.day == start.toLocalDate() && it.allDay == allDay && (repeat != null || customRule == it.rule) }?.rule
+                ?: repeat?.toRule(start.toLocalDate(), if (allDay) null else zone) ?: customRule
+            )?.let { Recurrence(it, exceptions) },
         timing = if (allDay) {
             Timing.AllDay(start.toLocalDate(), maxOf(start.toLocalDate(), end.toLocalDate()))
         } else {
@@ -128,6 +139,7 @@ data class EventDraft(
                 repeat = spec,
                 customRule = rule.takeIf { spec == null },
                 exceptions = event.recurrence?.exceptions.orEmpty(),
+                origin = rule?.let { RuleOrigin(it, spec, d.start.toLocalDate(), d.allDay) },
             )
         }
 
@@ -145,7 +157,7 @@ data class EventDraft(
         }
 
         /** Copie à enregistrer comme un nouvel événement : nouvel identifiant, nouvel UID. */
-        fun duplicate(event: Event, displayZone: ZoneId): EventDraft = of(event, displayZone).copy(id = 0, uid = UUID.randomUUID().toString(), exceptions = emptySet())
+        fun duplicate(event: Event, displayZone: ZoneId): EventDraft = of(event, displayZone).copy(id = 0, uid = UUID.randomUUID().toString(), exceptions = emptySet(), origin = null)
     }
 }
 

@@ -3,6 +3,7 @@ package com.gabrielifrim.hora.core.domain.recurrence
 import com.gabrielifrim.hora.core.domain.model.Event
 import com.gabrielifrim.hora.core.domain.model.Timing
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -40,17 +41,32 @@ object SeriesEdits {
                 EditPlan(
                     save = listOfNotNull(
                         head?.let { series.copy(recurrence = it) },
-                        edited.copy(id = 0, uid = "${series.uid}-$key", recurrence = edited.recurrence ?: tail, parentId = null, recurrenceId = null, occurrence = null),
+                        // Règle inchangée : la suite garde le compte restant (COUNT) ; répétition retirée : un événement seul.
+                        edited.copy(
+                            id = 0, uid = "${series.uid}-$key", parentId = null, recurrenceId = null, occurrence = null,
+                            recurrence = edited.recurrence?.let { if (it.rule == series.recurrence.rule) tail else it },
+                        ),
                     ),
                     delete = later.map { it.id } + if (head == null) listOf(series.id) else emptyList(),
                 )
             }
-            EditScope.ALL -> EditPlan(save = listOf(edited.copy(
-                id = series.id, uid = series.uid, parentId = null, recurrenceId = null, occurrence = null,
+            EditScope.ALL -> {
                 // Changer l'heure d'une occurrence change l'heure de toute la série, depuis son premier jour.
-                timing = shiftSeries(series.timing, occurrence.timing, edited.timing),
-                recurrence = edited.recurrence?.copy(exceptions = series.recurrence?.exceptions.orEmpty()),
-            )))
+                val timing = shiftSeries(series.timing, occurrence.timing, edited.timing)
+                // Les clés d'occurrence sont l'instant (ou le jour) de début : supprimées et modifiées suivent le décalage.
+                // Passer de la journée à une heure fixe change leur nature : elles ne correspondent plus à rien.
+                val sameKind = series.timing::class == timing::class
+                val move = { k: Long -> shiftKey(k, series.timing, timing) }
+                val saved = edited.copy(
+                    id = series.id, uid = series.uid, parentId = null, recurrenceId = null, occurrence = null, timing = timing,
+                    recurrence = edited.recurrence?.copy(exceptions = if (sameKind) series.recurrence?.exceptions.orEmpty().map(move).toSet() else emptySet()),
+                )
+                EditPlan(
+                    // La série en dernier : c'est elle que l'éditeur rouvre.
+                    save = (if (sameKind) children.map { c -> c.copy(recurrenceId = c.recurrenceId?.let(move)) } else emptyList()) + saved,
+                    delete = if (sameKind) emptyList() else children.map { it.id },
+                )
+            }
         }
     }
 
@@ -92,7 +108,32 @@ object SeriesEdits {
             val first = series.first.plusDays(ChronoUnit.DAYS.between(before.first, after.first))
             Timing.AllDay(first, first.plusDays(ChronoUnit.DAYS.between(after.first, after.last)))
         }
-        // Passage de « toute la journée » à une heure fixe (ou l'inverse) : la nouvelle forme, au jour de la série.
+        // Passage de « toute la journée » à une heure fixe (ou l'inverse) : la nouvelle forme, au jour de la série
+        // décalé comme l'occurrence ; sinon tout le passé de la série disparaîtrait.
+        after is Timing.Timed -> {
+            val day = dayOf(series).plusDays(ChronoUnit.DAYS.between(dayOf(before), dayOf(after)))
+            val start = day.atTime(after.start.atZone(after.zone).toLocalTime()).atZone(after.zone).toInstant()
+            Timing.Timed(start, start.plus(Duration.between(after.start, after.end)), after.zone)
+        }
+        after is Timing.AllDay -> {
+            val first = dayOf(series).plusDays(ChronoUnit.DAYS.between(dayOf(before), after.first))
+            Timing.AllDay(first, first.plusDays(ChronoUnit.DAYS.between(after.first, after.last)))
+        }
         else -> after
+    }
+
+    private fun dayOf(t: Timing) = when (t) {
+        is Timing.Timed -> t.start.atZone(t.zone).toLocalDate()
+        is Timing.AllDay -> t.first
+    }
+
+    /** La clé [key] d'une occurrence de la série [from], décalée comme la série devenue [to] (même nature). */
+    private fun shiftKey(key: Long, from: Timing, to: Timing): Long = when {
+        from is Timing.Timed && to is Timing.Timed -> {
+            val shift = Duration.between(LocalDateTime.ofInstant(from.start, from.zone), LocalDateTime.ofInstant(to.start, to.zone))
+            LocalDateTime.ofInstant(Instant.ofEpochMilli(key), from.zone).plus(shift).atZone(to.zone).toInstant().toEpochMilli()
+        }
+        from is Timing.AllDay && to is Timing.AllDay -> key + ChronoUnit.DAYS.between(from.first, to.first)
+        else -> key
     }
 }

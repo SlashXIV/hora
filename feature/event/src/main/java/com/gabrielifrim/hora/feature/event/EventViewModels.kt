@@ -147,7 +147,7 @@ class EventDetailViewModel @AssistedInject constructor(
         val rootId = shown.parentId ?: eventId
         // Un événement d'Android part seul, à la date affichée : sa série reste chez son app.
         val device = deviceEventOf(eventId) != null
-        val root = if (device) shown.copy(occurrence = null) else events.event(rootId).first() ?: return null
+        val root = if (device) shown.copy(occurrence = null, recurrence = null) else events.event(rootId).first() ?: return null
         val text = IcsWriter.write(listOf(root) + if (device) emptyList() else events.children(rootId), agendas.value.filterKeys { it == root.agendaId })
         return withContext(Dispatchers.IO) {
             val dir = File(context.cacheDir, "partage").apply { deleteRecursively(); mkdirs() }

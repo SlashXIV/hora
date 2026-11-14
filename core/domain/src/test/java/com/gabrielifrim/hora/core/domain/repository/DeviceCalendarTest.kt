@@ -32,6 +32,22 @@ class DeviceCalendarTest {
         assertThat(deviceAllDay(utc(d14), utc(d14))).isEqualTo(Timing.AllDay(d14, d14))
     }
 
+    @Test fun copie_importee_reconnue_sans_uid_commun() {
+        // Côté Hora : jour (epoch) ou millisecondes ; côté Android : DTSTART, minuit UTC pour une journée entière.
+        val d11 = LocalDate.of(2026, 11, 11)
+        val utc = d11.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        assertThat(copyKey(true, deviceStart(true, utc), "Armistice")).isEqualTo(copyKey(true, d11.toEpochDay(), "Armistice"))
+        val train = LocalDateTime.of(d11, LocalTime.of(7, 20)).atZone(ZoneId.of("Europe/Paris")).toInstant().toEpochMilli()
+        assertThat(copyKey(false, deviceStart(false, train), "Train ")).isEqualTo(copyKey(false, train, "Train"))
+        // Un autre début, une autre nature ou un autre titre : pas une copie.
+        assertThat(copyKey(false, train + 60_000, "Train")).isNotEqualTo(copyKey(false, train, "Train"))
+        assertThat(copyKey(true, d11.toEpochDay(), "Train")).isNotEqualTo(copyKey(false, d11.toEpochDay(), "Train"))
+        assertThat(copyKey(false, train, "Train retour")).isNotEqualTo(copyKey(false, train, "Train"))
+        // Avant 1970, la division arrondit vers le bas : le bon jour.
+        val d1969 = LocalDate.of(1969, 12, 31)
+        assertThat(deviceStart(true, d1969.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli())).isEqualTo(d1969.toEpochDay())
+    }
+
     @Test fun journee_entiere_ecrite_relue_a_l_identique() {
         val allDay = Timing.AllDay(LocalDate.of(2026, 11, 14), LocalDate.of(2026, 11, 16))
         val t = deviceTimes(allDay, recurring = false)

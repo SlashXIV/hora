@@ -29,7 +29,9 @@ import com.gabrielifrim.hora.core.domain.recurrence.SeriesEdits
 import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
 import com.gabrielifrim.hora.core.domain.repository.deviceMinutes
 import com.gabrielifrim.hora.core.domain.repository.deviceTimes
+import com.gabrielifrim.hora.core.domain.repository.copyKey
 import com.gabrielifrim.hora.core.domain.repository.deviceAllDay
+import com.gabrielifrim.hora.core.domain.repository.deviceStart
 import com.gabrielifrim.hora.core.domain.repository.deviceAgendaId
 import com.gabrielifrim.hora.core.domain.repository.deviceCalendarOf
 import com.gabrielifrim.hora.core.domain.repository.deviceEventId
@@ -86,7 +88,15 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
         }
     }.conflate()
 
-    private val uids: Flow<Set<String>> = eventDao.observeUids().map { it.toSet() }
+    /** Ce qu'Hora a déjà : un événement d'Android au même UID, ou copie au même titre et au même début, est un doublon. */
+    private class Known(val uids: Set<String>, val keys: Set<String>) {
+        fun has(uid: String?, allDay: Boolean, dtstart: Long, title: String?) =
+            (uid != null && uid in uids) || copyKey(allDay, deviceStart(allDay, dtstart), title.orEmpty()) in keys
+    }
+
+    private val known: Flow<Known> = combine(eventDao.observeUids(), eventDao.observeCopies()) { uids, copies ->
+        Known(uids.toSet(), copies.mapTo(HashSet()) { copyKey(it.allDay, it.start, it.title) })
+    }
 
     private fun readable(): Boolean = prefs.getBoolean(ENABLED, false) &&
         context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
@@ -117,12 +127,12 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
 
     override val agendas: Flow<List<Agenda>> = changes.map { if (readable()) calendars() else emptyList() }.flowOn(Dispatchers.IO)
 
-    override fun eventsBetween(first: LocalDate, last: LocalDate, zone: ZoneId): Flow<List<Event>> = combine(changes, uids) { _, horaUids ->
+    override fun eventsBetween(first: LocalDate, last: LocalDate, zone: ZoneId): Flow<List<Event>> = combine(changes, known) { _, hora ->
         if (!readable()) return@combine emptyList()
         // Les journées entières sont rangées en UTC : un jour de marge de chaque côté, les vues trient au jour près.
         val from = first.minusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
         val to = last.plusDays(2).atStartOfDay(zone).toInstant().toEpochMilli()
-        instances(from, to, null).filter { it.uid !in horaUids }
+        instances(from, to, null, hora)
     }.flowOn(Dispatchers.IO)
 
     override fun event(id: Long, begin: Long?): Flow<Event?> = changes.map {
@@ -139,25 +149,26 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
         found?.copy(reminders = reminders(eventId), recurrence = rule?.let { Recurrence(it) })
     }.flowOn(Dispatchers.IO)
 
-    override fun search(query: String): Flow<List<Event>> = combine(changes, uids) { _, horaUids ->
+    override fun search(query: String): Flow<List<Event>> = combine(changes, known) { _, hora ->
         val q = query.trim()
         if (!readable() || q.isEmpty()) return@combine emptyList()
         // shortcut: on cherche dans l'année autour d'aujourd'hui, première occurrence de chaque événement.
         val now = System.currentTimeMillis()
         val day = Duration.ofDays(1).toMillis()
-        instances(now - 365 * day, now + 365 * day, null)
-            .filter { it.uid !in horaUids && listOf(it.title, it.location, it.notes).any { s -> s.contains(q, ignoreCase = true) } }
+        instances(now - 365 * day, now + 365 * day, null, hora)
+            .filter { listOf(it.title, it.location, it.notes).any { s -> s.contains(q, ignoreCase = true) } }
             // La prochaine occurrence d'une série plutôt que celle de l'an dernier.
             .sortedBy { it.occurrence!! < now }
             .distinctBy { it.id }
     }.flowOn(Dispatchers.IO)
 
-    override val duplicates: Flow<Int> = combine(changes, uids) { _, horaUids ->
+    override val duplicates: Flow<Int> = combine(changes, known) { _, hora ->
         if (!readable()) return@combine 0
         val hidden = hiddenTest()
-        query(Events.CONTENT_URI, arrayOf(Events.CALENDAR_ID, Events.UID_2445, Events.VISIBLE), "${Events.DELETED} = 0", null) { c ->
-            c.getLong(0).takeIf { !hidden(it, c.getInt(2) == 1) }?.let { c.getString(1) }
-        }.count { it in horaUids }
+        val columns = arrayOf(Events.CALENDAR_ID, Events.UID_2445, Events.VISIBLE, Events.ALL_DAY, Events.DTSTART, Events.TITLE)
+        query(Events.CONTENT_URI, columns, "${Events.DELETED} = 0", null) { c ->
+            true.takeIf { !hidden(c.getLong(0), c.getInt(2) == 1) && hora.has(c.getString(1), c.getInt(3) == 1, c.getLong(4), c.getString(5)) }
+        }.size
     }.flowOn(Dispatchers.IO)
 
     override suspend fun setHidden(agendaId: Long, hidden: Boolean) {
@@ -194,7 +205,7 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
     }
 
     /** Occurrences entre [from] et [to] (millisecondes) des agendas visibles, ou du seul événement [eventId]. */
-    private fun instances(from: Long, to: Long, eventId: Long?): List<Event> {
+    private fun instances(from: Long, to: Long, eventId: Long?, hora: Known? = null): List<Event> {
         val hidden = hiddenTest()
         val uri = Instances.CONTENT_URI.buildUpon().also { ContentUris.appendId(it, from); ContentUris.appendId(it, to) }.build()
         val selection = "${Instances.STATUS} IS NULL OR ${Instances.STATUS} != ${Events.STATUS_CANCELED}"
@@ -203,13 +214,14 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
             arrayOf(
                 Instances.EVENT_ID, Instances.BEGIN, Instances.END, Instances.TITLE, Instances.EVENT_LOCATION, Instances.DESCRIPTION,
                 Instances.CALENDAR_ID, Instances.ALL_DAY, Instances.AVAILABILITY, Instances.EVENT_TIMEZONE, Instances.UID_2445,
-                Instances.VISIBLE,
+                Instances.VISIBLE, Instances.DTSTART,
             ),
             if (eventId == null) selection else "($selection) AND ${Instances.EVENT_ID} = ?",
             eventId?.let { arrayOf(it.toString()) },
         ) { c ->
             val calendar = c.getLong(6)
             if (hidden(calendar, c.getInt(11) == 1)) return@query null
+            if (hora?.has(c.getString(10), c.getInt(7) == 1, c.getLong(12), c.getString(3)) == true) return@query null
             val id = c.getLong(0)
             val begin = c.getLong(1)
             val end = maxOf(begin, c.getLong(2))

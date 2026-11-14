@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Les agendas d'Android (DAVx5, un compte, l'appareil), lus sur demande, modifiables
  * sur demande aussi. Ils ne passent jamais par la base : ni export, ni sauvegarde, ni rappel
- * d'Hora (l'app d'origine les fait sonner). Un événement dont l'UID existe déjà dans Hora est masqué.
+ * d'Hora (l'app d'origine les fait sonner). Un événement dont l'UID ou la [copyKey] existe déjà dans Hora est masqué.
  *
  * Identifiants négatifs, bien au-delà de ceux des agendas calculés : voir [deviceAgendaId].
  */
@@ -89,6 +89,17 @@ fun deviceAllDay(beginMs: Long, endMs: Long): Timing.AllDay {
     val last = Instant.ofEpochMilli(maxOf(beginMs, endMs - 1)).atOffset(ZoneOffset.UTC).toLocalDate()
     return Timing.AllDay(first, maxOf(first, last))
 }
+
+/**
+ * Clé d'une copie : même titre, même début, même journée entière. Un événement importé depuis
+ * Fossify, qui synchronisait déjà Google, n'a pas l'UID d'Android : il se reconnaît ainsi.
+ * [start] : jour (epoch) pour une journée entière côté Hora, millisecondes sinon ; [deviceStart]
+ * convertit le DTSTART d'Android vers la même forme.
+ */
+fun copyKey(allDay: Boolean, start: Long, title: String): String = "${if (allDay) 'J' else 'H'}$start ${title.trim()}"
+
+/** DTSTART d'Android ramené à la forme d'Hora : minuit UTC → jour (epoch) pour une journée entière. */
+fun deviceStart(allDay: Boolean, dtstart: Long): Long = if (allDay) Math.floorDiv(dtstart, 86_400_000L) else dtstart
 
 /** Les colonnes de temps d'un événement d'Android : une série porte une durée, pas de fin. */
 data class DeviceTimes(val start: Long, val end: Long?, val duration: String?, val allDay: Boolean, val zone: String)

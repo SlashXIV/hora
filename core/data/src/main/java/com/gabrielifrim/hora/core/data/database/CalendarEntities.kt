@@ -58,6 +58,8 @@ data class EventEntity(
     @ColumnInfo(name = "travel_minutes", defaultValue = "0") val travelMinutes: Int = 0,
 )
 
+data class EventCopy(@ColumnInfo(name = "all_day") val allDay: Boolean, val start: Long, val title: String)
+
 /** Un jeu de rappels réutilisable (« Rendez-vous du matin »). */
 @Entity(tableName = "reminder_set")
 data class ReminderSetEntity(
@@ -173,6 +175,10 @@ interface EventDao {
     /** Les UID d'Hora : un événement d'Android qui en porte un est un doublon. */
     @Query("SELECT uid FROM event")
     fun observeUids(): Flow<List<String>>
+
+    /** De quoi reconnaître une copie sans UID commun (`copyKey`). */
+    @Query("SELECT all_day, start, title FROM event")
+    fun observeCopies(): Flow<List<EventCopy>>
 
     @Query("SELECT * FROM event WHERE agenda_id IN (:agendaIds) ORDER BY parent_id IS NOT NULL, start")
     suspend fun inAgendas(agendaIds: List<Long>): List<EventEntity>

@@ -53,6 +53,13 @@ class EventRepositoryTest {
     }
 
     @Test
+    fun rendez_vous_a_venir_garde_son_rappel_tout_juste_passe() = runTest {
+        // Créé à H pour H + 5 min avec « 10 min avant » : le rappel (H − 5 min) est présenté, pas noté d'office.
+        events.save(startingIn(5))
+        assertThat(store.firedSince(Instant.now().minus(Duration.ofDays(1)))).isEmpty()
+    }
+
+    @Test
     fun rappel_a_venir_reste_a_sonner() = runTest {
         // Dans 10 min 20 s : son rappel tombe dans 20 s, à l'intérieur de la tolérance de 30 s du planificateur.
         events.save(startingIn(10).let { e -> e.copy(timing = (e.timing as Timing.Timed).let { t -> Timing.Timed(t.start.plusSeconds(20), t.end.plusSeconds(20), t.zone) }) })

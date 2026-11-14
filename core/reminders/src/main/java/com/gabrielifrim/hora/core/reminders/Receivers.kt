@@ -54,6 +54,7 @@ class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) = work {
         // Le rappel sans titre d'avant déverrouillage laisse la place au vrai, présenté par le moteur.
         androidx.core.app.NotificationManagerCompat.from(context).cancel(LockedBoot.NOTIFICATION_ID)
+        LockedBoot.cancel(context)
         // Chacun pour soi : une erreur des prières ne laisse pas le résumé désarmé.
         runCatching { engine.run() }
         runCatching { prayers.run() }

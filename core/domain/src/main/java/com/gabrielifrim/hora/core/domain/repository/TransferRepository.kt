@@ -23,6 +23,6 @@ interface TransferRepository {
      */
     suspend fun import(groups: List<ImportGroup>): ImportReport
 
-    /** Les UID déjà en base : l'aperçu annonce ce qu'un import remplacerait. */
-    suspend fun existingUids(): Set<String>
+    /** Les UID de [candidates] qu'un import remplacerait : l'aperçu l'annonce. */
+    suspend fun replacedUids(candidates: List<Event>): Set<String>
 }

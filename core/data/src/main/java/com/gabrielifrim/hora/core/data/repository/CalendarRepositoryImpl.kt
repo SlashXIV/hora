@@ -93,7 +93,8 @@ internal class EventRepositoryImpl @Inject constructor(
         return dao.search("%$escaped%").map { list -> list.map { it.toDomain() } }
     }
 
-    override suspend fun save(event: Event): Long = db.withTransaction { store(event).also { saved -> reminders.markPastFired(listOf(saved)) }.id }
+    // Un rendez-vous à venir (14 h 05 créé à 14 h, rappel 15 min avant) garde son rappel : présenté aussitôt.
+    override suspend fun save(event: Event): Long = db.withTransaction { store(event).also { saved -> reminders.markPastFired(listOf(saved), startedOnly = true) }.id }
 
     private suspend fun store(event: Event): Event = event.copy(id = dao.upsert(event.toEntity()).let { if (it == -1L) event.id else it })
 
@@ -178,7 +179,9 @@ internal class TransferRepositoryImpl @Inject constructor(
 
     override suspend fun events(agendaIds: Set<Long>): List<Event> = events.inAgendas(agendaIds.toList()).map { it.toDomain() }
 
-    override suspend fun existingUids(): Set<String> = events.observeUids().first().toSet()
+    override suspend fun replacedUids(candidates: List<Event>): Set<String> =
+        // Même règle que l'import : un numéro Fossify porté par un autre événement est ajouté, pas remplacé.
+        candidates.filter { events.byUid(distinctUid(it)) != null }.map { it.uid }.toSet()
 
     override suspend fun import(groups: List<ImportGroup>): ImportReport = db.withTransaction {
         val existingAgendas = agendas.all().toMutableList()
@@ -241,12 +244,12 @@ internal class TransferRepositoryImpl @Inject constructor(
  * d'identifiant), alarme cochée après coup, rendez-vous passé saisi avec les rappels de
  * l'agenda. Il est noté comme déjà présenté ; les rappels à venir sonnent normalement.
  */
-internal suspend fun ReminderDao.markPastFired(saved: List<Event>) {
+internal suspend fun ReminderDao.markPastFired(saved: List<Event>, startedOnly: Boolean = false) {
     val now = Instant.now()
     val overrides = saved.filter { it.parentId != null && it.recurrenceId != null }.groupBy({ it.parentId!! }, { it.recurrenceId!! }).mapValues { it.value.toSet() }
     ReminderPlanner.plan(saved.filter { it.reminders.isNotEmpty() }, overrides, emptyList(), emptySet(), now, ZoneId.systemDefault())
         // Le planificateur présente en avance de 30 s ; un rappel encore à venir doit sonner.
-        .due.filter { it.at.isBefore(now) }
+        .due.filter { it.at.isBefore(now) && (!startedOnly || startOf(it.event.timing).isBefore(now)) }
         .forEach { due ->
             val key = due.firedKey ?: return@forEach
             markFired(FiredReminderEntity(due.event.id, due.occurrence, key.substringAfterLast('|'), due.at.toEpochMilli()))
@@ -309,4 +312,9 @@ private fun Event.toEntity(): EventEntity {
         pinned = pinned,
         travelMinutes = travelMinutes,
     )
+}
+
+private fun startOf(timing: Timing): Instant = when (timing) {
+    is Timing.Timed -> timing.start
+    is Timing.AllDay -> timing.first.atStartOfDay(ZoneId.systemDefault()).toInstant()
 }

@@ -111,7 +111,7 @@ class TransferViewModel @Inject constructor(
                 used += color
                 SourceAgendaChoice(name, color, entries.size, joinsExisting = match != null)
             }
-            _import.value = ImportUi.Preview(file, sources, transfer.existingUids())
+            _import.value = ImportUi.Preview(file, sources, transfer.replacedUids(file.entries.map { it.item.event }))
         }
     }
 

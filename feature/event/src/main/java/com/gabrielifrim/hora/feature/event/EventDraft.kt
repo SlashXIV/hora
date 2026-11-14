@@ -45,7 +45,10 @@ data class EventDraft(
     /** La règle relue et ce qui l'a produite : réécrite seulement si l'un change (« dernier lundi » reste le dernier). */
     val origin: RuleOrigin? = null,
 ) : java.io.Serializable {
-    data class RuleOrigin(val rule: String, val repeat: RepeatSpec?, val day: LocalDate, val allDay: Boolean) : java.io.Serializable
+    data class RuleOrigin(val rule: String, val repeat: RepeatSpec?, val day: LocalDate, val allDay: Boolean, val time: LocalTime) : java.io.Serializable {
+        /** UNTIL à l'heure près : décaler l'heure ferait sortir la dernière occurrence de la série. */
+        val timedEnd: Boolean get() = Regex("UNTIL=\\d{8}T").containsMatchIn(rule)
+    }
 
     // Toute la journée, on compare des jours : sinon « jeudi 00:00 » serait avant « jeudi 09:00 ».
     val canSave: Boolean get() = title.isNotBlank() &&
@@ -106,7 +109,10 @@ data class EventDraft(
         travelMinutes = if (allDay) 0 else travelMinutes,
         reminders = reminders,
         recurrence = (
-            origin?.takeIf { it.repeat == repeat && it.day == start.toLocalDate() && it.allDay == allDay && (repeat != null || customRule == it.rule) }?.rule
+            origin?.takeIf {
+                it.repeat == repeat && it.day == start.toLocalDate() && it.allDay == allDay && (repeat != null || customRule == it.rule) &&
+                    (!it.timedEnd || it.time == start.toLocalTime())
+            }?.rule
                 ?: repeat?.toRule(start.toLocalDate(), if (allDay) null else zone) ?: customRule
             )?.let { Recurrence(it, exceptions) },
         timing = if (allDay) {
@@ -139,7 +145,7 @@ data class EventDraft(
                 repeat = spec,
                 customRule = rule.takeIf { spec == null },
                 exceptions = event.recurrence?.exceptions.orEmpty(),
-                origin = rule?.let { RuleOrigin(it, spec, d.start.toLocalDate(), d.allDay) },
+                origin = rule?.let { RuleOrigin(it, spec, d.start.toLocalDate(), d.allDay, d.start.toLocalTime()) },
             )
         }
 

@@ -95,6 +95,9 @@ class DatabaseBackup @Inject constructor(
             val parent = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
             val now = LocalDateTime.now()
             val name = if (auto) "hora-auto-${now.format(DAY)}.db" else "hora-${now.format(MINUTE)}.db"
+            // Restes d'une sauvegarde interrompue (Hora tué pendant l'écriture) : jamais comptés, effacés.
+            children(tree).filter { it.second.startsWith("hora-") && (it.second.endsWith(".part") || it.second.endsWith(".old")) }
+                .forEach { runCatching { DocumentsContract.deleteDocument(resolver, it.first) } }
             // Écrite sous un nom provisoire : un échec ne laisse ni fichier vide parmi les sauvegardes, ni l'ancienne effacée.
             val target = requireNotNull(DocumentsContract.createDocument(resolver, parent, "application/octet-stream", "$name.part")) { "création refusée" }
             try {
@@ -103,10 +106,18 @@ class DatabaseBackup @Inject constructor(
                 runCatching { DocumentsContract.deleteDocument(resolver, target) }
                 throw e
             }
-            children(tree).filter { it.second == name }.forEach { DocumentsContract.deleteDocument(resolver, it.first) }
-            DocumentsContract.renameDocument(resolver, target, name)
+            // L'ancienne du même nom est mise de côté, la nouvelle prend son nom, puis seulement l'ancienne s'efface.
+            val parked = children(tree).filter { it.second == name }.mapNotNull { runCatching { DocumentsContract.renameDocument(resolver, it.first, "$name.old") }.getOrNull() }
+            try {
+                requireNotNull(DocumentsContract.renameDocument(resolver, target, name)) { "renommage refusé" }
+            } catch (e: Throwable) {
+                parked.forEach { runCatching { DocumentsContract.renameDocument(resolver, it, name) } }
+                runCatching { DocumentsContract.deleteDocument(resolver, target) }
+                throw e
+            }
+            parked.forEach { runCatching { DocumentsContract.deleteDocument(resolver, it) } }
             if (auto) {
-                children(tree).filter { it.second.startsWith("hora-auto-") }.sortedByDescending { it.second }.drop(KEEP_AUTO)
+                children(tree).filter { it.second.startsWith("hora-auto-") && it.second.endsWith(".db") }.sortedByDescending { it.second }.drop(KEEP_AUTO)
                     .forEach { DocumentsContract.deleteDocument(resolver, it.first) }
             }
             update { putLong(KEY_LAST, System.currentTimeMillis()); putBoolean(KEY_FAILED, false) }
@@ -151,6 +162,8 @@ class DatabaseBackup @Inject constructor(
             if (!header.contentEquals(SQLITE_HEADER)) return@withContext RestoreCheck.NotHora
             SQLiteDatabase.openDatabase(copy.path, null, SQLiteDatabase.OPEN_READONLY).use { sqlite ->
                 if (sqlite.version > HoraDatabase.VERSION) return@withContext RestoreCheck.TooNew
+                // Une base vide (version 0) n'est pas une sauvegarde : Room la créerait vierge.
+                if (sqlite.version < 1) return@withContext RestoreCheck.NotHora
                 // Une sauvegarde tronquée a un en-tête valable : seule la lecture de chaque page la trahit.
                 val intact = sqlite.rawQuery("PRAGMA quick_check", null).use { c -> c.moveToFirst() && c.getString(0) == "ok" }
                 if (!intact) return@withContext RestoreCheck.NotHora

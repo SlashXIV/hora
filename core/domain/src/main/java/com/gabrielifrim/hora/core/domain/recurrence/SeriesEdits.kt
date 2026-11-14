@@ -4,6 +4,7 @@ import com.gabrielifrim.hora.core.domain.model.Event
 import com.gabrielifrim.hora.core.domain.model.Timing
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -53,19 +54,20 @@ object SeriesEdits {
             EditScope.ALL -> {
                 // Changer l'heure d'une occurrence change l'heure de toute la série, depuis son premier jour.
                 val timing = shiftSeries(series.timing, occurrence.timing, edited.timing)
-                // Les clés d'occurrence sont l'instant (ou le jour) de début : supprimées et modifiées suivent le décalage.
-                // Passer de la journée à une heure fixe change leur nature : elles ne correspondent plus à rien.
-                val sameKind = series.timing::class == timing::class
+                // Les clés d'occurrence sont l'instant (ou le jour) de début : supprimées et modifiées suivent le décalage,
+                // y compris quand la série passe de la journée à une heure fixe.
                 val move = { k: Long -> shiftKey(k, series.timing, timing) }
                 val saved = edited.copy(
                     id = series.id, uid = series.uid, parentId = null, recurrenceId = null, occurrence = null, timing = timing,
-                    recurrence = edited.recurrence?.copy(exceptions = if (sameKind) series.recurrence?.exceptions.orEmpty().map(move).toSet() else emptySet()),
+                    recurrence = edited.recurrence?.copy(exceptions = series.recurrence?.exceptions.orEmpty().map(move).toSet()),
                 )
-                EditPlan(
-                    // La série en dernier : c'est elle que l'éditeur rouvre.
-                    save = (if (sameKind) children.map { c -> c.copy(recurrenceId = c.recurrenceId?.let(move)) } else emptyList()) + saved,
-                    delete = if (sameKind) emptyList() else children.map { it.id },
-                )
+                val moved = children.map { c ->
+                    val key = c.recurrenceId?.let(move)
+                    // L'uid « série#clé » suit sa clé : sinon une future occurrence modifiée à cette date le reprendrait.
+                    c.copy(recurrenceId = key, uid = if (key != null && c.uid == "${series.uid}#${c.recurrenceId}") "${series.uid}#$key" else c.uid)
+                }
+                // La série en dernier : c'est elle que l'éditeur rouvre.
+                EditPlan(save = moved + saved)
             }
         }
     }
@@ -127,13 +129,21 @@ object SeriesEdits {
         is Timing.AllDay -> t.first
     }
 
-    /** La clé [key] d'une occurrence de la série [from], décalée comme la série devenue [to] (même nature). */
-    private fun shiftKey(key: Long, from: Timing, to: Timing): Long = when {
-        from is Timing.Timed && to is Timing.Timed -> {
-            val shift = Duration.between(LocalDateTime.ofInstant(from.start, from.zone), LocalDateTime.ofInstant(to.start, to.zone))
-            LocalDateTime.ofInstant(Instant.ofEpochMilli(key), from.zone).plus(shift).atZone(to.zone).toInstant().toEpochMilli()
+    /** La clé [key] d'une occurrence de la série [from], décalée comme la série devenue [to]. */
+    private fun shiftKey(key: Long, from: Timing, to: Timing): Long {
+        val days = ChronoUnit.DAYS.between(dayOf(from), dayOf(to))
+        return when {
+            from is Timing.Timed && to is Timing.Timed -> {
+                val shift = Duration.between(LocalDateTime.ofInstant(from.start, from.zone), LocalDateTime.ofInstant(to.start, to.zone))
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(key), from.zone).plus(shift).atZone(to.zone).toInstant().toEpochMilli()
+            }
+            from is Timing.AllDay && to is Timing.AllDay -> key + days
+            // Journée vers heure fixe : ce jour-là, à la nouvelle heure.
+            from is Timing.AllDay && to is Timing.Timed ->
+                LocalDate.ofEpochDay(key + days).atTime(to.start.atZone(to.zone).toLocalTime()).atZone(to.zone).toInstant().toEpochMilli()
+            // Heure fixe vers journée : le jour de l'occurrence.
+            from is Timing.Timed && to is Timing.AllDay -> Instant.ofEpochMilli(key).atZone(from.zone).toLocalDate().plusDays(days).toEpochDay()
+            else -> key
         }
-        from is Timing.AllDay && to is Timing.AllDay -> key + ChronoUnit.DAYS.between(from.first, to.first)
-        else -> key
     }
 }

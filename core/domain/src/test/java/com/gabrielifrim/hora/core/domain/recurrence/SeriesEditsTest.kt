@@ -83,10 +83,25 @@ class SeriesEditsTest {
     }
 
     @Test
-    fun `tous en journee entiere garde le passe de la serie`() {
+    fun `tous en journee entiere garde le passe, les supprimees et les modifiees`() {
         val day = (third.timing as Timing.Timed).start.atZone(paris).toLocalDate()
-        val plan = SeriesEdits.update(EditScope.ALL, series, third, third.copy(timing = Timing.AllDay(day, day)), emptyList(), paris)
-        assertThat((plan.save.last().timing as Timing.AllDay).first).isEqualTo(LocalDate.of(2026, 11, 3))
+        val deleted = occurrences[1].occurrence!! // jeudi 5 novembre
+        val withHole = series.copy(recurrence = series.recurrence!!.copy(exceptions = setOf(deleted)))
+        val child = third.copy(id = 99, uid = "sport#${occurrences[4].occurrence}", parentId = 7, recurrenceId = occurrences[4].occurrence, occurrence = null)
+        val plan = SeriesEdits.update(EditScope.ALL, withHole, third, third.copy(timing = Timing.AllDay(day, day)), listOf(child), paris)
+        val saved = plan.save.last()
+        assertThat((saved.timing as Timing.AllDay).first).isEqualTo(LocalDate.of(2026, 11, 3))
+        // Converties en jours : le 5 reste supprimé, l'occurrence modifiée (le 17) est gardée, pas effacée.
+        assertThat(saved.recurrence!!.exceptions).containsExactly(LocalDate.of(2026, 11, 5).toEpochDay())
+        assertThat(plan.save.single { it.id == 99L }.recurrenceId).isEqualTo(LocalDate.of(2026, 11, 17).toEpochDay())
+        assertThat(plan.delete).isEmpty()
+    }
+
+    @Test
+    fun `tous decale aussi l'uid des occurrences modifiees`() {
+        val child = third.copy(id = 99, uid = "sport#${occurrences[4].occurrence}", parentId = 7, recurrenceId = occurrences[4].occurrence, occurrence = null)
+        val moved = SeriesEdits.update(EditScope.ALL, series, third, third.at(19), listOf(child), paris).save.single { it.id == 99L }
+        assertThat(moved.uid).isEqualTo("sport#${moved.recurrenceId}")
     }
 
     @Test

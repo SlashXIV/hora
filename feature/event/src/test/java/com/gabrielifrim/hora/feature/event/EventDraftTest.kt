@@ -95,4 +95,14 @@ class EventDraftTest {
         val moved = EventDraft.of(event, paris).withStart(start.plusDays(1))
         assertThat(moved.toEvent().recurrence!!.rule).isEqualTo("FREQ=WEEKLY;BYDAY=WE")
     }
+
+    @Test
+    fun `une fin a l'heure pres est recalculee si l'heure de debut change`() {
+        val start = LocalDateTime.of(2026, 11, 2, 9, 0)
+        val event = EventDraft(agendaId = 1, title = "Cours", start = start, end = start.plusHours(1), zone = paris).toEvent()
+            .copy(recurrence = com.gabrielifrim.hora.core.domain.model.Recurrence("FREQ=WEEKLY;BYDAY=MO;UNTIL=20261130T080000Z"))
+        val later = EventDraft.of(event, paris).withStart(start.withHour(10))
+        // Le dernier lundi (30 novembre) à 10 h tombe après 08:00Z : la fin est remise au soir du dernier jour.
+        assertThat(later.toEvent().recurrence!!.rule).isEqualTo("FREQ=WEEKLY;BYDAY=MO;UNTIL=20261130T225959Z")
+    }
 }

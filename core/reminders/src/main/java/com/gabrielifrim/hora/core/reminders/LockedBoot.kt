@@ -28,6 +28,16 @@ internal object LockedBoot {
 
     fun next(context: Context): Pair<Long, Boolean>? = prefs(context).let { p -> p.getLong(AT, -1).takeIf { it >= 0 }?.let { it to p.getBoolean(ALARM, false) } }
 
+    /** Le moteur a repris la main : l'alarme de secours posée au démarrage verrouillé ne doit plus réveiller. */
+    fun cancel(context: Context) {
+        val pending = PendingIntent.getBroadcast(
+            context, 0, Intent(context, LockedAlarmReceiver::class.java),
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+        ) ?: return
+        context.getSystemService(AlarmManager::class.java)?.cancel(pending)
+        NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+    }
+
     fun locked(context: Context): Boolean = context.getSystemService(UserManager::class.java)?.isUserUnlocked == false
 }
 

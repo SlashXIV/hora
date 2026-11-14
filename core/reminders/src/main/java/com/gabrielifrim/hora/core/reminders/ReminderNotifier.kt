@@ -125,7 +125,8 @@ class ReminderNotifier @Inject constructor(
             is Timing.Timed -> timing.start
             is Timing.AllDay -> timing.first.atStartOfDay(ZoneId.systemDefault()).toInstant()
         }
-        val minutes = Duration.between(Instant.now(), start).toMinutes()
+        // Arrondi à la minute supérieure : l'alarme part quelques millisecondes après l'instant du rappel (« 10 min avant » ≠ « dans 9 min »).
+        val minutes = Duration.between(Instant.now(), start).plusSeconds(59).toMinutes()
         return when {
             minutes <= 0 -> context.getString(R.string.until_now)
             minutes < 60 -> context.resources.getQuantityString(R.plurals.until_minutes, minutes.toInt(), minutes.toInt())

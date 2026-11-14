@@ -3,6 +3,7 @@ package com.gabrielifrim.hora.feature.event
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gabrielifrim.hora.core.domain.model.Agenda
@@ -85,12 +86,17 @@ class EventDetailViewModel @AssistedInject constructor(
     /** Un id négatif est une entrée d'un agenda calculé (férié, fête…) ou d'Android, en lecture seule. */
     private val onDevice = deviceEventOf(eventId) != null
 
-    val event: StateFlow<Event?> = when {
+    private val source = when {
         // Android rend déjà l'occurrence : sa clé est un instant, pas celle d'Hora.
         onDevice -> device.event(eventId, occurrence.takeIf { it >= 0 })
         eventId < 0 -> almanac.event(eventId).map { it?.let { s -> occurrenceOf(s, occurrence, zone) } }
         else -> events.event(eventId).map { it?.let { s -> occurrenceOf(s, occurrence, zone) } }
     }
+
+    /** Vrai quand l'événement n'existe pas ou plus (supprimé, ouvert depuis un vieux rappel) : la fiche se ferme. */
+    val gone: StateFlow<Boolean> = source.map { it == null }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val event: StateFlow<Event?> = source
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     val agendas: StateFlow<Map<Long, Agenda>> = combine(agendas.agendas, almanac.agendas, device.agendas) { a, b, c -> a + b + c }.map { l -> l.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
@@ -201,6 +207,7 @@ class EventEditorViewModel @AssistedInject constructor(
     private val agendaRepository: AgendaRepository,
     private val setRepository: ReminderSetRepository,
     settings: SettingsRepository,
+    private val handle: SavedStateHandle,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -259,9 +266,13 @@ class EventEditorViewModel @AssistedInject constructor(
         if (deviceEventOf(it.id) != null) it.recurrence != null else it.occurrence != null || it.parentId != null
     } == true
 
+    /** Le brouillon tel qu'ouvert : le quitter sans l'avoir changé ne demande rien. */
+    var initial: EventDraft? = null
+        private set
+
     init {
         viewModelScope.launch {
-            draft.value = when {
+            val loaded = when {
                 deviceEventOf(eventId) != null -> device.event(eventId, occurrence.takeIf { it >= 0 }).firstOrNull()?.let { shown ->
                     original = shown
                     canEditOccurrence.value = device.canEditOccurrence(eventId)
@@ -288,12 +299,19 @@ class EventEditorViewModel @AssistedInject constructor(
                     .let { d -> if (quick.isBlank()) d else d.withQuick(QuickEntry.parse(quick, LocalDateTime.now())) }
                     .let { d -> templates.templates.first().firstOrNull { it.id == template }?.let(d::withTemplate) ?: d }
             }
+            initial = loaded
+            // Hora tué en arrière-plan (MIUI) pendant la saisie : on reprend ce qui avait été tapé.
+            draft.value = handle.get<EventDraft>(DRAFT) ?: loaded
         }
     }
 
     fun update(transform: (EventDraft) -> EventDraft) {
         draft.value = draft.value?.let(transform)
+        handle[DRAFT] = draft.value
     }
+
+    /** Un appui en double sur « Enregistrer » ne crée pas deux événements. */
+    private var saving = false
 
     /** Changer d'agenda un nouvel événement remplace ses rappels par défaut, s'ils n'ont pas été touchés. */
     fun chooseAgenda(id: Long) = update { d ->
@@ -311,12 +329,14 @@ class EventEditorViewModel @AssistedInject constructor(
     /** @param scope portée pour une occurrence de série ; ignorée sinon. */
     fun save(scope: EditScope, onDone: (Long) -> Unit) {
         val current = draft.value?.takeIf { it.canSave } ?: return
+        if (saving) return
+        saving = true
         viewModelScope.launch {
             val edited = current.toEvent()
             val s = series
             val o = original
             if (deviceCalendarOf(edited.agendaId) != null) {
-                device.save(edited, o, scope)?.let(onDone) ?: run { saveFailed.value = true }
+                device.save(edited, o, scope)?.let(onDone) ?: run { saveFailed.value = true; saving = false }
                 return@launch
             }
             val id = if (needsScope && s != null && o != null) {
@@ -326,5 +346,9 @@ class EventEditorViewModel @AssistedInject constructor(
             }
             onDone(id)
         }
+    }
+
+    private companion object {
+        const val DRAFT = "brouillon"
     }
 }

@@ -84,12 +84,16 @@ private enum class Tab(val route: Any, val label: Int, val icon: ImageVector) {
 }
 
 @Composable
-fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}) {
+fun HoraApp(opening: Pair<Long, Long>? = null, onOpened: () -> Unit = {}, onEditing: (Boolean) -> Unit = {}) {
     val nav = rememberNavController()
     LaunchedEffect(opening) {
         opening?.let { (id, occurrence) -> nav.navigate(EventRoute(id, occurrence)); onOpened() }
     }
     val entry by nav.currentBackStackEntryAsState()
+    LaunchedEffect(entry) {
+        val d = entry?.destination
+        onEditing(d != null && (d.hasRoute(EditRoute::class) || d.hasRoute(QuickRoute::class) || d.hasRoute(TransferRoute::class)))
+    }
     val haptics = rememberHaptics()
     // La transition signature (l'ombre qui tourne) arrive avec les moments ; d'ici là,
     // un fondu calme, et rien du tout si les animations sont coupées.

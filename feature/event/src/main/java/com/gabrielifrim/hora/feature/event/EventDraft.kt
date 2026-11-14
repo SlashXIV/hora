@@ -44,8 +44,8 @@ data class EventDraft(
     val exceptions: Set<Long> = emptySet(),
     /** La règle relue et ce qui l'a produite : réécrite seulement si l'un change (« dernier lundi » reste le dernier). */
     val origin: RuleOrigin? = null,
-) {
-    data class RuleOrigin(val rule: String, val repeat: RepeatSpec?, val day: LocalDate, val allDay: Boolean)
+) : java.io.Serializable {
+    data class RuleOrigin(val rule: String, val repeat: RepeatSpec?, val day: LocalDate, val allDay: Boolean) : java.io.Serializable
 
     // Toute la journée, on compare des jours : sinon « jeudi 00:00 » serait avant « jeudi 09:00 ».
     val canSave: Boolean get() = title.isNotBlank() &&

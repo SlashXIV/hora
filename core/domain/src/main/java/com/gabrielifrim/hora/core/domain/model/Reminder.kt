@@ -11,7 +11,8 @@ import java.time.ZonedDateTime
  *
  * @property alarm sonne en alarme plein écran plutôt qu'en notification.
  */
-sealed interface Reminder {
+// Serializable : un brouillon d'éditeur qui les porte survit à la mort du processus.
+sealed interface Reminder : java.io.Serializable {
     val alarm: Boolean
 
     /** « 10 min avant », « 2 jours avant » : une durée avant le début. 0 = à l'heure. */

@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -94,6 +95,7 @@ class QuickEntryViewModel @Inject constructor(
     agendaRepository: AgendaRepository,
     private val events: EventRepository,
     private val templateRepository: TemplateRepository,
+    handle: SavedStateHandle,
 ) : ViewModel() {
     val templates: StateFlow<List<EventTemplate>> = templateRepository.templates.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -102,7 +104,8 @@ class QuickEntryViewModel @Inject constructor(
     }
 
     private val zone = ZoneId.systemDefault()
-    val text = MutableStateFlow("")
+    /** Gardé si Hora est tué en arrière-plan pendant la saisie. */
+    val text = handle.getMutableStateFlow("texte", "")
     val agendas: StateFlow<Map<Long, Agenda>> = agendaRepository.agendas.map { list -> list.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
@@ -113,8 +116,13 @@ class QuickEntryViewModel @Inject constructor(
             .withQuick(QuickEntry.parse(t, LocalDateTime.now()))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    private var creating = false
+
     fun create(onCreated: (Long) -> Unit) {
         val d = draft.value?.takeIf { it.canSave } ?: return
+        // Deux appuis rapides (ou Entrée puis « Créer ») : un seul événement.
+        if (creating) return
+        creating = true
         viewModelScope.launch { onCreated(events.save(d.toEvent())) }
     }
 }

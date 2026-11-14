@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
 /** Ce que l'éditeur sait proposer ; toute autre RRULE (importée) est gardée telle quelle. */
 enum class Frequency { DAILY, WEEKLY, MONTHLY_BY_DATE, MONTHLY_BY_RANK, YEARLY }
 
-sealed interface RepeatEnd {
+sealed interface RepeatEnd : java.io.Serializable {
     data object Never : RepeatEnd
     data class After(val count: Int) : RepeatEnd
     data class Until(val lastDay: LocalDate) : RepeatEnd
@@ -26,7 +26,7 @@ data class RepeatSpec(
     /** Jours de la semaine (hebdomadaire) ; vide : le jour du début. */
     val weekdays: Set<DayOfWeek> = emptySet(),
     val end: RepeatEnd = RepeatEnd.Never,
-) {
+) : java.io.Serializable {
     init {
         require(interval >= 1) { "intervalle d'au moins 1" }
     }

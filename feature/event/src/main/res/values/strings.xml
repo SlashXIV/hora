@@ -35,6 +35,9 @@
     <string name="device_reminders_write">Enregistrés dans Android : l’app d’agenda du téléphone les fait sonner, pas Hora. « La veille à 20 h » devient une durée avant le début.</string>
     <string name="device_save_failed">Android a refusé l’enregistrement. Vérifier « Modifier depuis Hora » dans Réglages › Agendas.</string>
     <string name="scope_local_series">Cet agenda reste sur le téléphone, sans synchronisation : Android n’y garde pas une occurrence changée seule. Le changement vaut pour toute la série.</string>
+    <string name="discard_title">Abandonner les changements ?</string>
+    <string name="discard_message">Ce qui a été saisi depuis l’ouverture sera perdu.</string>
+    <string name="discard_confirm">Abandonner</string>
     <string name="device_open">Ouvrir dans l’app d’origine</string>
     <string name="device_copy">Copier dans Hora</string>
     <string name="action_move">Déplacer</string>

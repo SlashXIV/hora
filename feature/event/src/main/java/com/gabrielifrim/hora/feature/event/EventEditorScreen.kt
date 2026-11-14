@@ -3,6 +3,7 @@ package com.gabrielifrim.hora.feature.event
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
@@ -11,6 +12,7 @@ import com.gabrielifrim.hora.core.domain.recurrence.EditScope
 import com.gabrielifrim.hora.core.domain.repository.deviceCalendarOf
 import com.gabrielifrim.hora.core.ui.component.AddReminderSheet
 import com.gabrielifrim.hora.core.ui.component.ButtonStyle
+import com.gabrielifrim.hora.core.ui.component.ConfirmDialog
 import com.gabrielifrim.hora.core.ui.component.HoraDialog
 import com.gabrielifrim.hora.core.ui.component.ReminderList
 import androidx.compose.foundation.clickable
@@ -110,6 +112,10 @@ fun EventEditorScreen(
         if (viewModel.needsScope) picking = Picking.SCOPE else viewModel.save(EditScope.ALL, onSaved)
     }
     val d = draft ?: return
+    // Un geste Retour au bord de l'écran ne jette pas ce qui a été tapé.
+    var leaving by remember { mutableStateOf(false) }
+    val back = { if (d != viewModel.initial) leaving = true else onClose() }
+    BackHandler(onBack = back)
     // Agenda d'Android : couleur propre, trajet et épingle n'y ont pas de place.
     val onDevice = deviceCalendarOf(d.agendaId) != null
 
@@ -117,7 +123,7 @@ fun EventEditorScreen(
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             PageHeader(
                 title = stringResource(if (d.id == 0L) R.string.editor_new else R.string.editor_edit),
-                onBack = onClose,
+                onBack = back,
                 backLabel = stringResource(R.string.back),
             )
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -193,6 +199,16 @@ fun EventEditorScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+    }
+
+    if (leaving) {
+        ConfirmDialog(
+            title = stringResource(R.string.discard_title),
+            message = stringResource(R.string.discard_message),
+            confirmLabel = stringResource(R.string.discard_confirm),
+            onConfirm = { leaving = false; onClose() },
+            onDismiss = { leaving = false },
+        )
     }
 
     when (picking) {

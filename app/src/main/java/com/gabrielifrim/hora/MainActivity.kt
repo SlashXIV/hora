@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
                 CompositionLocalProvider(LocalUserSettings provides loaded) {
                     Box(Modifier.fillMaxSize().background(HoraTheme.colors.background)) {
                         val open by opening.collectAsStateWithLifecycle()
-                        HoraApp(opening = open, onOpened = { opening.value = null })
+                        HoraApp(opening = open, onOpened = { opening.value = null }, onEditing = { editing = it })
                     }
                 }
             }
@@ -93,11 +93,14 @@ class MainActivity : ComponentActivity() {
         if (id > 0 || deviceEventOf(id) != null) opening.value = id to intent.getLongExtra(AppReminderLauncher.EXTRA_OCCURRENCE, -1)
     }
 
+    /** Saisie ou import en cours : changer d'icône arrêterait Hora et perdrait la saisie ou le fichier choisi. */
+    private var editing = false
+
     override fun onStop() {
         super.onStop()
         // Pas pendant une rotation : l'activité revient aussitôt, l'arrêter serait visible.
         if (!isChangingConfigurations) {
-            AppIconSwitcher.applyPending(applicationContext)
+            if (!editing) AppIconSwitcher.applyPending(applicationContext)
             DayIconAlarm.arm(applicationContext)
         }
     }

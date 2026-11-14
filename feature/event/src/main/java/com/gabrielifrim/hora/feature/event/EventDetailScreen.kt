@@ -86,11 +86,11 @@ fun EventDetailScreen(
     val shareTitle = stringResource(R.string.share_title)
     // Un événement supprimé ailleurs (ou introuvable) ferme sa fiche. Celle d'Android se ferme à la suppression :
     // sinon elle montrerait l'occurrence suivante.
-    var seen by remember { mutableStateOf(false) }
+    val gone by viewModel.gone.collectAsStateWithLifecycle()
     // Une seule sortie : la suppression et la disparition de l'événement peuvent se suivre.
     var closed by remember { mutableStateOf(false) }
     val close = { if (!closed) { closed = true; onBack() } }
-    LaunchedEffect(event) { if (event != null) seen = true else if (seen) close() }
+    LaunchedEffect(gone) { if (gone) close() }
 
     val e = event ?: return
     val editable = e.id > 0

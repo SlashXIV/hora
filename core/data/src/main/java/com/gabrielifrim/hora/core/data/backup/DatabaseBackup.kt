@@ -9,8 +9,11 @@ import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.core.net.toUri
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import androidx.room.withTransaction
 import com.gabrielifrim.hora.core.data.database.HoraDatabase
+import com.gabrielifrim.hora.core.data.database.applyHoraConfiguration
 import com.gabrielifrim.hora.core.domain.repository.BackupRepository
 import com.gabrielifrim.hora.core.domain.repository.BackupState
 import com.gabrielifrim.hora.core.domain.repository.RestoreCheck
@@ -92,9 +95,16 @@ class DatabaseBackup @Inject constructor(
             val parent = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
             val now = LocalDateTime.now()
             val name = if (auto) "hora-auto-${now.format(DAY)}.db" else "hora-${now.format(MINUTE)}.db"
+            // Écrite sous un nom provisoire : un échec ne laisse ni fichier vide parmi les sauvegardes, ni l'ancienne effacée.
+            val target = requireNotNull(DocumentsContract.createDocument(resolver, parent, "application/octet-stream", "$name.part")) { "création refusée" }
+            try {
+                requireNotNull(resolver.openOutputStream(target, "w")) { "écriture refusée" }.use { snapshot(it) }
+            } catch (e: Throwable) {
+                runCatching { DocumentsContract.deleteDocument(resolver, target) }
+                throw e
+            }
             children(tree).filter { it.second == name }.forEach { DocumentsContract.deleteDocument(resolver, it.first) }
-            val target = requireNotNull(DocumentsContract.createDocument(resolver, parent, "application/octet-stream", name)) { "création refusée" }
-            requireNotNull(resolver.openOutputStream(target, "w")) { "écriture refusée" }.use { snapshot(it) }
+            DocumentsContract.renameDocument(resolver, target, name)
             if (auto) {
                 children(tree).filter { it.second.startsWith("hora-auto-") }.sortedByDescending { it.second }.drop(KEEP_AUTO)
                     .forEach { DocumentsContract.deleteDocument(resolver, it.first) }
@@ -141,10 +151,19 @@ class DatabaseBackup @Inject constructor(
             if (!header.contentEquals(SQLITE_HEADER)) return@withContext RestoreCheck.NotHora
             SQLiteDatabase.openDatabase(copy.path, null, SQLiteDatabase.OPEN_READONLY).use { sqlite ->
                 if (sqlite.version > HoraDatabase.VERSION) return@withContext RestoreCheck.TooNew
-                fun count(table: String) = sqlite.rawQuery("SELECT COUNT(*) FROM $table", null).use { c -> c.moveToFirst(); c.getInt(0) }
-                runCatching { count("settings") }.getOrNull() ?: return@withContext RestoreCheck.NotHora
-                // Une base v1 (J1) n'a ni agendas ni événements : rien à montrer, mais elle se restaure.
-                RestoreCheck.Ready(copy.path, runCatching { count("event") }.getOrDefault(0), runCatching { count("agenda") }.getOrDefault(0))
+                // Une sauvegarde tronquée a un en-tête valable : seule la lecture de chaque page la trahit.
+                val intact = sqlite.rawQuery("PRAGMA quick_check", null).use { c -> c.moveToFirst() && c.getString(0) == "ok" }
+                if (!intact) return@withContext RestoreCheck.NotHora
+            }
+            // Room migre puis valide le schéma sur la copie : la base d'une autre app est refusée ici, pas à chaque lancement.
+            val room = Room.databaseBuilder(context, HoraDatabase::class.java, copy.path).applyHoraConfiguration()
+                .setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build()
+            try {
+                val sqlite = room.openHelper.writableDatabase
+                fun count(table: String) = sqlite.query("SELECT COUNT(*) FROM $table").use { c -> c.moveToFirst(); c.getInt(0) }
+                RestoreCheck.Ready(copy.path, count("event"), count("agenda"))
+            } finally {
+                room.close()
             }
         }.getOrElse { RestoreCheck.NotHora }
     }
@@ -157,12 +176,13 @@ class DatabaseBackup @Inject constructor(
     override suspend fun restore(check: RestoreCheck.Ready): Unit = withContext(Dispatchers.IO) {
         val main = context.getDatabasePath(HoraDatabase.NAME)
         File(context.filesDir, "avant-restauration.db").outputStream().use { snapshot(it) }
-        db.close()
-        listOf("-wal", "-shm", "-journal").forEach { File(main.path + it).delete() }
-        // Copie à côté puis renommage : une copie interrompue (stockage plein) laisse la base intacte.
+        // Copie à côté, base encore ouverte : un échec (stockage plein, fichier effacé du cache) laisse Hora utilisable.
         val incoming = File(main.path + ".restauration")
         File(check.path).copyTo(incoming, overwrite = true)
-        if (!incoming.renameTo(main)) error("remplacement de la base refusé")
+        db.close()
+        listOf("-wal", "-shm", "-journal").forEach { File(main.path + it).delete() }
+        // Renommage refusé : l'ancienne base reste ; on relance quand même, la base fermée ne se rouvre pas ici.
+        incoming.renameTo(main)
         File(check.path).delete()
         val launch = requireNotNull(context.packageManager.getLaunchIntentForPackage(context.packageName))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

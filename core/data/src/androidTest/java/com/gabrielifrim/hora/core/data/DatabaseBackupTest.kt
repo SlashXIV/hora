@@ -63,6 +63,28 @@ class DatabaseBackupTest {
     }
 
     @Test
+    fun une_sauvegarde_tronquee_est_refusee() = runTest {
+        val agendaId = db.agendaDao().upsert(AgendaEntity(name = "Perso", colorKey = "BLUE", hidden = false, sortOrder = 0))
+        repeat(300) { db.eventDao().upsert(EventEntity(uid = "e$it", agendaId = agendaId, title = "Événement $it ".repeat(20), location = "", notes = "", colorKey = null, allDay = true, start = 1, end = 1, timeZone = null)) }
+        val full = File(context.cacheDir, "pleine.db").apply { outputStream().use { backup.snapshot(it) } }
+        // Écriture interrompue : la première moitié seulement, en-tête compris.
+        val cut = File(context.cacheDir, "tronquee.db").apply { writeBytes(full.readBytes().copyOf(full.length().toInt() / 2)) }
+        assertThat(backup.inspect(Uri.fromFile(cut).toString())).isEqualTo(RestoreCheck.NotHora)
+        full.delete(); cut.delete()
+    }
+
+    @Test
+    fun la_base_d_une_autre_app_est_refusee() = runTest {
+        val file = File(context.cacheDir, "autre-app.db").apply { delete() }
+        android.database.sqlite.SQLiteDatabase.openOrCreateDatabase(file, null).use { other ->
+            other.execSQL("CREATE TABLE settings (id INTEGER PRIMARY KEY, valeur TEXT)")
+            other.version = 5
+        }
+        assertThat(backup.inspect(Uri.fromFile(file).toString())).isEqualTo(RestoreCheck.NotHora)
+        file.delete()
+    }
+
+    @Test
     fun prochaine_sauvegarde_au_prochain_3_h() {
         val day = LocalDateTime.of(2026, 11, 3, 0, 0)
         assertThat(DatabaseBackup.nextRun(day.withHour(1))).isEqualTo(day.withHour(3))

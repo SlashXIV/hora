@@ -94,7 +94,17 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
     private fun canWrite(): Boolean = readable() && prefs.getBoolean(WRITE, false) &&
         context.checkSelfPermission(Manifest.permission.WRITE_CALENDAR) == PackageManager.PERMISSION_GRANTED
 
-    private fun hidden(): Set<Long> = prefs.getStringSet(HIDDEN, emptySet()).orEmpty().mapNotNull { it.toLongOrNull() }.toSet()
+    private fun ids(key: String): Set<Long> = prefs.getStringSet(key, emptySet()).orEmpty().mapNotNull { it.toLongOrNull() }.toSet()
+
+    /**
+     * Masqué dans Hora : le choix fait dans Hora, sinon celui d'Android (un agenda décoché dans
+     * Google Agenda, comme les fériés de chaque compte, reste masqué).
+     */
+    private fun hiddenTest(): (Long, Boolean) -> Boolean {
+        val hidden = ids(HIDDEN)
+        val shown = ids(SHOWN)
+        return { id, androidVisible -> id in hidden || (!androidVisible && id !in shown) }
+    }
 
     override val enabled: Flow<Boolean> = changes.map { readable() }
 
@@ -144,16 +154,16 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
 
     override val duplicates: Flow<Int> = combine(changes, uids) { _, horaUids ->
         if (!readable()) return@combine 0
-        val hidden = hidden()
-        query(Events.CONTENT_URI, arrayOf(Events.CALENDAR_ID, Events.UID_2445), "${Events.DELETED} = 0", null) { c ->
-            c.getLong(0).takeIf { it !in hidden }?.let { c.getString(1) }
+        val hidden = hiddenTest()
+        query(Events.CONTENT_URI, arrayOf(Events.CALENDAR_ID, Events.UID_2445, Events.VISIBLE), "${Events.DELETED} = 0", null) { c ->
+            c.getLong(0).takeIf { !hidden(it, c.getInt(2) == 1) }?.let { c.getString(1) }
         }.count { it in horaUids }
     }.flowOn(Dispatchers.IO)
 
     override suspend fun setHidden(agendaId: Long, hidden: Boolean) {
         val id = deviceCalendarOf(agendaId) ?: return
-        val set = hidden().let { if (hidden) it + id else it - id }
-        prefs.edit().putStringSet(HIDDEN, set.map { it.toString() }.toSet()).apply()
+        fun put(key: String, add: Boolean) = (ids(key).let { if (add) it + id else it - id }).map { it.toString() }.toSet()
+        prefs.edit().putStringSet(HIDDEN, put(HIDDEN, hidden)).putStringSet(SHOWN, put(SHOWN, !hidden)).apply()
     }
 
     override suspend fun setColor(agendaId: Long, colorKey: String) {
@@ -162,19 +172,20 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
     }
 
     private fun calendars(): List<Agenda> {
-        val hidden = hidden()
+        val hidden = hiddenTest()
         val write = canWrite()
         return query(
             Calendars.CONTENT_URI,
-            arrayOf(Calendars._ID, Calendars.CALENDAR_DISPLAY_NAME, Calendars.ACCOUNT_NAME, Calendars.ACCOUNT_TYPE, Calendars.CALENDAR_COLOR, Calendars.CALENDAR_ACCESS_LEVEL),
+            arrayOf(Calendars._ID, Calendars.CALENDAR_DISPLAY_NAME, Calendars.ACCOUNT_NAME, Calendars.ACCOUNT_TYPE, Calendars.CALENDAR_COLOR, Calendars.CALENDAR_ACCESS_LEVEL, Calendars.VISIBLE),
             null, null,
         ) { c ->
             val id = c.getLong(0)
             Agenda(
                 id = deviceAgendaId(id),
-                name = c.getString(1).orEmpty(),
+                // Un nom resté clé de traduction (« calendar_displayname_local » de l'agenda Xiaomi) n'est pas montrable.
+                name = c.getString(1)?.takeUnless { RESOURCE_KEY.matches(it) } ?: context.getString(R.string.device_local_name),
                 colorKey = prefs.getString(COLOR + id, null) ?: nearestColorKey(c.getInt(4)),
-                hidden = id in hidden,
+                hidden = hidden(id, c.getInt(6) == 1),
                 sortOrder = Int.MAX_VALUE - 1,
                 account = if (c.getString(3) == CalendarContract.ACCOUNT_TYPE_LOCAL) context.getString(R.string.device_local) else c.getString(2).orEmpty(),
                 readOnly = !write || c.getInt(5) < Calendars.CAL_ACCESS_CONTRIBUTOR,
@@ -184,7 +195,7 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
 
     /** Occurrences entre [from] et [to] (millisecondes) des agendas visibles, ou du seul événement [eventId]. */
     private fun instances(from: Long, to: Long, eventId: Long?): List<Event> {
-        val hidden = hidden()
+        val hidden = hiddenTest()
         val uri = Instances.CONTENT_URI.buildUpon().also { ContentUris.appendId(it, from); ContentUris.appendId(it, to) }.build()
         val selection = "${Instances.STATUS} IS NULL OR ${Instances.STATUS} != ${Events.STATUS_CANCELED}"
         return query(
@@ -192,12 +203,13 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
             arrayOf(
                 Instances.EVENT_ID, Instances.BEGIN, Instances.END, Instances.TITLE, Instances.EVENT_LOCATION, Instances.DESCRIPTION,
                 Instances.CALENDAR_ID, Instances.ALL_DAY, Instances.AVAILABILITY, Instances.EVENT_TIMEZONE, Instances.UID_2445,
+                Instances.VISIBLE,
             ),
             if (eventId == null) selection else "($selection) AND ${Instances.EVENT_ID} = ?",
             eventId?.let { arrayOf(it.toString()) },
         ) { c ->
             val calendar = c.getLong(6)
-            if (calendar in hidden) return@query null
+            if (hidden(calendar, c.getInt(11) == 1)) return@query null
             val id = c.getLong(0)
             val begin = c.getLong(1)
             val end = maxOf(begin, c.getLong(2))
@@ -332,6 +344,8 @@ internal class DeviceCalendarRepositoryImpl @Inject constructor(
     private companion object {
         const val ENABLED = "enabled"
         const val HIDDEN = "hidden"
+        const val SHOWN = "shown"
+        val RESOURCE_KEY = Regex("[a-z]+(_[a-z]+)+")
         const val WRITE = "write"
         const val TAG = "Hora"
         const val COLOR = "color_"

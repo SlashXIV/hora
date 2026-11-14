@@ -298,7 +298,7 @@ private fun AgendaChoice(agendas: List<Agenda>, selected: Long, onSelect: (Long)
             agendas.forEach { agenda ->
                 val key = agendaColorKey(agenda.colorKey)
                 // Un agenda d'Android porte son compte : « Famille » d'Hora et celui du téléphone ne se confondent pas.
-                Tag(listOfNotNull(agenda.name, agenda.account).joinToString(" · "), selected = agenda.id == selected, onClick = { onSelect(agenda.id) }, leading = { AgendaMark(key.shape, key.color(), size = 10.dp) })
+                Tag(listOfNotNull(agenda.name, agenda.account).distinct().joinToString(" · "), selected = agenda.id == selected, onClick = { onSelect(agenda.id) }, leading = { AgendaMark(key.shape, key.color(), size = 10.dp) })
             }
         }
     }

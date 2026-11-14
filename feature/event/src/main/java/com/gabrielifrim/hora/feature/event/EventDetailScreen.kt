@@ -114,7 +114,8 @@ fun EventDetailScreen(
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     AgendaMark(key.shape, key.color(), size = 12.dp)
-                    Eyebrow(listOfNotNull(agendas[e.agendaId]?.name, agendas[e.agendaId]?.account).joinToString(" · "))
+                    // Google nomme l'agenda principal comme son compte : on ne le répète pas.
+                    Eyebrow(listOfNotNull(agendas[e.agendaId]?.name, agendas[e.agendaId]?.account).distinct().joinToString(" · "))
                 }
                 if (device != null) HoraText(stringResource(if (deviceWritable) R.string.device_event_writable else R.string.device_event_read_only), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

@@ -1,8 +1,12 @@
 package com.gabrielifrim.hora.core.domain.repository
 
+import com.gabrielifrim.hora.core.domain.model.Reminder
 import com.gabrielifrim.hora.core.domain.model.Timing
 import com.google.common.truth.Truth.assertThat
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import org.junit.Test
 
@@ -26,6 +30,33 @@ class DeviceCalendarTest {
         assertThat(deviceAllDay(utc(d14), utc(d14.plusDays(3)))).isEqualTo(Timing.AllDay(d14, d14.plusDays(2)))
         // Une fin égale au début (saisie bancale d'une autre app) reste un jour.
         assertThat(deviceAllDay(utc(d14), utc(d14))).isEqualTo(Timing.AllDay(d14, d14))
+    }
+
+    @Test fun journee_entiere_ecrite_relue_a_l_identique() {
+        val allDay = Timing.AllDay(LocalDate.of(2026, 11, 14), LocalDate.of(2026, 11, 16))
+        val t = deviceTimes(allDay, recurring = false)
+        assertThat(t.allDay).isTrue()
+        assertThat(t.zone).isEqualTo("UTC")
+        assertThat(deviceAllDay(t.start, t.end!!)).isEqualTo(allDay)
+        // Une série porte une durée à la place de la fin.
+        assertThat(deviceTimes(allDay, recurring = true).let { it.end to it.duration }).isEqualTo(null to "P3D")
+    }
+
+    @Test fun heure_fixe_ecrite_avec_son_fuseau() {
+        val zone = ZoneId.of("Europe/Paris")
+        val start = LocalDateTime.of(2026, 11, 14, 9, 30).atZone(zone).toInstant()
+        val timed = Timing.Timed(start, start.plusSeconds(5400), zone)
+        assertThat(deviceTimes(timed, recurring = false)).isEqualTo(DeviceTimes(start.toEpochMilli(), start.toEpochMilli() + 5_400_000, null, false, "Europe/Paris"))
+        assertThat(deviceTimes(timed, recurring = true).duration).isEqualTo("P5400S")
+    }
+
+    @Test fun rappel_ancre_converti_en_minutes() {
+        val zone = ZoneId.of("Europe/Paris")
+        val start = LocalDateTime.of(2026, 11, 14, 9, 30).atZone(zone).toInstant()
+        val timed = Timing.Timed(start, start, zone)
+        assertThat(deviceMinutes(Reminder.Before(15), timed, zone)).isEqualTo(15)
+        // La veille à 20 h pour 9 h 30 : 13 h 30 avant.
+        assertThat(deviceMinutes(Reminder.Anchored(1, LocalTime.of(20, 0)), timed, zone)).isEqualTo(810)
     }
 
     @Test fun couleur_d_android_ramenee_a_celle_d_hora() {

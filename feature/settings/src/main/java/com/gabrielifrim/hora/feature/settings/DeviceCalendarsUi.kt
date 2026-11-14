@@ -41,6 +41,7 @@ import com.gabrielifrim.hora.core.ui.component.HoraSheet
 import com.gabrielifrim.hora.core.ui.component.HoraText
 import com.gabrielifrim.hora.core.ui.component.Rule
 import com.gabrielifrim.hora.core.ui.component.Tag
+import com.gabrielifrim.hora.core.ui.component.ToggleRow
 import com.gabrielifrim.hora.core.ui.component.ToggleSwitch
 import com.gabrielifrim.hora.core.ui.text.agendaColorKey
 import com.gabrielifrim.hora.core.ui.text.color
@@ -57,7 +58,9 @@ internal fun DeviceCalendarsSection(
     enabled: Boolean,
     agendas: List<Agenda>,
     duplicates: Int,
+    writable: Boolean,
     onEnable: (Boolean) -> Unit,
+    onWritable: (Boolean) -> Unit,
     onVisible: (Agenda, Boolean) -> Unit,
     onColor: (Agenda, String) -> Unit,
 ) {
@@ -67,6 +70,11 @@ internal fun DeviceCalendarsSection(
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         refused = !granted
         if (granted) onEnable(true)
+    }
+    var writeRefused by remember { mutableStateOf(false) }
+    val askWrite = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        writeRefused = !granted
+        if (granted) onWritable(true)
     }
     Eyebrow(stringResource(R.string.device_title), Modifier.padding(top = 20.dp, bottom = 4.dp))
     if (!enabled) {
@@ -115,7 +123,7 @@ internal fun DeviceCalendarsSection(
                         AgendaMark(key.shape, key.color(), size = 14.dp)
                         HoraText(agenda.name, style = HoraTheme.type.body)
                     }
-                    HoraText(stringResource(if (agenda.hidden) R.string.agenda_hidden else R.string.device_agenda_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2, modifier = Modifier.padding(start = 26.dp))
+                    HoraText(stringResource(if (agenda.hidden) R.string.agenda_hidden else if (agenda.readOnly) R.string.device_agenda_hint else R.string.device_agenda_writable_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2, modifier = Modifier.padding(start = 26.dp))
                 }
                 ToggleSwitch(checked = !agenda.hidden, onCheckedChange = { onVisible(agenda, it) }, label = stringResource(R.string.agenda_visible, agenda.name))
             }
@@ -125,6 +133,19 @@ internal fun DeviceCalendarsSection(
     if (duplicates > 0) {
         HoraText(pluralStringResource(R.plurals.device_duplicates, duplicates, duplicates), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2, modifier = Modifier.padding(top = 8.dp))
     }
+    ToggleRow(
+        title = stringResource(R.string.device_write),
+        hint = stringResource(if (writeRefused) R.string.device_write_refused else R.string.device_write_hint),
+        checked = writable,
+        onCheckedChange = { on ->
+            when {
+                !on -> onWritable(false)
+                context.checkSelfPermission(Manifest.permission.WRITE_CALENDAR) == PackageManager.PERMISSION_GRANTED -> onWritable(true)
+                else -> askWrite.launch(Manifest.permission.WRITE_CALENDAR)
+            }
+        },
+        modifier = Modifier.padding(top = 8.dp),
+    )
     HoraButton(stringResource(R.string.device_disable), onClick = { onEnable(false) }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
     HoraText(stringResource(R.string.device_disable_hint), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2, modifier = Modifier.padding(top = 4.dp))
 

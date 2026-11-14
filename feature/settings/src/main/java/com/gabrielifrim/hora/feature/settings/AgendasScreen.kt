@@ -80,6 +80,11 @@ class AgendasViewModel @Inject constructor(
     val deviceEnabled: StateFlow<Boolean> = device.enabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     val deviceAgendas: StateFlow<List<Agenda>> = device.agendas.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val duplicates: StateFlow<Int> = device.duplicates.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    val deviceWritable: StateFlow<Boolean> = device.writable.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    fun setDeviceWritable(on: Boolean) {
+        viewModelScope.launch { device.setWritable(on) }
+    }
 
     fun setDeviceEnabled(on: Boolean) {
         viewModelScope.launch { device.setEnabled(on) }
@@ -110,6 +115,7 @@ fun AgendasScreen(onBack: () -> Unit, viewModel: AgendasViewModel = hiltViewMode
     val deviceEnabled by viewModel.deviceEnabled.collectAsStateWithLifecycle()
     val deviceAgendas by viewModel.deviceAgendas.collectAsStateWithLifecycle()
     val duplicates by viewModel.duplicates.collectAsStateWithLifecycle()
+    val deviceWritable by viewModel.deviceWritable.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Agenda?>(null) }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
@@ -153,7 +159,7 @@ fun AgendasScreen(onBack: () -> Unit, viewModel: AgendasViewModel = hiltViewMode
         }
         item {
             Column {
-                DeviceCalendarsSection(deviceEnabled, deviceAgendas, duplicates, viewModel::setDeviceEnabled, viewModel::setDeviceVisible, viewModel::setDeviceColor)
+                DeviceCalendarsSection(deviceEnabled, deviceAgendas, duplicates, deviceWritable, viewModel::setDeviceEnabled, viewModel::setDeviceWritable, viewModel::setDeviceVisible, viewModel::setDeviceColor)
             }
         }
     }

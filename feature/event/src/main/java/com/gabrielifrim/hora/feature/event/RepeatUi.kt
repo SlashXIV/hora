@@ -148,15 +148,20 @@ fun RepeatSheet(
 
 /** « Cet événement / Les suivants / Tous » : la question des agendas, posée au moment d'écrire. */
 @Composable
-fun ScopeDialog(title: String, onPick: (EditScope) -> Unit, onDismiss: () -> Unit) {
+fun ScopeDialog(title: String, onPick: (EditScope) -> Unit, onDismiss: () -> Unit, following: Boolean = true, single: Boolean = true) {
     HoraDialog(
         title = title,
         onDismissRequest = onDismiss,
         actions = { HoraButton(stringResource(R.string.cancel), onClick = onDismiss, style = ButtonStyle.Text) },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            HoraButton(stringResource(R.string.scope_this), onClick = { onPick(EditScope.THIS) }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth())
-            HoraButton(stringResource(R.string.scope_following), onClick = { onPick(EditScope.FOLLOWING) }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth())
+            if (single) {
+                HoraButton(stringResource(R.string.scope_this), onClick = { onPick(EditScope.THIS) }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth())
+            } else {
+                HoraText(stringResource(R.string.scope_local_series), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+            }
+            // Android ne coupe pas une série : « cet événement » ou « tous ».
+            if (following) HoraButton(stringResource(R.string.scope_following), onClick = { onPick(EditScope.FOLLOWING) }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth())
             HoraButton(stringResource(R.string.scope_all), onClick = { onPick(EditScope.ALL) }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth())
         }
     }

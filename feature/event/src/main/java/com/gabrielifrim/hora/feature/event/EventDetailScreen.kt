@@ -75,6 +75,7 @@ fun EventDetailScreen(
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
     val templateSaved by viewModel.templateSaved.collectAsStateWithLifecycle()
     val popoteAgenda by viewModel.popoteAgenda.collectAsStateWithLifecycle()
+    val canEditOccurrence by viewModel.canEditOccurrence.collectAsStateWithLifecycle()
     val formats = rememberFormats()
     val zone = ZoneId.systemDefault()
     val haptics = rememberHaptics()
@@ -83,14 +84,20 @@ fun EventDetailScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val shareTitle = stringResource(R.string.share_title)
-    // Un événement supprimé ailleurs (ou introuvable) ferme sa fiche.
+    // Un événement supprimé ailleurs (ou introuvable) ferme sa fiche. Celle d'Android se ferme à la suppression :
+    // sinon elle montrerait l'occurrence suivante.
     var seen by remember { mutableStateOf(false) }
-    LaunchedEffect(event) { if (event != null) seen = true else if (seen) onBack() }
+    // Une seule sortie : la suppression et la disparition de l'événement peuvent se suivre.
+    var closed by remember { mutableStateOf(false) }
+    val close = { if (!closed) { closed = true; onBack() } }
+    LaunchedEffect(event) { if (event != null) seen = true else if (seen) close() }
 
     val e = event ?: return
     val editable = e.id > 0
     // Un événement d'Android se lit, s'ouvre dans son app, se copie dans Hora ; il ne se modifie pas ici.
     val device = deviceEventOf(e.id)
+    // Modifiable quand « Modifier depuis Hora » est actif et que son compte le permet.
+    val deviceWritable = device != null && agendas[e.agendaId]?.readOnly == false
     val key = colorKeyOf(e, agendas)
     val day = when (val t = e.timing) {
         is Timing.Timed -> t.start.atZone(zone).toLocalDate()
@@ -109,7 +116,7 @@ fun EventDetailScreen(
                     AgendaMark(key.shape, key.color(), size = 12.dp)
                     Eyebrow(listOfNotNull(agendas[e.agendaId]?.name, agendas[e.agendaId]?.account).joinToString(" · "))
                 }
-                if (device != null) HoraText(stringResource(R.string.device_event_read_only), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
+                if (device != null) HoraText(stringResource(if (deviceWritable) R.string.device_event_writable else R.string.device_event_read_only), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     HoraText(formats.dayLong(day), style = HoraTheme.type.body)
                     HoraText(timeRange(e, zone, formats), style = HoraTheme.type.hour.copy(fontSize = HoraTheme.type.body.fontSize))
@@ -183,6 +190,8 @@ fun EventDetailScreen(
                             HoraButton(stringResource(R.string.action_move), onClick = { moving = true }, style = ButtonStyle.Line, modifier = Modifier.weight(1f))
                         }
                     }
+                    // Une occurrence d'un agenda local ne bouge pas seule (voir canEditOccurrence).
+                    if (deviceWritable && (!e.isRecurring || canEditOccurrence)) HoraButton(stringResource(R.string.action_move), onClick = { moving = true }, style = ButtonStyle.Line, modifier = Modifier.fillMaxWidth())
                     if (device != null) {
                         HoraButton(
                             stringResource(R.string.device_open),
@@ -234,7 +243,7 @@ fun EventDetailScreen(
                 }
             }
         }
-        if (editable) {
+        if (editable || deviceWritable) {
             Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 HoraButton(stringResource(R.string.action_delete), onClick = { confirmDelete = true }, style = ButtonStyle.Line, contentColor = HoraTheme.colors.error, modifier = Modifier.weight(1f))
                 HoraButton(stringResource(R.string.action_edit), onClick = { onEdit(e.id, e.occurrence) }, modifier = Modifier.weight(1f))
@@ -253,15 +262,17 @@ fun EventDetailScreen(
     if (confirmDelete && e.isRecurring) {
         ScopeDialog(
             title = stringResource(R.string.delete_scope_title),
-            onPick = { scope -> confirmDelete = false; viewModel.delete(scope) },
+            onPick = { scope -> confirmDelete = false; viewModel.delete(scope) { if (device != null) close() } },
             onDismiss = { confirmDelete = false },
+            following = device == null,
+            single = canEditOccurrence,
         )
     } else if (confirmDelete) {
         ConfirmDialog(
             title = stringResource(R.string.delete_title),
             message = stringResource(R.string.delete_message, e.title),
             confirmLabel = stringResource(R.string.action_delete),
-            onConfirm = { confirmDelete = false; viewModel.delete(EditScope.ALL) },
+            onConfirm = { confirmDelete = false; viewModel.delete(EditScope.ALL) { if (device != null) close() } },
             onDismiss = { confirmDelete = false },
         )
     }

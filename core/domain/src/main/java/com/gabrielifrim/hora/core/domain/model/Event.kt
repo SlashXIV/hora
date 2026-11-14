@@ -18,6 +18,8 @@ data class Agenda(
     val defaultReminders: List<Reminder> = emptyList(),
     /** Agenda d'Android : le compte qui le porte (« Sur l'appareil », un compte DAVx5…) ; null pour Hora. */
     val account: String? = null,
+    /** Agenda d'Android qu'Hora ne peut pas modifier (écriture non demandée, ou agenda en lecture seule). */
+    val readOnly: Boolean = false,
 )
 
 /** Quand a lieu un événement. */

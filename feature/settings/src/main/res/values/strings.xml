@@ -47,12 +47,16 @@
     <string name="agenda_delete">Supprimer l’agenda</string>
     <!-- Pont système (J9) : agendas d’Android en lecture seule. -->
     <string name="device_title">Agendas du téléphone</string>
-    <string name="device_explain">Montrer dans Hora les agendas d’Android : ceux de DAVx5, d’un compte ou de l’appareil. Lecture seule ; Hora n’y écrit rien et n’envoie rien. Leurs rappels sonnent par l’app d’origine.</string>
+    <string name="device_explain">Montrer dans Hora les agendas d’Android : ceux de DAVx5, d’un compte ou de l’appareil. Lecture seule au départ ; Hora n’envoie rien. Leurs rappels sonnent par l’app d’origine.</string>
     <string name="device_enable">Lire les agendas du téléphone</string>
     <string name="device_refused">Lecture refusée. Pour l’autoriser : Paramètres d’Android › Applications › Hora › Autorisations.</string>
     <string name="device_open_settings">Ouvrir les paramètres d’Android</string>
     <string name="device_none">Aucun agenda sur ce téléphone.</string>
     <string name="device_agenda_hint">Lecture seule · toucher pour changer de couleur</string>
+    <string name="device_agenda_writable_hint">Modifiable depuis Hora · toucher pour changer de couleur</string>
+    <string name="device_write">Modifier depuis Hora</string>
+    <string name="device_write_hint">Créer, modifier et supprimer dans ces agendas. L’app qui les synchronise (DAVx5…) envoie ensuite les changements ; leurs rappels sonnent toujours par l’app d’agenda du téléphone.</string>
+    <string name="device_write_refused">Écriture refusée. Pour l’autoriser : Paramètres d’Android › Applications › Hora › Autorisations.</string>
     <string name="device_color">Changer de couleur</string>
     <string name="device_color_hint">Dans Hora seulement : Android garde la sienne.</string>
     <string name="device_disable">Arrêter la lecture</string>

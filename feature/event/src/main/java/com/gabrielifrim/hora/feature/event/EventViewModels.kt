@@ -14,6 +14,7 @@ import com.gabrielifrim.hora.core.domain.recurrence.SeriesEdits
 import com.gabrielifrim.hora.core.domain.repository.AgendaRepository
 import com.gabrielifrim.hora.core.domain.repository.AlmanacRepository
 import com.gabrielifrim.hora.core.domain.repository.DeviceCalendarRepository
+import com.gabrielifrim.hora.core.domain.repository.deviceCalendarOf
 import com.gabrielifrim.hora.core.domain.repository.deviceEventOf
 import com.gabrielifrim.hora.core.domain.repository.EventRepository
 import com.gabrielifrim.hora.core.domain.repository.ReminderSet
@@ -69,7 +70,7 @@ class EventDetailViewModel @AssistedInject constructor(
     agendas: AgendaRepository,
     @param:ApplicationContext private val context: Context,
     almanac: AlmanacRepository,
-    device: DeviceCalendarRepository,
+    private val device: DeviceCalendarRepository,
     private val templates: TemplateRepository,
     settings: SettingsRepository,
 ) : ViewModel() {
@@ -82,14 +83,24 @@ class EventDetailViewModel @AssistedInject constructor(
 
     /** Ce qu'on affiche : l'occurrence demandée, avec son horaire. */
     /** Un id négatif est une entrée d'un agenda calculé (férié, fête…) ou d'Android, en lecture seule. */
+    private val onDevice = deviceEventOf(eventId) != null
+
     val event: StateFlow<Event?> = when {
-        deviceEventOf(eventId) != null -> device.event(eventId, occurrence.takeIf { it >= 0 })
-        eventId < 0 -> almanac.event(eventId)
-        else -> events.event(eventId)
-    }.map { it?.let { s -> occurrenceOf(s, occurrence, zone) } }
+        // Android rend déjà l'occurrence : sa clé est un instant, pas celle d'Hora.
+        onDevice -> device.event(eventId, occurrence.takeIf { it >= 0 })
+        eventId < 0 -> almanac.event(eventId).map { it?.let { s -> occurrenceOf(s, occurrence, zone) } }
+        else -> events.event(eventId).map { it?.let { s -> occurrenceOf(s, occurrence, zone) } }
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     val agendas: StateFlow<Map<Long, Agenda>> = combine(agendas.agendas, almanac.agendas, device.agendas) { a, b, c -> a + b + c }.map { l -> l.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    /** Faux pour une série d'un agenda local d'Android : seule « toute la série » y tient. */
+    val canEditOccurrence = MutableStateFlow(true)
+
+    init {
+        if (onDevice) viewModelScope.launch { canEditOccurrence.value = device.canEditOccurrence(eventId) }
+    }
 
     /** L'agenda relié à Popote (Réglages), null s'il n'y en a pas. */
     val popoteAgenda: StateFlow<Long?> = settings.settings.map { it.popoteAgenda }
@@ -116,7 +127,9 @@ class EventDetailViewModel @AssistedInject constructor(
         val shown = event.value ?: return
         viewModelScope.launch {
             val moved = shown.movedTo(date)
-            if (shown.occurrence != null) {
+            if (onDevice) {
+                device.save(moved, shown, EditScope.THIS)
+            } else if (shown.occurrence != null) {
                 val series = events.event(eventId).first() ?: return@launch
                 events.apply(SeriesEdits.update(EditScope.THIS, series, shown, moved, events.children(series.id), zone))
             } else {
@@ -145,11 +158,13 @@ class EventDetailViewModel @AssistedInject constructor(
     }
 
     /** La fiche se ferme d'elle-même quand l'événement disparaît. */
-    fun delete(scope: EditScope) {
+    fun delete(scope: EditScope, onDone: () -> Unit = {}) {
         val shown = event.value ?: return
         viewModelScope.launch {
             val parentId = shown.parentId
             when {
+                // Refusée par Android : la fiche reste ouverte, l'événement aussi.
+                onDevice -> if (device.delete(shown, scope)) onDone()
                 parentId != null -> {
                     // Occurrence modifiée à part : « cet événement » la retire de sa série ; sinon on agit sur la série.
                     val series = events.event(parentId).first() ?: return@launch events.delete(shown.id)
@@ -202,7 +217,27 @@ class EventEditorViewModel @AssistedInject constructor(
 
     private val zone = ZoneId.systemDefault()
 
-    val agendas: StateFlow<List<Agenda>> = agendaRepository.agendas.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    /** null tant que le brouillon se charge. */
+    val draft = MutableStateFlow<EventDraft?>(null)
+
+    /**
+     * Un événement reste dans son monde : Hora, ou son agenda d'Android (le déplacer d'un
+     * compte à l'autre, c'est le copier). Un nouveau va où l'on veut, si Android permet d'y écrire.
+     */
+    val agendas: StateFlow<List<Agenda>> = combine(agendaRepository.agendas, device.agendas, draft) { hora, android, d ->
+        val writable = android.filter { !it.readOnly }
+        when {
+            d == null || d.id > 0 -> hora
+            d.id < 0 -> writable.filter { it.id == d.agendaId }
+            else -> hora + writable
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Vrai si Android a refusé d'enregistrer (écriture retirée entre-temps). */
+    val saveFailed = MutableStateFlow(false)
+
+    /** Faux pour une série d'un agenda local d'Android : seule « toute la série » y tient. */
+    val canEditOccurrence = MutableStateFlow(true)
     val reminderSets: StateFlow<List<ReminderSet>> = setRepository.sets.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val plages: StateFlow<List<Plage>> = settings.settings.map { it.plages }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -217,17 +252,21 @@ class EventEditorViewModel @AssistedInject constructor(
         return FreeSlots.find(others, from, Duration.between(d.start, d.end), plage, d.zone)
     }
 
-    /** null tant que le brouillon se charge. */
-    val draft = MutableStateFlow<EventDraft?>(null)
-
     /** La série et l'occurrence d'origine, si l'on modifie une occurrence : il faudra choisir la portée. */
     private var series: Event? = null
     private var original: Event? = null
-    val needsScope: Boolean get() = original?.let { it.occurrence != null || it.parentId != null } == true
+    val needsScope: Boolean get() = original?.let {
+        if (deviceEventOf(it.id) != null) it.recurrence != null else it.occurrence != null || it.parentId != null
+    } == true
 
     init {
         viewModelScope.launch {
             draft.value = when {
+                deviceEventOf(eventId) != null -> device.event(eventId, occurrence.takeIf { it >= 0 }).firstOrNull()?.let { shown ->
+                    original = shown
+                    canEditOccurrence.value = device.canEditOccurrence(eventId)
+                    EventDraft.of(shown, zone)
+                }
                 eventId > 0 -> events.event(eventId).firstOrNull()?.let { s ->
                     val shown = occurrenceOf(s, occurrence, zone)
                     series = s.parentId?.let { events.event(it).firstOrNull() } ?: s
@@ -276,6 +315,10 @@ class EventEditorViewModel @AssistedInject constructor(
             val edited = current.toEvent()
             val s = series
             val o = original
+            if (deviceCalendarOf(edited.agendaId) != null) {
+                device.save(edited, o, scope)?.let(onDone) ?: run { saveFailed.value = true }
+                return@launch
+            }
             val id = if (needsScope && s != null && o != null) {
                 events.apply(SeriesEdits.update(scope, s, o, edited, events.children(s.id), zone)) ?: s.id
             } else {

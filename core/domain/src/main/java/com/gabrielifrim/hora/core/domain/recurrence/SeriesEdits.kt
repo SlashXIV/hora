@@ -81,7 +81,7 @@ object SeriesEdits {
     }
 
     /** Applique à la série le décalage (heure, durée) fait sur une de ses occurrences. */
-    private fun shiftSeries(series: Timing, before: Timing, after: Timing): Timing = when {
+    fun shiftSeries(series: Timing, before: Timing, after: Timing): Timing = when {
         series is Timing.Timed && before is Timing.Timed && after is Timing.Timed -> {
             val zone = after.zone
             val shift = Duration.between(LocalDateTime.ofInstant(before.start, before.zone), LocalDateTime.ofInstant(after.start, after.zone))

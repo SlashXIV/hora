@@ -8,6 +8,7 @@
 
     <!-- Pont système (J9) : lire les agendas d'Android, demandé seulement depuis Réglages › Agendas. -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
 
     <!--
         Sauvegarde Android : rien vers le cloud (aucun service Google), transfert

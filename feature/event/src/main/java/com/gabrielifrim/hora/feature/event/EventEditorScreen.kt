@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.gabrielifrim.hora.core.domain.recurrence.EditScope
+import com.gabrielifrim.hora.core.domain.repository.deviceCalendarOf
 import com.gabrielifrim.hora.core.ui.component.AddReminderSheet
 import com.gabrielifrim.hora.core.ui.component.ButtonStyle
 import com.gabrielifrim.hora.core.ui.component.HoraDialog
@@ -96,6 +97,8 @@ fun EventEditorScreen(
     val agendas by viewModel.agendas.collectAsStateWithLifecycle()
     val sets by viewModel.reminderSets.collectAsStateWithLifecycle()
     val plages by viewModel.plages.collectAsStateWithLifecycle()
+    val saveFailed by viewModel.saveFailed.collectAsStateWithLifecycle()
+    val canEditOccurrence by viewModel.canEditOccurrence.collectAsStateWithLifecycle()
     val formats = rememberFormats()
     val haptics = rememberHaptics()
     var picking by remember { mutableStateOf<Picking?>(null) }
@@ -107,6 +110,8 @@ fun EventEditorScreen(
         if (viewModel.needsScope) picking = Picking.SCOPE else viewModel.save(EditScope.ALL, onSaved)
     }
     val d = draft ?: return
+    // Agenda d'Android : couleur propre, trajet et épingle n'y ont pas de place.
+    val onDevice = deviceCalendarOf(d.agendaId) != null
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -133,7 +138,7 @@ fun EventEditorScreen(
                     onDate = { picking = Picking.END_DATE }, onTime = { picking = Picking.END_TIME })
                 if (!d.allDay) {
                     HoraButton(stringResource(R.string.slot_find), onClick = { picking = Picking.SLOT }, style = ButtonStyle.Line)
-                    TravelChoice(d, formats, onChange = { m -> haptics.tick(); viewModel.update { it.copy(travelMinutes = m) } }, onAddReminder = {
+                    if (!onDevice) TravelChoice(d, formats, onChange = { m -> haptics.tick(); viewModel.update { it.copy(travelMinutes = m) } }, onAddReminder = {
                         haptics.tick(); viewModel.update { it.copy(reminders = (it.reminders + Reminder.Before(it.travelMinutes)).distinct()) }
                     })
                     ValueRow(stringResource(R.string.field_zone), d.zone.id, onClick = { picking = Picking.ZONE })
@@ -156,12 +161,13 @@ fun EventEditorScreen(
                         picking = Picking.REMINDER
                     },
                 )
+                if (onDevice) HoraText(stringResource(R.string.device_reminders_write), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
                 if (d.reminders.size > 1) {
                     HoraButton(stringResource(R.string.save_as_set), onClick = { picking = Picking.SAVE_SET }, style = ButtonStyle.Text)
                 }
                 Rule()
                 AgendaChoice(agendas, d.agendaId) { id -> haptics.tick(); viewModel.chooseAgenda(id) }
-                ColorChoice(d.colorKey) { key -> haptics.tick(); viewModel.update { it.copy(colorKey = key) } }
+                if (!onDevice) ColorChoice(d.colorKey) { key -> haptics.tick(); viewModel.update { it.copy(colorKey = key) } }
                 Rule()
                 HoraTextField(
                     value = d.location,
@@ -178,6 +184,7 @@ fun EventEditorScreen(
             }
         }
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (saveFailed) HoraText(stringResource(R.string.device_save_failed), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.error)
             if (d.title.isBlank()) HoraText(stringResource(R.string.editor_title_needed), style = HoraTheme.type.bodySmall, color = HoraTheme.colors.ink2)
             HoraButton(
                 stringResource(R.string.action_save),
@@ -212,7 +219,7 @@ fun EventEditorScreen(
             haptics.tick(); viewModel.update { it.copy(reminders = (it.reminders + added).distinct()) }; picking = null
         }, onDismiss = { picking = null })
         Picking.SAVE_SET -> SaveSetDialog(onSave = { name -> viewModel.saveAsSet(name); picking = null }, onDismiss = { picking = null })
-        Picking.SCOPE -> ScopeDialog(stringResource(R.string.edit_scope_title), onPick = { scope -> picking = null; viewModel.save(scope, onSaved) }, onDismiss = { picking = null })
+        Picking.SCOPE -> ScopeDialog(stringResource(R.string.edit_scope_title), onPick = { scope -> picking = null; viewModel.save(scope, onSaved) }, onDismiss = { picking = null }, following = !onDevice, single = canEditOccurrence)
         null -> Unit
     }
 }
@@ -290,7 +297,8 @@ private fun AgendaChoice(agendas: List<Agenda>, selected: Long, onSelect: (Long)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             agendas.forEach { agenda ->
                 val key = agendaColorKey(agenda.colorKey)
-                Tag(agenda.name, selected = agenda.id == selected, onClick = { onSelect(agenda.id) }, leading = { AgendaMark(key.shape, key.color(), size = 10.dp) })
+                // Un agenda d'Android porte son compte : « Famille » d'Hora et celui du téléphone ne se confondent pas.
+                Tag(listOfNotNull(agenda.name, agenda.account).joinToString(" · "), selected = agenda.id == selected, onClick = { onSelect(agenda.id) }, leading = { AgendaMark(key.shape, key.color(), size = 10.dp) })
             }
         }
     }

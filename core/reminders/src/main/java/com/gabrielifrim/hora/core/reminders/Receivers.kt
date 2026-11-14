@@ -27,6 +27,9 @@ private fun BroadcastReceiver.work(block: suspend () -> Unit) {
     CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
         try {
             block()
+        } catch (e: Throwable) {
+            // Un récepteur qui lève tue l'application : on le note, le reste continue.
+            android.util.Log.w("Hora", "réveil interrompu", e)
         } finally {
             pending.finish()
         }
@@ -49,9 +52,12 @@ class RescheduleReceiver : BroadcastReceiver() {
     @Inject lateinit var digest: DigestAlarms
 
     override fun onReceive(context: Context, intent: Intent) = work {
-        engine.run()
-        prayers.run()
-        digest.run()
+        // Le rappel sans titre d'avant déverrouillage laisse la place au vrai, présenté par le moteur.
+        androidx.core.app.NotificationManagerCompat.from(context).cancel(LockedBoot.NOTIFICATION_ID)
+        // Chacun pour soi : une erreur des prières ne laisse pas le résumé désarmé.
+        runCatching { engine.run() }
+        runCatching { prayers.run() }
+        runCatching { digest.run() }
     }
 }
 
@@ -85,12 +91,17 @@ class SnoozeReceiver : BroadcastReceiver() {
         const val EXTRA_OCCURRENCE = "occurrence"
         const val EXTRA_ALARM = "alarm"
 
-        /** « Demain matin » : 8 h le lendemain, heure locale. */
+        /** « Demain matin » : le prochain 8 h, heure locale ; à 0 h 30, c'est 8 h le jour même. */
         fun snoozeUntil(action: String?, now: Instant, zone: ZoneId): Instant = when (action) {
             ONE_HOUR -> now.plus(Duration.ofHours(1))
-            TOMORROW_MORNING -> now.atZone(zone).toLocalDate().plusDays(1).atTime(LocalTime.of(8, 0)).atZone(zone).toInstant()
+            TOMORROW_MORNING -> now.atZone(zone).let { local ->
+                val day = if (local.toLocalTime().isBefore(MORNING)) local.toLocalDate() else local.toLocalDate().plusDays(1)
+                day.atTime(MORNING).atZone(zone).toInstant()
+            }
             else -> now.plus(Duration.ofMinutes(10))
         }
+
+        private val MORNING: LocalTime = LocalTime.of(8, 0)
     }
 }
 

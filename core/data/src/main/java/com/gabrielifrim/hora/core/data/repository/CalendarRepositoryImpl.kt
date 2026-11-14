@@ -66,6 +66,7 @@ internal class AgendaRepositoryImpl @Inject constructor(
 internal class EventRepositoryImpl @Inject constructor(
     private val db: HoraDatabase,
     private val dao: EventDao,
+    private val reminders: ReminderDao,
 ) : EventRepository {
 
     override fun eventsBetween(first: LocalDate, last: LocalDate, zone: ZoneId): Flow<List<Event>> {
@@ -91,7 +92,9 @@ internal class EventRepositoryImpl @Inject constructor(
         return dao.search("%$escaped%").map { list -> list.map { it.toDomain() } }
     }
 
-    override suspend fun save(event: Event): Long = dao.upsert(event.toEntity()).let { if (it == -1L) event.id else it }
+    override suspend fun save(event: Event): Long = db.withTransaction { store(event).also { saved -> reminders.markPastFired(listOf(saved)) }.id }
+
+    private suspend fun store(event: Event): Event = event.copy(id = dao.upsert(event.toEntity()).let { if (it == -1L) event.id else it })
 
     override suspend fun delete(id: Long) = db.withTransaction {
         dao.deleteChildren(id)
@@ -104,7 +107,9 @@ internal class EventRepositoryImpl @Inject constructor(
             dao.delete(id)
         }
         // Le dernier enregistré est celui que l'on vient de modifier : l'occurrence ou la nouvelle série.
-        plan.save.map { save(it) }.lastOrNull()
+        val saved = plan.save.map { store(it) }
+        reminders.markPastFired(saved)
+        saved.lastOrNull()?.id
     }
 }
 
@@ -205,7 +210,7 @@ internal class TransferRepositoryImpl @Inject constructor(
                 if (previous == null) added++ else updated++
             }
         }
-        markPastRemindersFired(saved)
+        reminders.markPastFired(saved)
         ImportReport(added, updated, agendasCreated)
     }
 
@@ -225,20 +230,24 @@ internal class TransferRepositoryImpl @Inject constructor(
         return "$uid~" + "${event.title}|$start".hashCode().toUInt().toString(16)
     }
 
-    /**
-     * Un rappel d'un événement importé dont l'heure vient de passer serait rattrapé
-     * comme « manqué » : sur un import de tout un agenda, une avalanche. Il est noté
-     * comme déjà présenté ; les rappels à venir sonnent normalement.
-     */
-    private suspend fun markPastRemindersFired(saved: List<Event>) {
-        val now = Instant.now()
-        val overrides = saved.filter { it.parentId != null && it.recurrenceId != null }.groupBy({ it.parentId!! }, { it.recurrenceId!! }).mapValues { it.value.toSet() }
-        ReminderPlanner.plan(saved.filter { it.reminders.isNotEmpty() }, overrides, emptyList(), emptySet(), now, ZoneId.systemDefault())
-            .due.forEach { due ->
-                val key = due.firedKey ?: return@forEach
-                reminders.markFired(FiredReminderEntity(due.event.id, due.occurrence, key.substringAfterLast('|'), now.toEpochMilli()))
-            }
-    }
+}
+
+/**
+ * Un rappel dont l'heure est déjà passée quand on écrit l'événement serait rattrapé
+ * comme « manqué » : import de tout un agenda, occurrence modifiée seule (elle change
+ * d'identifiant), alarme cochée après coup, rendez-vous passé saisi avec les rappels de
+ * l'agenda. Il est noté comme déjà présenté ; les rappels à venir sonnent normalement.
+ */
+internal suspend fun ReminderDao.markPastFired(saved: List<Event>) {
+    val now = Instant.now()
+    val overrides = saved.filter { it.parentId != null && it.recurrenceId != null }.groupBy({ it.parentId!! }, { it.recurrenceId!! }).mapValues { it.value.toSet() }
+    ReminderPlanner.plan(saved.filter { it.reminders.isNotEmpty() }, overrides, emptyList(), emptySet(), now, ZoneId.systemDefault())
+        // Le planificateur présente en avance de 30 s ; un rappel encore à venir doit sonner.
+        .due.filter { it.at.isBefore(now) }
+        .forEach { due ->
+            val key = due.firedKey ?: return@forEach
+            markFired(FiredReminderEntity(due.event.id, due.occurrence, key.substringAfterLast('|'), due.at.toEpochMilli()))
+        }
 }
 
 private fun AgendaEntity.toDomain() =Agenda(id, name, colorKey, hidden, sortOrder, ReminderCodec.decode(defaultReminders))

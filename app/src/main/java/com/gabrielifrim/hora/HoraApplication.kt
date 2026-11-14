@@ -9,6 +9,14 @@ import com.gabrielifrim.hora.core.reminders.DigestAlarms
 import com.gabrielifrim.hora.core.reminders.PrayerAlarms
 import com.gabrielifrim.hora.core.reminders.ReminderEngine
 import com.gabrielifrim.hora.core.reminders.ReminderNotifier
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Process
+import android.os.UserManager
+import androidx.core.content.ContextCompat
+import dagger.Lazy
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -26,22 +34,39 @@ import kotlinx.coroutines.launch
 
 @HiltAndroidApp
 class HoraApplication : Application() {
-    @Inject lateinit var engine: ReminderEngine
-    @Inject lateinit var store: ReminderStore
-    @Inject lateinit var notifier: ReminderNotifier
-    @Inject lateinit var backup: BackupRepository
-    @Inject lateinit var prayers: PrayerAlarms
-    @Inject lateinit var settings: SettingsRepository
-    @Inject lateinit var digest: DigestAlarms
-    @Inject lateinit var widgets: HoraWidgets
-    @Inject lateinit var device: DeviceCalendarRepository
+    @Inject lateinit var engine: Lazy<ReminderEngine>
+    @Inject lateinit var store: Lazy<ReminderStore>
+    @Inject lateinit var notifier: Lazy<ReminderNotifier>
+    @Inject lateinit var backup: Lazy<BackupRepository>
+    @Inject lateinit var prayers: Lazy<PrayerAlarms>
+    @Inject lateinit var settings: Lazy<SettingsRepository>
+    @Inject lateinit var digest: Lazy<DigestAlarms>
+    @Inject lateinit var widgets: Lazy<HoraWidgets>
+    @Inject lateinit var device: Lazy<DeviceCalendarRepository>
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @OptIn(FlowPreview::class)
     override fun onCreate() {
         super.onCreate()
-        notifier.ensureChannels()
+        // Avant le premier déverrouillage, base et réglages sont chiffrés : seuls les récepteurs de LockedBoot
+        // tournent. Au déverrouillage, on laisse le processus repartir à neuf (BOOT_COMPLETED suit).
+        if (getSystemService(UserManager::class.java)?.isUserUnlocked == false) {
+            val unlocked = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) = Process.killProcess(Process.myPid())
+            }
+            ContextCompat.registerReceiver(this, unlocked, IntentFilter(Intent.ACTION_USER_UNLOCKED), ContextCompat.RECEIVER_NOT_EXPORTED)
+            return
+        }
+        val engine = engine.get()
+        val store = store.get()
+        val backup = backup.get()
+        val prayers = prayers.get()
+        val settings = settings.get()
+        val digest = digest.get()
+        val widgets = widgets.get()
+        val device = device.get()
+        notifier.get().ensureChannels()
         // L'alarme quotidienne de sauvegarde se perd à l'arrêt forcé : on la réarme à chaque lancement.
         DatabaseBackup.scheduleAuto(this, backup.state.value.auto)
         // L'icône du jour : chiffre rattrapé si minuit a été manqué, alarme de minuit réarmée.

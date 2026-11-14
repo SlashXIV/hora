@@ -25,6 +25,13 @@
         <receiver android:name=".SnoozeReceiver" android:exported="false" />
         <receiver android:name=".PrayerReceiver" android:exported="false" />
         <receiver android:name=".DigestReceiver" android:exported="false" />
+        <!-- Redémarrage avant déverrouillage : seule l'échéance gardée hors chiffrement est réarmée. -->
+        <receiver android:name=".LockedBootReceiver" android:exported="true" android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".LockedAlarmReceiver" android:exported="false" android:directBootAware="true" />
         <!-- Replanifier : démarrage du téléphone, heure ou fuseau changés, application mise à jour. -->
         <receiver android:name=".RescheduleReceiver" android:exported="true">
             <intent-filter>

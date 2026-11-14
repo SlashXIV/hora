@@ -39,18 +39,27 @@ class ReminderEngine @Inject constructor(
             now = now,
             zone = zone,
         )
-        for (due in plan.due) {
-            // Journal d'abord : un plantage pendant l'affichage ne fait pas sonner deux fois.
-            due.firedKey?.let { store.markFired(it, due.event.id, due.occurrence, now) }
-            due.snoozeId?.let { store.deleteSnooze(it) }
-            val late = Duration.between(due.at, now) > LATE
-            notifier.show(due, late)
+        // Quoi qu'il arrive en présentant (stockage plein…), la prochaine échéance est réarmée.
+        try {
+            for (due in plan.due) {
+                // Journal d'abord, à l'heure du rappel : un plantage pendant l'affichage ne fait pas sonner deux fois.
+                due.firedKey?.let { store.markFired(it, due.event.id, due.occurrence, due.at) }
+                due.snoozeId?.let { store.deleteSnooze(it) }
+                val late = Duration.between(due.at, now) > LATE
+                runCatching { notifier.show(due, late) }
+            }
+            // Un report plus vieux que le rattrapage ne sonnera plus : il ne reste pas en base.
+            store.snoozes().filter { it.at.isBefore(now.minus(ReminderPlanner.catchUp)) }.forEach { store.deleteSnooze(it.id) }
+            store.forgetFiredBefore(now.minus(Duration.ofDays(30)))
+        } finally {
+            // Rien dans l'horizon : un réveil dans 30 jours recalcule tout, un rappel lointain n'est pas perdu.
+            arm(plan.next ?: now.plus(Duration.ofDays(30)), plan.nextIsAlarm)
         }
-        store.forgetFiredBefore(now.minus(Duration.ofDays(30)))
-        arm(plan.next, plan.nextIsAlarm)
     }
 
     private fun arm(next: Instant?, alarm: Boolean) {
+        // Gardée aussi pour un redémarrage avant déverrouillage (voir LockedBoot).
+        LockedBoot.remember(context, next?.toEpochMilli(), alarm)
         val manager = context.getSystemService(AlarmManager::class.java) ?: return
         val pending = PendingIntent.getBroadcast(
             context, 0, Intent(context, ReminderAlarmReceiver::class.java),

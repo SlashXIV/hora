@@ -89,7 +89,7 @@ fun TransferScreen(onBack: () -> Unit, viewModel: TransferViewModel = hiltViewMo
                         HoraButton(stringResource(R.string.import_pick), onClick = { viewModel.messageShown(); pickIcs.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth())
                     }
                     ImportUi.Reading -> HoraText(stringResource(R.string.import_reading), style = HoraTheme.type.body, color = HoraTheme.colors.ink2)
-                    is ImportUi.Preview -> ImportPreview(ui, onToggle = viewModel::toggleSource, onConfirm = { viewModel.confirmImport(unnamed) }, onCancel = viewModel::resetImport)
+                    is ImportUi.Preview -> ImportPreview(ui, unnamed, onToggle = viewModel::toggleSource, onConfirm = { viewModel.confirmImport(unnamed) }, onCancel = viewModel::resetImport)
                     is ImportUi.Done -> {
                         HoraText(
                             stringResource(R.string.import_done, ui.report.added, ui.report.updated, ui.report.agendasCreated),
@@ -175,7 +175,7 @@ fun TransferScreen(onBack: () -> Unit, viewModel: TransferViewModel = hiltViewMo
 
 /** Les agendas trouvés dans le fichier, à cocher, et ce qui a dû être adapté. */
 @Composable
-private fun ImportPreview(ui: ImportUi.Preview, onToggle: (String) -> Unit, onConfirm: () -> Unit, onCancel: () -> Unit) {
+private fun ImportPreview(ui: ImportUi.Preview, unnamed: String, onToggle: (String) -> Unit, onConfirm: () -> Unit, onCancel: () -> Unit) {
     ui.sources.forEach { source ->
         val key = agendaColorKey(source.colorKey)
         Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -196,6 +196,8 @@ private fun ImportPreview(ui: ImportUi.Preview, onToggle: (String) -> Unit, onCo
     val notes = buildList {
         if (f.tasks > 0) add(pluralStringResource(R.plurals.import_tasks, f.tasks, f.tasks))
         if (f.skipped > 0) add(pluralStringResource(R.plurals.import_skipped, f.skipped, f.skipped))
+        // Un vieux fichier réimporté écrase ce qui a changé depuis : on le dit avant.
+        ui.replacing(unnamed).takeIf { it > 0 }?.let { add(pluralStringResource(R.plurals.import_replacing, it, it)) }
         if (f.shiftedReminders > 0) add(pluralStringResource(R.plurals.import_shifted, f.shiftedReminders, f.shiftedReminders))
         if (f.unknownZones.isNotEmpty()) add(stringResource(R.string.import_zones, f.unknownZones.joinToString()))
     }

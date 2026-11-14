@@ -40,6 +40,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 internal class AgendaRepositoryImpl @Inject constructor(
@@ -176,6 +177,8 @@ internal class TransferRepositoryImpl @Inject constructor(
 ) : TransferRepository {
 
     override suspend fun events(agendaIds: Set<Long>): List<Event> = events.inAgendas(agendaIds.toList()).map { it.toDomain() }
+
+    override suspend fun existingUids(): Set<String> = events.observeUids().first().toSet()
 
     override suspend fun import(groups: List<ImportGroup>): ImportReport = db.withTransaction {
         val existingAgendas = agendas.all().toMutableList()

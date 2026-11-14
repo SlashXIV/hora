@@ -190,4 +190,13 @@ class IcsReaderTest {
         assertThat(result.entries.single().item.event.reminders).containsExactly(Reminder.Before(0))
         assertThat(result.shiftedReminders).isEqualTo(1)
     }
+
+    private val CRLF = "\r\n"
+
+    @Test
+    fun `fichier Windows-1252 - les accents restent`() {
+        val ics = listOf("BEGIN:VCALENDAR", "BEGIN:VEVENT", "UID:w", "DTSTART;VALUE=DATE:20261114", "SUMMARY:Réunion", "END:VEVENT", "END:VCALENDAR").joinToString(CRLF, postfix = CRLF)
+        val result = IcsReader.read(ics.toByteArray(charset("windows-1252")), paris)
+        assertThat(result.entries.single().item.event.title).isEqualTo("Réunion")
+    }
 }

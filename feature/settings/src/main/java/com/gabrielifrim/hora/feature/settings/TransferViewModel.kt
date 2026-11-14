@@ -47,8 +47,14 @@ data class SourceAgendaChoice(
 sealed interface ImportUi {
     data object Idle : ImportUi
     data object Reading : ImportUi
-    data class Preview(val file: IcsImport, val sources: List<SourceAgendaChoice>) : ImportUi {
+    data class Preview(val file: IcsImport, val sources: List<SourceAgendaChoice>, val existing: Set<String> = emptySet()) : ImportUi {
         val selected: Int get() = sources.filter { it.include }.sumOf { it.count }
+
+        /** Événements cochés dont l'UID est déjà dans Hora : ils seront remplacés par la version du fichier. */
+        fun replacing(unnamedAgenda: String): Int {
+            val chosen = sources.filter { it.include }.map { it.name }.toSet()
+            return file.entries.count { (it.agenda.name ?: unnamedAgenda) in chosen && it.item.event.uid in existing }
+        }
     }
     data class Done(val report: ImportReport) : ImportUi
     /** Fichier illisible, trop gros ou sans événement. */
@@ -105,7 +111,7 @@ class TransferViewModel @Inject constructor(
                 used += color
                 SourceAgendaChoice(name, color, entries.size, joinsExisting = match != null)
             }
-            _import.value = ImportUi.Preview(file, sources)
+            _import.value = ImportUi.Preview(file, sources, transfer.existingUids())
         }
     }
 

@@ -70,7 +70,7 @@ object IcsSyntax {
                 i++
             }
         }
-        return out.toString(Charsets.UTF_8).split('\n').filter { it.isNotBlank() }
+        return decode(out.toByteArray()).split('\n').filter { it.isNotBlank() }
     }
 
     /** NOM;P1=a;P2="b;c":valeur. Le premier « : » hors guillemets sépare la valeur. */
@@ -151,3 +151,8 @@ object IcsSyntax {
         return sb.append("\r\n").toString()
     }
 }
+
+/** UTF-8, comme le veut la RFC ; un vieil export Windows (« R\u00e9union » en Windows-1252) garde ses accents. */
+internal fun decode(bytes: ByteArray): String = runCatching {
+    Charsets.UTF_8.newDecoder().onMalformedInput(java.nio.charset.CodingErrorAction.REPORT).decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+}.getOrElse { String(bytes, charset("windows-1252")) }

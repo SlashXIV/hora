@@ -45,10 +45,12 @@ object DayLayout {
             val dayStart = date.atStartOfDay(zone).toInstant()
             val nextMidnight = date.plusDays(1).atStartOfDay(zone).toInstant()
             val startsBefore = t.start.isBefore(dayStart)
+            val startMinute = if (startsBefore) 0 else minuteOfDay(t.start.atZone(zone))
             DaySlice(
                 event = event,
-                startMinute = if (startsBefore) 0 else minuteOfDay(t.start.atZone(zone)),
-                endMinute = if (t.end.isBefore(nextMidnight)) minuteOfDay(t.end.atZone(zone)) else DAY_MINUTES,
+                startMinute = startMinute,
+                // Nuit du passage à l'heure d'hiver : 2 h 30 (été) à 2 h 15 (hiver) finit « avant » de commencer à l'horloge.
+                endMinute = maxOf(startMinute, if (t.end.isBefore(nextMidnight)) minuteOfDay(t.end.atZone(zone)) else DAY_MINUTES),
                 continuesBefore = startsBefore,
                 continuesAfter = t.end.isAfter(nextMidnight),
             )

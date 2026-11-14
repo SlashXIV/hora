@@ -123,7 +123,8 @@ private class Parser(private val words: List<String>, private val now: LocalDate
                 start = t
                 // « 14h-16h », « 14h à 16h », « 14h jusqu'à 16h »
                 val link = keys.getOrNull(i + n)
-                if (link in RANGE_LINKS) timeAt(i + n + 1)?.let { (e, m) -> if (e > t) { end = e; return consume(i, n + 1 + m) } }
+                // Une fin plus tôt que le début passe minuit (« 22h à 2h ») ; l'éditeur la met au lendemain.
+                if (link in RANGE_LINKS) timeAt(i + n + 1)?.let { (e, m) -> if (e != t) { end = e; return consume(i, n + 1 + m) } }
                 return consume(i, n)
             }
             // Une deuxième heure après « à » est une fin ; nue, c'est une durée (« 14h30 1h »).
@@ -148,7 +149,7 @@ private class Parser(private val words: List<String>, private val now: LocalDate
             // « 14h-16h » en un mot : la fin suit le tiret.
             if (w.contains('-') && start == null) {
                 Regex("^(\\d{1,2})(?:h|:)(\\d{2})?$").matchEntire(w.substringAfter('-'))?.let { e ->
-                    clock(e.groupValues[1], e.groupValues[2])?.takeIf { it > t }?.let { end = it }
+                    clock(e.groupValues[1], e.groupValues[2])?.takeIf { it != t }?.let { end = it }
                 }
             }
             return t to 1
@@ -209,12 +210,12 @@ private class Parser(private val words: List<String>, private val now: LocalDate
     /** Année dite, sinon celle qui place la date aujourd'hui ou après. */
     private fun yearOf(md: MonthDay, year: String): LocalDate? {
         val today = now.toLocalDate()
+        // MonthDay.atYear ramène le 29 février au 28 les années communes : on ne garde que les années où il existe.
         if (year.isNotEmpty()) {
             val y = year.toInt().let { if (it < 100) 2000 + it else it }
-            return runCatching { md.atYear(y) }.getOrNull()
+            return md.takeIf { it.isValidYear(y) }?.atYear(y)
         }
-        val thisYear = md.atYear(today.year)
-        return if (thisYear < today) md.atYear(today.year + 1) else thisYear
+        return (today.year..today.year + 8).asSequence().filter { md.isValidYear(it) }.map { md.atYear(it) }.firstOrNull { !it.isBefore(today) }
     }
 
     private companion object {

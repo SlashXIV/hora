@@ -22,4 +22,7 @@ interface TransferRepository {
      * dupliqué : réimporter le même fichier ne change rien.
      */
     suspend fun import(groups: List<ImportGroup>): ImportReport
+
+    /** Les UID déjà en base : l'aperçu annonce ce qu'un import remplacerait. */
+    suspend fun existingUids(): Set<String>
 }

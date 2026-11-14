@@ -111,6 +111,11 @@
         <item quantity="many">%d tâches importées comme événements sur la journée.</item>
         <item quantity="other">%d tâches importées comme événements sur la journée.</item>
     </plurals>
+    <plurals name="import_replacing">
+        <item quantity="one">%d événement est déjà dans Hora : il sera remplacé par la version du fichier.</item>
+        <item quantity="many">%d événements sont déjà dans Hora : ils seront remplacés par la version du fichier.</item>
+        <item quantity="other">%d événements sont déjà dans Hora : ils seront remplacés par la version du fichier.</item>
+    </plurals>
     <plurals name="import_skipped">
         <item quantity="one">%d élément sans date ou annulé, laissé de côté.</item>
         <item quantity="many">%d éléments sans date ou annulés, laissés de côté.</item>

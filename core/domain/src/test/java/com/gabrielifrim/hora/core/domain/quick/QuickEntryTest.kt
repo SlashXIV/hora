@@ -85,4 +85,17 @@ class QuickEntryTest {
             "rappel" to QuickEntry.Part.REMINDER, "1h" to QuickEntry.Part.REMINDER, "avant" to QuickEntry.Part.REMINDER,
         ).inOrder()
     }
+
+    @Test
+    fun `29 fevrier - la prochaine annee bissextile, jamais le 28`() {
+        assertThat(parse("Anniv 29 février").date).isEqualTo(LocalDate.of(2028, 2, 29))
+        assertThat(parse("Anniv 29/02/2027").date).isNull()
+    }
+
+    @Test
+    fun `une plage qui passe minuit garde sa fin`() {
+        val e = parse("Soirée 22h à 2h")
+        assertThat(e.start).isEqualTo(LocalTime.of(22, 0))
+        assertThat(e.end).isEqualTo(LocalTime.of(2, 0))
+    }
 }

@@ -83,7 +83,7 @@ data class EventDraft(
         )
         val from = q.start?.let(day::atTime) ?: day.atTime(start.toLocalTime())
         val length = when {
-            q.end != null && q.start != null -> Duration.between(q.start, q.end)
+            q.end != null && q.start != null -> Duration.between(q.start, q.end).let { if (it.isNegative) it.plusDays(1) else it }
             q.duration != null -> q.duration
             else -> Duration.between(start, end)
         }

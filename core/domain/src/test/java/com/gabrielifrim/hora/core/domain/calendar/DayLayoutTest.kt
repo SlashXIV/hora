@@ -73,4 +73,14 @@ class DayLayoutTest {
         val brunch = timed("Brunch", "2026-03-29T10:00", "2026-03-29T11:00")
         assertThat(DayLayout.timedSlices(listOf(brunch), LocalDate.of(2026, 3, 29), paris).single().startMinute).isEqualTo(10 * 60)
     }
+
+    @Test
+    fun `nuit du passage a l'heure d'hiver - un morceau ne finit pas avant de commencer`() {
+        // 25 octobre 2026 : de 2 h 30 (heure d'été) à 2 h 15 (heure d'hiver), soit 45 min réelles.
+        val start = LocalDateTime.of(2026, 10, 25, 2, 30).atZone(paris).withEarlierOffsetAtOverlap().toInstant()
+        val end = LocalDateTime.of(2026, 10, 25, 2, 15).atZone(paris).withLaterOffsetAtOverlap().toInstant()
+        val event = Event(uid = "nuit", agendaId = 1, title = "Nuit", timing = Timing.Timed(start, end, paris))
+        val slice = DayLayout.timedSlices(listOf(event), LocalDate.of(2026, 10, 25), paris).single()
+        assertThat(slice.endMinute).isAtLeast(slice.startMinute)
+    }
 }

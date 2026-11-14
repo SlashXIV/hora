@@ -15,8 +15,10 @@ android {
 
     defaultConfig {
         applicationId = "com.gabrielifrim.hora"
-        val (major, minor, patch) = horaVersion.split(".").map { it.toInt() }
-        versionCode = major * 10000 + minor * 100 + patch
+        val (major, minor, patch) = horaVersion.substringBefore("-").split(".").map { it.toInt() }
+        // Version candidate X.Y.Z-rc.N : juste avant X.Y.Z (1.0.0-rc.2 = 9902 < 1.0.0 = 10000).
+        val rc = horaVersion.substringAfter("-rc.", "").toIntOrNull()
+        versionCode = major * 10000 + minor * 100 + patch - (if (rc != null) 100 - rc else 0)
         versionName = horaVersion
     }
 

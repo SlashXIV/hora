@@ -52,6 +52,8 @@ jobs:
         run: |
           git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
           git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME" > notes.md
+          # Une version candidate (vX.Y.Z-rc.N) part en pré-release.
+          prerelease=""; case "$GITHUB_REF_NAME" in *-rc.*) prerelease="--prerelease";; esac
           gh release create "$GITHUB_REF_NAME" "Hora-$GITHUB_REF_NAME.apk" \
             --title "Hora $GITHUB_REF_NAME" \
-            --notes-file notes.md
+            --notes-file notes.md $prerelease

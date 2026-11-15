@@ -78,6 +78,7 @@ class ReminderNotifier @Inject constructor(
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(open)
             .setAutoCancel(true)
+            .addExtras(android.os.Bundle().apply { putLong(EXTRA_EVENT, event.id) })
             .addAction(0, context.getString(R.string.snooze_10), snooze(due, SnoozeReceiver.TEN_MINUTES, id))
             .addAction(0, context.getString(R.string.snooze_hour), snooze(due, SnoozeReceiver.ONE_HOUR, id))
             .addAction(0, context.getString(R.string.snooze_morning), snooze(due, SnoozeReceiver.TOMORROW_MORNING, id))
@@ -96,6 +97,14 @@ class ReminderNotifier @Inject constructor(
     }
 
     fun cancel(eventId: Long, occurrence: Long) = manager.cancel(notificationId(eventId, occurrence))
+
+    /**
+     * Retire les rappels affichés dont l'événement a disparu (supprimé, ou sans rappel) : une alarme
+     * en cours ne se balaie pas, elle resterait sinon jusqu'à « Arrêter ».
+     */
+    fun dismissGone(kept: Set<Long>) = manager.activeNotifications
+        .filter { it.notification.extras.containsKey(EXTRA_EVENT) && it.notification.extras.getLong(EXTRA_EVENT) !in kept }
+        .forEach { manager.cancel(it.tag, it.id) }
 
     fun openAppIntent(): PendingIntent = PendingIntent.getActivity(context, 1, launcher.openApp(context), PendingIntent.FLAG_IMMUTABLE)
 
@@ -138,6 +147,7 @@ class ReminderNotifier @Inject constructor(
     companion object {
         const val CHANNEL_REMINDERS = "reminders"
         const val CHANNEL_ALARMS = "alarms"
+        private const val EXTRA_EVENT = "hora.event" // texte-technique : clé interne
 
         fun notificationId(eventId: Long, occurrence: Long): Int = (eventId * 31 + occurrence).hashCode()
     }

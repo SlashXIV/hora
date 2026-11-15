@@ -31,8 +31,10 @@ class ReminderEngine @Inject constructor(
 
     suspend fun run(now: Instant = Instant.now()) = lock.withLock {
         val zone = ZoneId.systemDefault()
+        val events = store.eventsWithReminders()
+        runCatching { notifier.dismissGone(events.mapTo(HashSet()) { it.id }) }
         val plan = ReminderPlanner.plan(
-            events = store.eventsWithReminders(),
+            events = events,
             overrides = store.overrides(),
             snoozes = store.snoozes(),
             fired = store.firedSince(now.minus(ReminderPlanner.catchUp)),
